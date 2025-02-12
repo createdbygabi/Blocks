@@ -183,19 +183,12 @@ export async function getUserBusiness(userId) {
       `
       *,
       stripe_accounts (
-        id,
-        account_id,
-        account_type,
-        country,
-        capabilities,
-        payouts_enabled,
-        charges_enabled,
-        details_submitted
+        *
       )
     `
     )
     .eq("user_id", userId)
-    .maybeSingle();
+    .single();
 
   if (error) throw error;
   return data;

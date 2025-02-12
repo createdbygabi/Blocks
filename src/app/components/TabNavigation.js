@@ -74,7 +74,7 @@ const tabs = [
   },
   {
     name: "Payment Settings",
-    href: "/payment",
+    href: "/stripe-account",
     icon: (
       <svg
         className="w-4 h-4"
@@ -116,7 +116,7 @@ export function TabNavigation() {
     }
   };
 
-  if (pathname === "/landing") {
+  if (pathname === "/landing" || pathname === "/onboarding") {
     return null;
   }
 

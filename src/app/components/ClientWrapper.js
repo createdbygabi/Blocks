@@ -6,8 +6,8 @@ import { useUser } from "@/hooks/useUser";
 
 export function ClientWrapper({ children }) {
   const pathname = usePathname();
-  const isLandingPage = pathname === "/landing";
-  console.log("isLandingPage", isLandingPage);
+  const isNoNavPage = pathname === "/landing" || pathname === "/onboarding";
+  console.log("isNoNavPage", isNoNavPage);
 
   const { user, loading } = useUser();
 
@@ -27,9 +27,7 @@ export function ClientWrapper({ children }) {
 
   return (
     <main
-      className={`w-full min-h-screen ${
-        isLandingPage ? "" : "pl-[300px] pt-12"
-      }`}
+      className={`w-full min-h-screen ${isNoNavPage ? "" : "pl-[300px] pt-12"}`}
     >
       <AnimatedWrapper>{children}</AnimatedWrapper>
     </main>
