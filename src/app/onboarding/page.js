@@ -18,36 +18,61 @@ import {
   FiRocket,
 } from "react-icons/fi";
 import Image from "next/image";
+import { OnboardingManager } from "@/lib/onboarding/OnboardingManager";
+import { useUser } from "@/hooks/useUser";
+import { PIPELINE_STEPS } from "@/lib/onboarding/pipeline";
+import { GenerationProgress } from "@/components/GenerationProgress";
 
-export default function Onboarding() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [generating, setGenerating] = useState(false);
-  const [showingResults, setShowingResults] = useState(false);
-  const [generationPhase, setGenerationPhase] = useState(0);
-  const [formData, setFormData] = useState({
-    businessNiche: "",
-    product: "",
-    mainFeature: "",
-    painPoint: "",
-    targetAudience: "",
-  });
-
-  // Add completedSteps state
-  const [completedSteps, setCompletedSteps] = useState({
-    overview: { completed: true },
-    businessIdea: null,
-    branding: null,
-    website: null,
-    pricing: null,
-    marketing: null,
-    launch: null,
-  });
+export default function OnboardingPage() {
+  const { user } = useUser();
+  const [manager, setManager] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [stepData, setStepData] = useState({});
 
   useEffect(() => {
-    // Reset showingResults when step changes
-    const isFirstStep = currentStep === 1;
-    setShowingResults(!isFirstStep);
-  }, [currentStep]);
+    if (user) {
+      initializeOnboarding();
+    }
+  }, [user]);
+
+  const initializeOnboarding = async () => {
+    const mgr = new OnboardingManager(user.id);
+    await mgr.initialize();
+    setManager(mgr);
+    setCurrentStep(mgr.currentStep);
+    setProgress(mgr.getProgress());
+  };
+
+  const handleStepComplete = async (stepId, data) => {
+    try {
+      await manager.executeStep(stepId, data);
+      setCurrentStep(manager.determineCurrentStep());
+      setProgress(manager.getProgress());
+    } catch (error) {
+      console.error("Error completing step:", error);
+    }
+  };
+
+  const handleStepDefer = async (stepId) => {
+    try {
+      await manager.deferStep(stepId);
+      setCurrentStep(manager.determineCurrentStep());
+      setProgress(manager.getProgress());
+    } catch (error) {
+      console.error("Error deferring step:", error);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setStepData((prev) => ({
+      ...prev,
+      [currentStep.id]: {
+        ...prev[currentStep.id],
+        [field]: value,
+      },
+    }));
+  };
 
   const steps = [
     {
@@ -209,47 +234,6 @@ export default function Onboarding() {
       },
     },
   ];
-
-  // Handle step completion
-  const completeStep = (stepId, stepData = null) => {
-    setCompletedSteps((prev) => ({
-      ...prev,
-      [stepId]: {
-        completed: true,
-        data: stepData,
-      },
-    }));
-  };
-
-  // Handle continuing to next step
-  const handleContinue = async () => {
-    const currentStepData = steps[currentStep];
-
-    if (currentStep === 0) {
-      // Simply move to next step for overview
-      setCurrentStep(1);
-      return;
-    }
-
-    if (currentStep === 1) {
-      // Business Idea step
-      completeStep("businessIdea", {
-        "Business Niche": formData.businessNiche,
-        Product: formData.product,
-        "Main Feature": formData.mainFeature,
-        "Pain Point": formData.painPoint,
-        "Target Audience": formData.targetAudience,
-      });
-      setGenerating(true);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setGenerating(false);
-    } else if (currentStepData.id) {
-      // For other steps, just mark them as completed
-      completeStep(currentStepData.id);
-    }
-
-    setCurrentStep(currentStep + 1);
-  };
 
   const renderLoading = () => (
     <div className="flex items-center justify-center p-8">
@@ -561,12 +545,9 @@ export default function Onboarding() {
                 </label>
                 <textarea
                   className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200"
-                  value={formData[field.name] || ""}
+                  value={stepData[currentStepData.id]?.[field.name] || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      [field.name]: e.target.value,
-                    }))
+                    handleInputChange(field.name, e.target.value)
                   }
                   placeholder={field.placeholder}
                   rows={4}
@@ -588,7 +569,12 @@ export default function Onboarding() {
               Back
             </Button>
             <Button
-              onClick={handleContinue}
+              onClick={() =>
+                handleStepComplete(
+                  currentStepData.id,
+                  stepData[currentStepData.id]
+                )
+              }
               variant="primary"
               className="px-6 py-2"
             >
@@ -614,18 +600,15 @@ export default function Onboarding() {
   };
 
   const renderStep = () => {
-    const currentStepData = steps[currentStep];
-
-    if (currentStep === 0) {
+    if (!currentStep) {
       return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
           <div className="max-w-2xl w-full bg-[#0C0F17] rounded-2xl border border-gray-800/50 p-12 space-y-10">
             <h1 className="text-3xl font-medium text-white">
               Let's set up your automated business to start making money.
             </h1>
-
             <button
-              onClick={() => setCurrentStep(1)}
+              onClick={initializeOnboarding}
               className="px-6 py-3 bg-white hover:bg-gray-50 text-black rounded-xl text-sm font-medium transition-all duration-200"
             >
               Create My Business →
@@ -635,107 +618,142 @@ export default function Onboarding() {
       );
     }
 
-    // Regular steps
+    if (currentStep.id === "generation") {
+      return (
+        <GenerationProgress
+          parallelTasks={currentStep.parallelTasks}
+          integrations={currentStep.integrations}
+          onIntegrationComplete={async (integrationId) => {
+            // Handle integration setup (e.g., open Stripe Connect)
+            await handleIntegrationSetup(integrationId);
+          }}
+          onAllComplete={() => {
+            // Move to final step/business dashboard
+            handleStepComplete(currentStep.id);
+          }}
+        />
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-        <div className="max-w-2xl w-full bg-[#0C0F17] rounded-2xl border border-gray-800/50 p-12 space-y-10">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-medium text-white">
-              Design Your Business
-            </h2>
-            <p className="text-gray-400">Define your business fundamentals</p>
+      <div className="min-h-screen bg-black text-white">
+        {/* Progress indicator */}
+        <div className="fixed top-0 left-0 w-full h-1 bg-gray-800">
+          <div
+            className="h-full bg-blue-500 transition-all duration-500"
+            style={{ width: `${progress?.progress || 0}%` }}
+          />
+        </div>
+
+        <div className="max-w-4xl mx-auto p-8">
+          <div className="bg-[#0C0F17] rounded-2xl border border-gray-800/50 p-12 space-y-10">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-medium text-white">
+                {currentStep.title}
+              </h2>
+              <p className="text-gray-400">{currentStep.description}</p>
+            </div>
+
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              {currentStep.fields?.map((field) => (
+                <div key={field.name} className="space-y-3">
+                  <label className="block text-sm font-medium text-white">
+                    {field.label}
+                  </label>
+                  {field.type === "textarea" ? (
+                    <textarea
+                      value={stepData[currentStep.id]?.[field.name] || ""}
+                      onChange={(e) =>
+                        handleInputChange(field.name, e.target.value)
+                      }
+                      className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
+                      placeholder={field.placeholder}
+                      rows={4}
+                    />
+                  ) : (
+                    <input
+                      type={field.type}
+                      value={stepData[currentStep.id]?.[field.name] || ""}
+                      onChange={(e) =>
+                        handleInputChange(field.name, e.target.value)
+                      }
+                      className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
+                      placeholder={field.placeholder}
+                    />
+                  )}
+                  {field.helper && (
+                    <p className="text-sm text-gray-500">{field.helper}</p>
+                  )}
+                </div>
+              ))}
+            </form>
+
+            <div className="flex justify-between pt-6 border-t border-gray-800">
+              {currentStep.deferrable && (
+                <Button
+                  onClick={() => handleStepDefer(currentStep.id)}
+                  variant="secondary"
+                  className="px-6 py-2"
+                >
+                  Complete Later
+                </Button>
+              )}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() =>
+                    handleStepComplete(currentStep.id, stepData[currentStep.id])
+                  }
+                  variant="primary"
+                  className="px-6 py-2"
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          {/* Progress Summary */}
+          <div className="fixed top-8 right-8 w-80 bg-gray-900/90 backdrop-blur rounded-xl p-4 border border-gray-800">
+            <h3 className="text-lg font-medium text-white mb-4">
+              Your Progress
+            </h3>
             <div className="space-y-3">
-              <label className="block text-sm font-medium text-white">
-                Business Niche
-              </label>
-              <input
-                type="text"
-                value={formData.businessNiche}
-                onChange={(e) =>
-                  setFormData({ ...formData, businessNiche: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
-                placeholder="Business creators"
-              />
-            </div>
+              {Object.values(PIPELINE_STEPS).map((step) => {
+                const isCompleted = progress?.completed.has(step.id);
+                const isDeferred = progress?.deferred.has(step.id);
+                const isCurrent = currentStep.id === step.id;
 
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-white">
-                Product
-              </label>
-              <input
-                type="text"
-                value={formData.product}
-                onChange={(e) =>
-                  setFormData({ ...formData, product: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
-                placeholder="Generating landing pages"
-              />
+                return (
+                  <div
+                    key={step.id}
+                    className={`p-3 rounded-lg ${
+                      isCurrent
+                        ? "bg-blue-500/20 border border-blue-500/50"
+                        : isCompleted
+                        ? "bg-green-500/20 border border-green-500/50"
+                        : isDeferred
+                        ? "bg-yellow-500/20 border border-yellow-500/50"
+                        : "bg-gray-800/50 border border-gray-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                          isCompleted
+                            ? "bg-green-500"
+                            : isCurrent
+                            ? "bg-blue-500"
+                            : "bg-gray-700"
+                        }`}
+                      >
+                        {isCompleted ? "✓" : ""}
+                      </div>
+                      <span className="text-white">{step.title}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-white">
-                Main Feature
-              </label>
-              <input
-                type="text"
-                value={formData.mainFeature}
-                onChange={(e) =>
-                  setFormData({ ...formData, mainFeature: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
-                placeholder="Quick landing page setup"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-white">
-                Pain Point
-              </label>
-              <textarea
-                value={formData.painPoint}
-                onChange={(e) =>
-                  setFormData({ ...formData, painPoint: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
-                placeholder="Landing page creation is time consuming"
-                rows={4}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-white">
-                Target Audience
-              </label>
-              <input
-                type="text"
-                value={formData.targetAudience}
-                onChange={(e) =>
-                  setFormData({ ...formData, targetAudience: e.target.value })
-                }
-                className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-gray-700 focus:ring-0"
-                placeholder="Developers and creators"
-              />
-            </div>
-          </form>
-
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-800">
-            <button
-              onClick={() => setCurrentStep(0)}
-              className="px-6 py-3 border border-gray-800 text-gray-400 hover:bg-gray-800/50 rounded-xl text-sm"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => setCurrentStep(2)}
-              className="px-6 py-3 bg-white hover:bg-gray-50 text-black rounded-xl text-sm font-medium"
-            >
-              Continue
-            </button>
           </div>
         </div>
       </div>
