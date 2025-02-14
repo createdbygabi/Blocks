@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getUserLandingPage } from "@/lib/db";
-import { LandingPage, defaultContent } from "@/app/landing/page";
+import { defaultContent, LandingPage } from "@/app/landing/page";
 
 export default function PreviewPage({ params }) {
   const [pageData, setPageData] = useState({ content: defaultContent });

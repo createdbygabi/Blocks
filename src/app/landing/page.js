@@ -89,7 +89,7 @@ const fadeUp = {
 };
 
 // Update defaultContent to remove image dependencies and fix key issues
-const defaultContent = {
+export const defaultContent = {
   hero: {
     title: "Create Landing Pages That Convert",
     subtitle:
@@ -322,6 +322,10 @@ const defaultContent = {
     secondaryCta: "Talk to Sales",
   },
 };
+
+export function LandingPage({ content }) {
+  // Your landing page component
+}
 
 export default function LandingPageEditor({ params }) {
   const router = useRouter();

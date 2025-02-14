@@ -93,51 +93,35 @@ export class BusinessService {
         }),
       });
 
-      const { content } = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error Response:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // Deep merge function to properly merge nested objects
-      const deepMerge = (target, source) => {
-        const output = { ...target };
-        if (isObject(target) && isObject(source)) {
-          Object.keys(source).forEach((key) => {
-            if (isObject(source[key])) {
-              if (!(key in target)) {
-                Object.assign(output, { [key]: source[key] });
-              } else {
-                output[key] = deepMerge(target[key], source[key]);
-              }
-            } else {
-              Object.assign(output, { [key]: source[key] });
-            }
-          });
-        }
-        return output;
-      };
+      // First get the raw text
+      const text = await response.text();
+      console.log("Raw API Response:", text);
 
-      const isObject = (item) =>
-        item && typeof item === "object" && !Array.isArray(item);
+      // Only try to parse if we have content
+      if (!text) {
+        throw new Error("Empty response from server");
+      }
 
-      // Deep clone the default content
-      const baseContent = JSON.parse(JSON.stringify(defaultContent));
+      // Parse the response
+      const data = JSON.parse(text);
 
-      // Merge generated content with defaults using deep merge
-      const mergedContent = deepMerge(baseContent, content);
+      // Validate the response structure
+      if (!data || !data.content) {
+        console.error("Invalid response structure:", data);
+        throw new Error("Missing content in response");
+      }
 
-      // Save as a landing page
-      const landingPage = await saveLandingPage(this.userId, {
-        content: mergedContent,
-        theme: landingThemes[0],
-        design: designPresets[0],
-        font: fontPresets[0],
-        business_id: businessInfo.id,
-      });
-
+      // Return just the content and any additional data
       return {
-        content: mergedContent,
-        previewUrl: `/landing/${landingPage.id}`,
-        thumbnailUrl: `https://placehold.co/1200x630/1a1a1a/ffffff?text=${encodeURIComponent(
-          mergedContent.hero.title
-        )}`,
+        content: data.content,
+        previewUrl: data.previewUrl,
+        thumbnailUrl: data.thumbnailUrl,
       };
     } catch (error) {
       console.error("Failed to generate website content:", error);

@@ -52,6 +52,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
   });
   const [expandedStep, setExpandedStep] = useState("branding");
 
+  // Simple progress update function
   const updateProgress = (step, status, data = null) => {
     setGenerationState((prev) => ({
       ...prev,
@@ -71,7 +72,6 @@ export function GenerationProgress({ businessInfo, onComplete }) {
       : "completed";
   };
 
-  // Helper to check if a main step is completed
   const isStepCompleted = (stepKey) => {
     const substeps = GENERATION_STEPS[stepKey].substeps;
     return Object.keys(substeps).every(
@@ -79,20 +79,12 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     );
   };
 
-  // Auto-collapse completed steps and expand next
-  useEffect(() => {
-    if (isStepCompleted("branding") && expandedStep === "branding") {
-      setExpandedStep("website");
-    }
-  }, [generationState.results]);
-
+  // Start generation when component mounts
   useEffect(() => {
     if (user && businessInfo) {
       const generateBusiness = async () => {
         const businessService = new BusinessService(user.id);
-
         try {
-          // Start with logo generation
           await businessService.generateBranding(businessInfo, updateProgress);
         } catch (error) {
           console.error("Generation error:", error);
@@ -106,6 +98,17 @@ export function GenerationProgress({ businessInfo, onComplete }) {
       generateBusiness();
     }
   }, [user, businessInfo]);
+
+  // Auto-expand next section when current is complete
+  useEffect(() => {
+    if (isStepCompleted("branding") && expandedStep === "branding") {
+      setExpandedStep("website");
+    }
+  }, [generationState.results]);
+
+  if (generationState.error) {
+    return <div>Error: {generationState.error}</div>;
+  }
 
   // Add result display components
   const NamesList = ({ names }) => (
