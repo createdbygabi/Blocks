@@ -323,7 +323,7 @@ const defaultContent = {
   },
 };
 
-export default function LandingPageEditor() {
+export default function LandingPageEditor({ params }) {
   const router = useRouter();
   const { user } = useUser();
   const [content, setContent] = useState(defaultContent);
@@ -335,28 +335,33 @@ export default function LandingPageEditor() {
   const [saveStatus, setSaveStatus] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [previewContent, setPreviewContent] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load user's landing page
   useEffect(() => {
-    const loadPage = async () => {
-      if (!user) return;
-
+    const loadLandingPage = async () => {
       try {
-        const page = await getUserLandingPage(user.id);
-        if (page) {
-          setContent(page.content || defaultContent);
-          setCurrentTheme(page.theme || landingThemes[0]);
-          setCurrentDesign(page.design || designPresets[0]);
-          setCurrentFont(page.font || fontPresets[0]);
+        const data = await getUserLandingPage(params?.id);
+        if (data?.content) {
+          setContent(data.content);
+          setCurrentTheme(data.theme || landingThemes[0]);
+          setCurrentDesign(data.design || designPresets[0]);
+          setCurrentFont(data.font || fontPresets[0]);
         }
         setIsInitialized(true);
       } catch (error) {
-        console.error("Failed to load page:", error);
+        console.error("Failed to load landing page:", error);
         setIsInitialized(true);
+      } finally {
+        setIsLoading(false);
       }
     };
-    loadPage();
-  }, [user]);
+
+    if (params?.id) {
+      loadLandingPage();
+    } else {
+      setIsLoading(false);
+    }
+  }, [params?.id]);
 
   // Manual save function
   const handleSave = async () => {
@@ -526,7 +531,10 @@ export default function LandingPageEditor() {
     return originalText;
   };
 
-  // Update the hero section rendering to use getDisplayText
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className={`w-full min-h-screen ${fontVariables}`}>
       <Toast />
