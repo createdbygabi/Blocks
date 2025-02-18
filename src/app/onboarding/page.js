@@ -1,11 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/useUser";
+import { BusinessService } from "@/lib/services/business";
 import { GenerationProgress } from "@/components/GenerationProgress";
 
 export default function OnboardingPage() {
+  const router = useRouter();
+  const { user } = useUser();
   const [step, setStep] = useState("business_idea");
   const [businessInfo, setBusinessInfo] = useState(null);
+  const [formData, setFormData] = useState({
+    niche: "",
+    product: "",
+    mainFeature: "",
+    problem: "",
+    targetAudience: "",
+  });
+
+  // Initialize BusinessService and get mock data
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const businessService = new BusinessService(user.id);
+    const mockData = businessService.getMockBusinessInfo();
+
+    if (mockData) {
+      setFormData({
+        niche: mockData.niche || "",
+        product: mockData.services[0] || "", // Use first service as product
+        mainFeature: mockData.uniqueValue || "",
+        problem: mockData.goals[0] || "", // Use first goal as problem
+        targetAudience: mockData.targetAudience || "",
+      });
+    }
+  }, [user?.id]);
 
   const handleBusinessIdeaSubmit = (data) => {
     setBusinessInfo(data);
@@ -40,6 +70,10 @@ export default function OnboardingPage() {
               <input
                 type="text"
                 name="niche"
+                value={formData.niche}
+                onChange={(e) =>
+                  setFormData({ ...formData, niche: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., SaaS, E-commerce, Education"
@@ -48,11 +82,15 @@ export default function OnboardingPage() {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-white">
-                What product or service will you offer?
+                What product or service do you offer?
               </label>
               <input
                 type="text"
                 name="product"
+                value={formData.product}
+                onChange={(e) =>
+                  setFormData({ ...formData, product: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Landing page builder, Online courses"
@@ -66,6 +104,10 @@ export default function OnboardingPage() {
               <input
                 type="text"
                 name="mainFeature"
+                value={formData.mainFeature}
+                onChange={(e) =>
+                  setFormData({ ...formData, mainFeature: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., AI-powered design suggestions"
@@ -79,6 +121,10 @@ export default function OnboardingPage() {
               <input
                 type="text"
                 name="painPoint"
+                value={formData.problem}
+                onChange={(e) =>
+                  setFormData({ ...formData, problem: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Time spent on website design"
@@ -92,6 +138,10 @@ export default function OnboardingPage() {
               <input
                 type="text"
                 name="targetAudience"
+                value={formData.targetAudience}
+                onChange={(e) =>
+                  setFormData({ ...formData, targetAudience: e.target.value })
+                }
                 required
                 className="w-full px-4 py-3 bg-black/30 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Small business owners, Startups"
@@ -100,7 +150,7 @@ export default function OnboardingPage() {
 
             <button
               type="submit"
-              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+              className="w-full px-8 py-4 bg-blue-500 hover:bg-blue-600 rounded-xl text-white font-medium transition-colors"
             >
               Generate My Business →
             </button>
@@ -116,7 +166,6 @@ export default function OnboardingPage() {
         businessInfo={businessInfo}
         onComplete={(finalState) => {
           console.log("Business generated:", finalState);
-          // Navigate to dashboard or next step
         }}
       />
     );

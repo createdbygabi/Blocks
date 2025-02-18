@@ -3,10 +3,21 @@ import { saveBusiness, getUserBusiness } from "@/lib/db";
 import { saveLandingPage } from "@/lib/db";
 import { landingThemes, designPresets, fontPresets } from "@/lib/themes";
 import { defaultContent } from "@/app/landing/page";
+import { mockData } from "@/lib/mockData";
+import { DeploymentService } from "./deployment";
 
 export class BusinessService {
   constructor(userId) {
     this.userId = userId;
+    this.useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+  }
+
+  // Add method to get mock business info
+  getMockBusinessInfo() {
+    if (!this.useMockData) return null;
+
+    console.log("🎭 Using mock business info for onboarding");
+    return mockData.onboarding.business;
   }
 
   async generateName(businessInfo) {
@@ -129,77 +140,214 @@ export class BusinessService {
     }
   }
 
-  async generateBranding(businessInfo, updateStep) {
-    try {
-      // Step 1: Generate logo first
-      updateStep("logo", "running");
-      const { logo_url } = await this.generateLogo(businessInfo.niche);
-      updateStep("logo", "completed", logo_url);
+  async generateBranding(businessInfo, updateProgress) {
+    if (this.useMockData) {
+      // Always use mock business info in mock mode
+      const mockBusinessInfo = this.getMockBusinessInfo();
+      console.log(
+        "🎭 Using mock data for generation with business info:",
+        mockBusinessInfo
+      );
 
-      // Step 2: Generate business names
-      updateStep("names", "running");
-      const { allNames } = await this.generateName(businessInfo);
-      updateStep("names", "completed", allNames);
+      // Step 1: Logo
+      console.log("🎨 Generating logo...");
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const mockLogo = {
+        logo_url: `https://placehold.co/400x400/1a1a1a/ffffff?text=${encodeURIComponent(
+          mockBusinessInfo.niche.split(" ")[0]
+        )}`,
+      };
+      updateProgress("logo", "completed", mockLogo);
+      console.log("✅ Logo generated:", mockLogo);
 
-      // Step 3: Check domains for all names
-      updateStep("domains", "running");
-      const domainData = await this.checkDomains(allNames);
+      // Step 2: Names
+      console.log("📝 Generating names...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      updateProgress("names", "completed", mockData.businessNames.names);
+      console.log("✅ Names generated:", mockData.businessNames.names);
 
-      // Process domain results to show all domains with recommendations
-      const domainResults = domainData.results.map((result) => {
-        // Include all domains, both available and unavailable
-        const allDomains = result.domains.sort((a, b) => {
-          // Sort available domains by price first
-          if (a.available && b.available) {
-            return a.prices.registration_price - b.prices.registration_price;
-          }
-          // Put available domains before unavailable ones
-          return a.available ? -1 : b.available ? 1 : 0;
-        });
+      // Step 3: Domains
+      console.log("🌐 Checking domains...");
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      updateProgress("domains", "completed", mockData.domains);
+      console.log("✅ Domains checked:", mockData.domains);
 
-        const availableDomains = allDomains.filter((d) => d.available);
-        const cheapestDomain = availableDomains[0];
-        const bestValue = cheapestDomain?.domain;
+      // Step 4: Website Content
+      console.log("📄 Starting copywriting generation...");
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      updateProgress(
+        "copywriting",
+        "completed",
+        mockData.websiteContent.content
+      );
+      console.log("✅ Website content generation completed");
 
-        return {
-          name: result.name,
-          allDomains, // Include all domains
-          bestValue,
-          startingPrice: cheapestDomain?.prices.registration_price,
-        };
+      // Step 5: Preview
+      console.log("🖼️ Generating preview...");
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      updateProgress("preview", "completed", {
+        previewUrl: mockData.websiteContent.previewUrl,
+        thumbnailUrl: mockData.websiteContent.thumbnailUrl,
+      });
+      console.log("✅ Preview generated");
+
+      // Step 6: Deploy
+      console.log("🚀 Deploying website...");
+      updateProgress("deploy", "loading");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      updateProgress("deploy", "completed", {
+        url: `https://${businessInfo.niche
+          .toLowerCase()
+          .replace(/\s+/g, "-")}.joinblocks.me`,
       });
 
-      updateStep("domains", "completed", domainResults);
-
-      // Website Generation Steps
-      updateStep("copywriting", "running");
-      const { content, previewUrl, thumbnailUrl } =
-        await this.generateWebsiteContent(businessInfo, {
-          name: allNames[0],
-          logo_url,
-          domains: domainResults,
-        });
-      updateStep("copywriting", "completed", content);
-
-      // Use the preview URL directly from generateWebsiteContent
-      updateStep("preview", "completed", {
-        url: previewUrl,
-        thumbnail: thumbnailUrl,
-      });
-
-      return {
-        logo_url,
-        name: allNames[0],
-        allNames,
-        domains: domainResults,
-        website: {
-          content,
-          previewUrl,
-          thumbnailUrl,
+      const results = {
+        logo: mockLogo,
+        names: mockData.businessNames.names,
+        domains: mockData.domains,
+        content: mockData.websiteContent.content,
+        preview: {
+          previewUrl: mockData.websiteContent.previewUrl,
+          thumbnailUrl: mockData.websiteContent.thumbnailUrl,
         },
       };
+
+      // Save website content to database with correct structure
+      await saveLandingPage(this.userId, {
+        content: mockData.websiteContent.content, // Just save the content structure
+      });
+
+      console.log("🎉 Generation complete with results:", results);
+      return results;
+    }
+
+    // Real API implementation
+    try {
+      // Step 1: Generate name (single call)
+      updateProgress("names", "loading");
+      const nameResponse = await fetch("/api/business/generate-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessInfo }),
+      });
+
+      if (!nameResponse.ok) {
+        throw new Error(`Name generation failed: ${nameResponse.statusText}`);
+      }
+
+      const nameData = await nameResponse.json();
+      if (!nameData?.names?.length) {
+        throw new Error("No names were generated");
+      }
+      updateProgress("names", "completed", nameData.names);
+
+      // Step 2: Check domains (single call)
+      updateProgress("domains", "loading");
+      const domainsResponse = await fetch("/api/business/check-domains", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ names: nameData.names }), // Ensure we're sending { names: [...] }
+      });
+
+      if (!domainsResponse.ok) {
+        const errorData = await domainsResponse.json();
+        throw new Error(
+          errorData.error ||
+            `Domain check failed: ${domainsResponse.statusText}`
+        );
+      }
+
+      const domainsData = await domainsResponse.json();
+      if (!Array.isArray(domainsData)) {
+        throw new Error("Invalid domain check response");
+      }
+      updateProgress("domains", "completed", domainsData);
+
+      // Step 3: Generate website content (single call)
+      updateProgress("copywriting", "loading");
+      const contentResponse = await fetch("/api/website/generate-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessInfo,
+          brandingResults: {
+            name: nameData.names[0],
+            domains: domainsData,
+          },
+        }),
+      });
+
+      if (!contentResponse.ok) {
+        throw new Error(
+          `Content generation failed: ${contentResponse.statusText}`
+        );
+      }
+
+      const contentData = await contentResponse.json();
+      updateProgress("copywriting", "completed", contentData);
+
+      // Deploy step
+      updateProgress("deploy", "loading");
+      const deploymentService = new DeploymentService(this.userId);
+      const deploymentUrl = await deploymentService.generateFromBoilerplate({
+        name: businessInfo.niche.toLowerCase().replace(/\s+/g, "-"),
+        // Add any other config needed
+      });
+      updateProgress("deploy", "completed", { url: deploymentUrl });
+
+      return {
+        names: nameData.names,
+        domains: domainsData,
+        content: contentData,
+      };
     } catch (error) {
-      console.error("❌ Error in generation:", error);
+      console.error("Generation error:", error);
+      updateProgress(error.message, "error");
+      throw error;
+    }
+  }
+
+  async generatePricingPlan(businessInfo) {
+    if (this.useMockData) {
+      console.log("🎭 Using mock data for pricing plan generation");
+
+      // Simplified pricing with single core feature
+      const mockPricing = {
+        name: "Essential",
+        price: "29",
+        billingPeriod: "monthly",
+        mainFeature: businessInfo.mainFeature || "AI-powered page builder",
+        description: "Start with the essential feature you need",
+        features: [
+          // Only the core feature
+          businessInfo.mainFeature || "AI-powered page builder",
+        ],
+        cta: "Start Free Trial",
+        trialDays: 14,
+        setupFee: "0",
+        limitations: "Limited to 3 pages per month",
+      };
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return mockPricing;
+    }
+
+    // Real API implementation
+    try {
+      const response = await fetch("/api/business/generate-pricing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessInfo }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Pricing generation failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to generate pricing plan:", error);
       throw error;
     }
   }

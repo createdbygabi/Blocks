@@ -42,7 +42,7 @@ export async function POST(req) {
     console.log("🤖 API Names - Calling OpenAI...");
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4o",
+      model: "gpt-4",
     });
     console.log("📦 API Names - Raw OpenAI response:", completion);
 

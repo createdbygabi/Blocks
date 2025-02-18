@@ -1,25 +1,30 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { XMLParser } from "fast-xml-parser";
+import { NextResponse } from "next/server";
 
 const DNSIMPLE_TOKEN = process.env.DNSIMPLE_TOKEN;
 const DNSIMPLE_ACCOUNT_ID = process.env.DNSIMPLE_ACCOUNT_ID;
 
 export async function POST(req) {
   try {
-    const { businessNames } = await req.json();
-    const results = [];
+    const { names } = await req.json();
+
+    if (!names || !Array.isArray(names)) {
+      return NextResponse.json(
+        { error: "Invalid request: names array is required" },
+        { status: 400 }
+      );
+    }
 
     // Take first 5 names
-    const namesToCheck = businessNames.slice(0, 5);
-    console.log("🔍 API Domains - Checking names:", namesToCheck);
-
-    for (const name of namesToCheck) {
+    const namesToCheck = names.slice(0, 5);
+    const results = namesToCheck.map((name) => {
       const domain = name.toLowerCase().replace(/[^a-z0-9]/g, "");
       const domainWithExt = `${domain}.com`;
 
       // Simple simulation instead of real API calls
-      const isAvailable = domain.length > 5; // Simple rule: domains longer than 5 chars are "available"
+      const isAvailable = domain.length > 5;
       const domainResults = [
         {
           domain: domainWithExt,
@@ -36,18 +41,21 @@ export async function POST(req) {
         },
       ];
 
-      results.push({
+      return {
         name: name,
         domains: domainResults,
         cheapestDomain: isAvailable ? domainWithExt : null,
-      });
-    }
+      };
+    });
 
     console.log("✅ Final results:", results);
-    return Response.json({ results });
+    return NextResponse.json(results); // Return array directly, not wrapped in { results }
   } catch (error) {
     console.error("❌ API Domains - Error:", error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to check domains" },
+      { status: 500 }
+    );
   }
 }
 

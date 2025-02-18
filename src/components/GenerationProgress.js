@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/hooks/useUser";
 import { QuickActionCard } from "./QuickActionCard";
 import { BusinessService } from "@/lib/services/business";
@@ -39,9 +39,27 @@ const GENERATION_STEPS = {
         description: "Creating your website preview",
         loadingText: "Building your landing page...",
       },
+      deploy: {
+        title: "Deploying Website",
+        description: "Making your site live",
+        loadingText: "Deploying to joinblocks.me...",
+      },
+    },
+  },
+  pricing: {
+    title: "Setting Up Revenue Model",
+    description: "Creating your monetization strategy",
+    substeps: {
+      pricing_plan: {
+        title: "Generating Pricing Plan",
+        description: "Creating optimal pricing strategy",
+        loadingText: "AI is analyzing market data...",
+      },
     },
   },
 };
+
+console.log("🔍 GENERATION_STEPS structure:", GENERATION_STEPS);
 
 export function GenerationProgress({ businessInfo, onComplete }) {
   const { user } = useUser();
@@ -50,26 +68,52 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     results: {},
     error: null,
   });
+  const [isGenerating, setIsGenerating] = useState(false);
   const [expandedStep, setExpandedStep] = useState("branding");
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  // Simple progress update function
-  const updateProgress = (step, status, data = null) => {
-    setGenerationState((prev) => ({
-      ...prev,
-      currentStep: status === "completed" ? getNextStep(step) : step,
-      results: {
-        ...prev.results,
-        [step]: { status, data },
-      },
-    }));
-  };
+  const updateProgress = useCallback((step, status, data = null) => {
+    console.log(`🔄 Updating progress for ${step}:`, {
+      status,
+      dataReceived: !!data,
+      dataType: data ? typeof data : null,
+      dataStructure: data ? Object.keys(data) : null,
+    });
+
+    setGenerationState((prev) => {
+      const nextStep = status === "completed" ? getNextStep(step) : step;
+      console.log(`📍 Current step: ${step} → Next step: ${nextStep}`);
+      console.log(`📊 Current state:`, prev);
+
+      const newState = {
+        ...prev,
+        currentStep: nextStep,
+        results: {
+          ...prev.results,
+          [step]: { status, data },
+        },
+        error: status === "error" ? step : null,
+      };
+
+      console.log(`📊 New state:`, newState);
+      return newState;
+    });
+  }, []);
 
   const getNextStep = (currentStep) => {
-    const steps = Object.keys(GENERATION_STEPS);
-    const currentIndex = steps.indexOf(currentStep);
-    return currentIndex < steps.length - 1
-      ? steps[currentIndex + 1]
-      : "completed";
+    console.log("🔄 Getting next step from:", currentStep);
+
+    const steps = {
+      logo: "names",
+      names: "domains",
+      domains: "copywriting",
+      copywriting: "preview",
+      preview: "deploy",
+    };
+
+    const nextStep = steps[currentStep];
+    console.log("➡️ Next step will be:", nextStep);
+    return nextStep;
   };
 
   const isStepCompleted = (stepKey) => {
@@ -79,32 +123,86 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     );
   };
 
-  // Start generation when component mounts
+  // Single generation effect with proper completion check
   useEffect(() => {
-    if (user && businessInfo) {
+    const shouldGenerate =
+      user?.id &&
+      businessInfo &&
+      !isGenerating &&
+      !generationState.error &&
+      !isCompleted;
+
+    console.log("🔍 Generation conditions:", {
+      hasUser: !!user?.id,
+      hasBusinessInfo: !!businessInfo,
+      isGenerating,
+      hasError: !!generationState.error,
+      isCompleted,
+      shouldGenerate,
+    });
+
+    if (shouldGenerate) {
       const generateBusiness = async () => {
-        const businessService = new BusinessService(user.id);
+        console.log("🚀 Starting content generation");
+        setIsGenerating(true);
         try {
-          await businessService.generateBranding(businessInfo, updateProgress);
+          const businessService = new BusinessService(user.id);
+          const results = await businessService.generateBranding(
+            businessInfo,
+            updateProgress
+          );
+          console.log("✨ Generation completed:", results);
+          onComplete?.(results);
+          setIsCompleted(true);
+
+          // Generate pricing plan
+          updateProgress("pricing_plan", "loading");
+          const pricingPlan = await businessService.generatePricingPlan(
+            businessInfo
+          );
+          updateProgress("pricing_plan", "completed", pricingPlan);
         } catch (error) {
-          console.error("Generation error:", error);
+          console.error("❌ Generation error:", error);
           setGenerationState((prev) => ({
             ...prev,
             error: error.message,
           }));
+        } finally {
+          setIsGenerating(false);
         }
       };
 
       generateBusiness();
     }
-  }, [user, businessInfo]);
+  }, [
+    user?.id,
+    businessInfo,
+    onComplete,
+    updateProgress,
+    isGenerating,
+    generationState.error,
+    isCompleted,
+  ]);
 
-  // Auto-expand next section when current is complete
+  // Update the useEffect for section expansion
   useEffect(() => {
     if (isStepCompleted("branding") && expandedStep === "branding") {
       setExpandedStep("website");
+    } else if (isStepCompleted("website") && expandedStep === "website") {
+      setExpandedStep("pricing");
     }
   }, [generationState.results]);
+
+  // Update the useEffect for section expansion
+  useEffect(() => {
+    // Expand website section when copywriting starts
+    if (
+      generationState.currentStep === "copywriting" &&
+      expandedStep === "branding"
+    ) {
+      setExpandedStep("website");
+    }
+  }, [generationState.currentStep, expandedStep]);
 
   if (generationState.error) {
     return <div>Error: {generationState.error}</div>;
@@ -124,96 +222,114 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     </div>
   );
 
-  const DomainsList = ({ domains }) => (
-    <div className="space-y-4">
-      {domains.map((result, i) => (
-        <div key={i} className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">{result.name}</span>
-            {result.startingPrice && (
-              <span className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">
-                Best price: ${result.startingPrice}
-              </span>
-            )}
-          </div>
+  const DomainsList = ({ domains }) => {
+    if (!Array.isArray(domains)) {
+      console.error("Invalid domains data:", domains);
+      return <div>Error loading domain data</div>;
+    }
 
-          <div className="grid gap-1">
-            {result.allDomains.map((domain, j) => (
-              <div
-                key={j}
-                className={`flex items-center justify-between p-2 rounded text-xs ${
-                  domain.available
-                    ? domain.domain === result.bestValue
-                      ? "bg-green-500/10 border border-green-500/30"
-                      : "bg-black/30"
-                    : "bg-red-500/10 border border-red-500/30"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-mono">{domain.domain}</span>
-                  {domain.available ? (
-                    domain.domain === result.bestValue && (
-                      <span className="px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded text-[10px]">
-                        Best Value
+    return (
+      <div className="space-y-4">
+        {domains.map((result, i) => (
+          <div key={i} className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">{result.name}</span>
+              {result.cheapestDomain && (
+                <span className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">
+                  Best price: ${result.domains[0]?.prices?.registration_price}
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-1">
+              {result.domains.map((domain, j) => (
+                <div
+                  key={j}
+                  className={`flex items-center justify-between p-2 rounded text-xs ${
+                    domain.available
+                      ? domain.domain === result.cheapestDomain
+                        ? "bg-green-500/10 border border-green-500/30"
+                        : "bg-black/30"
+                      : "bg-red-500/10 border border-red-500/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono">{domain.domain}</span>
+                    {domain.available ? (
+                      domain.domain === result.cheapestDomain && (
+                        <span className="px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded text-[10px]">
+                          Best Value
+                        </span>
+                      )
+                    ) : (
+                      <span className="px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded text-[10px]">
+                        Unavailable
                       </span>
-                    )
-                  ) : (
-                    <span className="px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded text-[10px]">
-                      Unavailable
-                    </span>
+                    )}
+                  </div>
+                  {domain.available && domain.prices && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">
+                        ${domain.prices.registration_price}
+                      </span>
+                      <a
+                        href={`https://www.namecheap.com/domains/registration/results/?domain=${domain.domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2 py-1 bg-blue-500 hover:bg-blue-600 rounded transition-colors"
+                      >
+                        Register
+                      </a>
+                    </div>
                   )}
                 </div>
-                {domain.available && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-400">
-                      ${domain.prices.registration_price}
-                    </span>
-                    <a
-                      href={`https://www.namecheap.com/domains/registration/results/?domain=${domain.domain}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2 py-1 bg-blue-500 hover:bg-blue-600 rounded transition-colors"
-                    >
-                      Register
-                    </a>
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
-  const LogoPreview = ({ url }) => (
-    <div className="aspect-square w-32 bg-black/30 border border-gray-800 rounded-xl p-4">
-      <img
-        src={url}
-        alt="Generated logo"
-        className="w-full h-full object-contain"
-      />
-    </div>
-  );
+  const LogoPreview = ({ url }) => {
+    // Handle both string URL and object with logo_url
+    const logoUrl = typeof url === "string" ? url : url?.logo_url;
 
-  const WebsitePreview = ({ data }) => (
-    <div className="space-y-4">
-      <div className="relative aspect-video w-full max-w-lg mx-auto overflow-hidden rounded-xl border border-gray-800">
+    return (
+      <div className="aspect-square w-32 bg-black/30 border border-gray-800 rounded-xl p-4">
         <img
-          src={data.thumbnail}
-          alt="Website Preview"
-          className="w-full h-full object-cover"
+          src={logoUrl}
+          alt="Generated logo"
+          className="w-full h-full object-contain"
         />
-        <a
-          href={data.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity"
-        >
-          <span className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm">
-            View Preview
-          </span>
-        </a>
+      </div>
+    );
+  };
+
+  // Add PricingPlanPreview component
+  const PricingPlanPreview = ({ plan }) => (
+    <div className="mt-4 bg-black/30 rounded-xl border border-gray-800 p-4 space-y-4">
+      <div>
+        <div className="text-sm text-gray-400 mb-1">Plan</div>
+        <div className="text-lg font-medium">{plan.name}</div>
+      </div>
+      <div>
+        <div className="text-sm text-gray-400 mb-1">Price</div>
+        <div className="text-2xl font-bold text-blue-400">
+          ${plan.price}
+          <span className="text-sm text-gray-400">/{plan.billingPeriod}</span>
+        </div>
+      </div>
+      <div>
+        <div className="text-sm text-gray-400 mb-1">Features</div>
+        <ul className="space-y-2">
+          {plan.features.map((feature, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <span className="text-green-400">✓</span>
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
@@ -253,7 +369,11 @@ export function GenerationProgress({ businessInfo, onComplete }) {
                     >
                       <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
                         <span className="text-blue-400 font-medium">
-                          {stepKey === "branding" ? "1" : "2"}
+                          {stepKey === "branding"
+                            ? "1"
+                            : stepKey === "website"
+                            ? "2"
+                            : "3"}
                         </span>
                       </div>
                       <div className="flex-1 text-left">
@@ -329,38 +449,103 @@ export function GenerationProgress({ businessInfo, onComplete }) {
                                   </p>
 
                                   {/* Results */}
-                                  {generationState.results[subKey]?.data && (
-                                    <div className="mt-4 bg-black/30 rounded-xl border border-gray-800 p-4">
-                                      {subKey === "names" && (
-                                        <NamesList
-                                          names={
-                                            generationState.results[subKey].data
-                                          }
-                                        />
-                                      )}
-                                      {subKey === "domains" && (
-                                        <DomainsList
-                                          domains={
-                                            generationState.results[subKey].data
-                                          }
-                                        />
-                                      )}
-                                      {subKey === "logo" && (
-                                        <LogoPreview
-                                          url={
-                                            generationState.results[subKey].data
-                                          }
-                                        />
-                                      )}
-                                      {subKey === "preview" && (
-                                        <WebsitePreview
-                                          data={
-                                            generationState.results[subKey].data
-                                          }
-                                        />
-                                      )}
-                                    </div>
-                                  )}
+                                  {subKey === "names" &&
+                                    generationState.results[subKey]?.data && (
+                                      <NamesList
+                                        names={
+                                          generationState.results[subKey].data
+                                        }
+                                      />
+                                    )}
+                                  {subKey === "domains" &&
+                                    generationState.results[subKey]?.data && (
+                                      <DomainsList
+                                        domains={
+                                          generationState.results[subKey].data
+                                        }
+                                      />
+                                    )}
+                                  {subKey === "logo" &&
+                                    generationState.results[subKey]?.data && (
+                                      <LogoPreview
+                                        url={
+                                          generationState.results[subKey].data
+                                            .logo_url
+                                        }
+                                      />
+                                    )}
+                                  {subKey === "copywriting" &&
+                                    generationState.results[subKey]?.data && (
+                                      <div className="mt-4 bg-black/30 rounded-xl border border-gray-800 p-4 space-y-4">
+                                        <div>
+                                          <div className="text-sm text-gray-400 mb-1">
+                                            Headline
+                                          </div>
+                                          <div className="text-lg font-medium">
+                                            {
+                                              generationState.results[subKey]
+                                                .data.hero.title
+                                            }
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <div className="text-sm text-gray-400 mb-1">
+                                            Subtitle
+                                          </div>
+                                          <div className="text-gray-300">
+                                            {
+                                              generationState.results[subKey]
+                                                .data.hero.subtitle
+                                            }
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <div className="text-sm text-gray-400 mb-1">
+                                            Call to Action
+                                          </div>
+                                          <div className="text-blue-400 font-medium">
+                                            {
+                                              generationState.results[subKey]
+                                                .data.hero.cta
+                                            }
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  {subKey === "preview" &&
+                                    generationState.results[subKey]?.data && (
+                                      <div className="mt-4">
+                                        <a
+                                          href="/landing"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+                                        >
+                                          <span>View Landing Page</span>
+                                          <svg
+                                            className="w-4 h-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                          >
+                                            <path
+                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                              strokeWidth="2"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
+                                          </svg>
+                                        </a>
+                                      </div>
+                                    )}
+                                  {subKey === "pricing_plan" &&
+                                    generationState.results[subKey]?.data && (
+                                      <PricingPlanPreview
+                                        plan={
+                                          generationState.results[subKey].data
+                                        }
+                                      />
+                                    )}
                                 </div>
                               </div>
                             </div>

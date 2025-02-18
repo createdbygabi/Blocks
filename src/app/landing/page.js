@@ -341,31 +341,32 @@ export default function LandingPageEditor({ params }) {
   const [previewContent, setPreviewContent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch landing page content when component mounts
   useEffect(() => {
-    const loadLandingPage = async () => {
+    async function fetchContent() {
+      if (!user?.id) return;
+
       try {
-        const data = await getUserLandingPage(params?.id);
-        if (data?.content) {
-          setContent(data.content);
-          setCurrentTheme(data.theme || landingThemes[0]);
-          setCurrentDesign(data.design || designPresets[0]);
-          setCurrentFont(data.font || fontPresets[0]);
+        setIsLoading(true);
+        const landingPage = await getUserLandingPage(user.id);
+        if (landingPage?.content) {
+          console.log("📄 Fetched landing page content:", landingPage.content);
+          setContent(landingPage.content);
+          setCurrentTheme(landingPage.theme || landingThemes[0]);
+          setCurrentDesign(landingPage.design || designPresets[0]);
+          setCurrentFont(landingPage.font || fontPresets[0]);
         }
         setIsInitialized(true);
       } catch (error) {
-        console.error("Failed to load landing page:", error);
+        console.error("Failed to fetch landing page:", error);
         setIsInitialized(true);
       } finally {
         setIsLoading(false);
       }
-    };
-
-    if (params?.id) {
-      loadLandingPage();
-    } else {
-      setIsLoading(false);
     }
-  }, [params?.id]);
+
+    fetchContent();
+  }, [user?.id]);
 
   // Manual save function
   const handleSave = async () => {

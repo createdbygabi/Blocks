@@ -235,58 +235,52 @@ export async function POST(req) {
   try {
     const { businessInfo, brandingResults } = await req.json();
 
-    if (!businessInfo || !brandingResults) {
+    if (!businessInfo || !brandingResults?.name) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required information" },
         { status: 400 }
       );
     }
 
-    const content = {};
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      temperature: 0.7,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert conversion copywriter who specializes in creating high-converting landing page copy.",
+        },
+        {
+          role: "user",
+          content: `Generate a complete landing page for a ${
+            businessInfo.niche
+          } business named "${brandingResults.name}".
 
-    // Generate content for each section
-    for (const section of Object.keys(SECTION_TEMPLATES)) {
-      try {
-        const template = SECTION_TEMPLATES[section];
-        const textFields = getTextFields(template);
+Business Details:
+- Main Feature: ${businessInfo.mainFeature}
+- Pain Point: ${businessInfo.painPoint}
+- Target Audience: ${businessInfo.targetAudience}
 
-        // Skip if no fields to generate
-        if (!textFields.length) {
-          content[section] = template;
-          continue;
-        }
+Generate persuasive content for each section while:
+1. Being clear and benefit-focused
+2. Addressing pain points directly
+3. Matching the target audience
+4. Using persuasive language
+5. Maintaining authenticity
 
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4",
-          temperature: 0.7,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are an expert conversion copywriter who specializes in creating high-converting landing page copy. For each field, respond with 'PATH:' followed by the field path and 'NEW TEXT:' followed by your generated content.",
-            },
-            {
-              role: "user",
-              content: `Generate landing page content for the "${section}" section of a ${
-                businessInfo.niche
-              } business named "${brandingResults.name}".
-
-Follow these guidelines:
-1. Be clear and benefit-focused
-2. Match the length requirements
-3. Be persuasive but authentic
-4. Focus on the target audience
-
-For each field below, provide the new content using this format:
+For each field below, provide the content using this format:
 PATH: [field path]
 NEW TEXT: [your generated text]
 ---
 
-Fields to generate:
-${textFields
-  .map((field) => {
-    const instructions = getFieldInstructions(section, field.path);
-    return `
+${Object.entries(SECTION_TEMPLATES)
+  .map(([section, template]) => {
+    const fields = getTextFields(template);
+    return fields
+      .map((field) => {
+        const instructions = getFieldInstructions(section, field.path);
+        return `
 PATH: ${field.path}
 INSTRUCTIONS: ${instructions.instructions}
 ${
@@ -294,68 +288,43 @@ ${
     ? `EXAMPLES:\n${instructions.examples.join("\n")}`
     : ""
 }`;
+      })
+      .join("\n---\n");
   })
-  .join("\n\n")}`,
-            },
-          ],
-        });
+  .join("\n---\n")}`,
+        },
+      ],
+    });
 
-        // Get the generated content
-        const generatedText = completion.choices[0].message.content;
-        console.log(`Generated text for ${section}:`, generatedText);
+    // Parse the response and update all sections at once
+    const generatedText = completion.choices[0].message.content;
+    const content = JSON.parse(JSON.stringify(SECTION_TEMPLATES));
 
-        // Create a copy of the template
-        const sectionContent = JSON.parse(JSON.stringify(template));
+    const blocks = generatedText
+      .split(/\n*---\n*/)
+      .filter((block) => block.trim());
+    blocks.forEach((block) => {
+      const pathMatch = block.match(/PATH:\s*([^\n]+)/i);
+      const textMatch = block.match(/NEW TEXT:\s*([\s\S]+?)(?=\n*PATH:|$)/i);
 
-        // Parse the response and update fields
-        const blocks = generatedText
-          .split(/\n*---\n*/)
-          .filter((block) => block.trim());
-
-        blocks.forEach((block) => {
-          // Look for PATH: and NEW TEXT: in the block
-          const pathMatch = block.match(/PATH:\s*([^\n]+)/i);
-          const textMatch = block.match(
-            /NEW TEXT:\s*([\s\S]+?)(?=\n*PATH:|$)/i
-          );
-
-          if (pathMatch && textMatch) {
-            const path = pathMatch[1].trim();
-            const newText = textMatch[1].trim();
-            console.log(`Setting ${path} to:`, newText);
-            setValueAtPath(sectionContent, path, newText);
-          }
-        });
-
-        content[section] = sectionContent;
-      } catch (error) {
-        console.error(`Error generating ${section}:`, error);
-        console.error("Error details:", error.stack);
-        // Use template as fallback
-        content[section] = template;
+      if (pathMatch && textMatch) {
+        const path = pathMatch[1].trim();
+        const newText = textMatch[1].trim();
+        setValueAtPath(content, path, newText);
       }
-    }
+    });
 
-    // Create preview URL and thumbnail
-    const previewUrl = `/preview/${Date.now()}`; // You can modify this
-    const thumbnailUrl = `https://placehold.co/1200x630/1a1a1a/ffffff?text=${encodeURIComponent(
-      brandingResults.name
-    )}`;
-
-    // Always return a valid JSON response
     return NextResponse.json({
       content,
-      previewUrl,
-      thumbnailUrl,
+      previewUrl: `/preview/${Date.now()}`,
+      thumbnailUrl: `https://placehold.co/1200x630/1a1a1a/ffffff?text=${encodeURIComponent(
+        brandingResults.name
+      )}`,
     });
   } catch (error) {
     console.error("Request processing error:", error);
-    // Ensure we return valid JSON even in error cases
     return NextResponse.json(
-      {
-        error: "Failed to process request",
-        content: SECTION_TEMPLATES,
-      },
+      { error: error.message || "Failed to process request" },
       { status: 500 }
     );
   }
