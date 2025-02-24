@@ -21,11 +21,11 @@ export default function FormatTestPage() {
       test_mode: e.target.testMode.checked,
     };
 
-    console.log("Sending request with data:", formData); // Debug log
+    console.log("Sending request with data:", formData);
 
     try {
       const response = await fetch(
-        "https://blocks-video-script.onrender.com/api/reel/create",
+        "http://104.248.193.34:10000/api/reel/create",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -34,19 +34,19 @@ export default function FormatTestPage() {
       );
 
       const data = await response.json();
-      console.log("Response:", data); // Debug log
+      console.log("Response:", data);
 
       if (!response.ok) {
         throw new Error(data.detail || data.message || "API request failed");
       }
 
-      if (data.status === "success") {
+      if (data.status === "success" && data.url) {
         setVideoUrl(data.url);
       } else {
         setError(data.message || "Failed to generate video");
       }
     } catch (err) {
-      console.error("Error details:", err); // Debug log
+      console.error("Error details:", err);
       setError(err.message || "Failed to connect to the server");
     } finally {
       setIsLoading(false);
@@ -103,13 +103,36 @@ export default function FormatTestPage() {
         </form>
       </Card>
 
-      {error && <div className="mt-4 text-red-400">{error}</div>}
+      {error && (
+        <div className="mt-4 p-4 bg-red-500/10 border border-red-500 rounded text-red-400">
+          {error}
+        </div>
+      )}
 
       {videoUrl && (
         <div className="mt-4">
-          <video controls className="w-full rounded" src={videoUrl}>
-            Your browser does not support the video tag.
-          </video>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-2">Generated Video</h3>
+              <video
+                controls
+                className="w-full rounded bg-black/20"
+                playsInline
+                preload="metadata"
+              >
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <a
+                href={videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 text-purple-400 hover:text-purple-300 text-sm inline-block"
+              >
+                Open video in new tab
+              </a>
+            </div>
+          </Card>
         </div>
       )}
     </div>
