@@ -1,7 +1,11 @@
-import { OpenAIStream } from "@/lib/openai";
+import OpenAI from "openai";
 import { StreamingTextResponse } from "ai";
 
 export const runtime = "edge";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(req) {
   try {
@@ -31,7 +35,13 @@ Generate a JSON response with this structure:
 Focus on making the single-feature plan attractive and valuable while keeping it simple.
 The price should reflect that this is a focused, single-feature offering.`;
 
-    const response = await OpenAIStream(prompt);
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      stream: true,
+    });
+
     return new StreamingTextResponse(response);
   } catch (error) {
     console.error("Pricing generation error:", error);
