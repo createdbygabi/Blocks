@@ -1,5 +1,3 @@
-import "../globals.css"; // Still need global styles
-
 export default function SaasLayout({ children }) {
   return (
     <html lang="en">
