@@ -24,14 +24,11 @@ export default function FormatTestPage() {
     console.log("Sending request with data:", formData);
 
     try {
-      const response = await fetch(
-        "https://104.248.193.34:10000/api/reel/create",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch("https://joinblocks.me/api/reel/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
       console.log("Response:", data);
