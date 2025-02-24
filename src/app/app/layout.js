@@ -1,4 +1,3 @@
-import "../globals.css";
 import { TabNavigation } from "./components/TabNavigation";
 import { ClientWrapper } from "./components/ClientWrapper";
 import {
