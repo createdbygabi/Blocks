@@ -25,7 +25,7 @@ export default function FormatTestPage() {
 
     try {
       const response = await fetch(
-        "http://104.248.193.34:10000/api/reel/create",
+        "https://104.248.193.34:10000/api/reel/create",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
