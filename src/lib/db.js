@@ -181,10 +181,7 @@ export async function getUserBusiness(userId) {
     .from("businesses")
     .select(
       `
-      *,
-      stripe_accounts (
-        *
-      )
+      *
     `
     )
     .eq("user_id", userId)
@@ -329,4 +326,35 @@ export async function updateStripeAccount(id, stripeData) {
 
   if (error) throw error;
   return data;
+}
+
+export async function getBusinessAccountStatus(userId) {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  try {
+    const { data: business, error } = await supabase
+      .from("businesses")
+      .select(
+        `
+        id,
+        stripe_account_id,
+        ig_account_id
+      `
+      )
+      .eq("user_id", userId)
+      .single();
+
+    if (error) throw error;
+
+    return {
+      hasStripe: !!business?.stripe_account_id,
+      hasInstagram: !!business?.instagram_account_id,
+      businessId: business?.id,
+    };
+  } catch (error) {
+    console.error("Error checking account status:", error);
+    throw error;
+  }
 }

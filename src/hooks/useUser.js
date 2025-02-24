@@ -17,9 +17,9 @@ export function useUser() {
         } = await supabase.auth.getUser();
         setUser(currentUser);
 
-        if (!currentUser) {
-          router.push("/login");
-        }
+        // if (!currentUser) {
+        //   router.push("/login");
+        // }
       } catch (error) {
         console.error("Error getting user:", error);
       } finally {
