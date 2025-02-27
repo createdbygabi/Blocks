@@ -22,54 +22,41 @@ export class BusinessService {
   }
 
   async generateName(businessInfo) {
-    const response = await fetch("/api/business/generate-name", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ businessInfo }),
-    });
+    try {
+      console.log("🎭 Using mock data for name generation");
 
-    const { names } = await response.json();
-    if (!names || names.length === 0) {
-      throw new Error("Failed to generate business names");
+      const mockNames = [
+        "IntelliFlow",
+        "SmartSynth",
+        "AiForge",
+        "NexusAI",
+        "BrainWave",
+      ];
+
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return mockNames;
+    } catch (error) {
+      console.error("Failed to generate names:", error);
+      throw error;
     }
-
-    // Clean up names and remove any "- " prefix
-    const cleanNames = names.map((name) => name.replace(/^-\s+/, "").trim());
-
-    // Save to database
-    await saveBusiness(this.userId, {
-      name: cleanNames[0],
-      generated_names: {
-        names: cleanNames,
-        generated_at: new Date().toISOString(),
-      },
-    });
-
-    return { name: cleanNames[0], allNames: cleanNames };
   }
 
-  async generateLogo(niche) {
-    // Simple placeholder logo for development
-    return {
-      logo_url: "https://placehold.co/400x400/1a1a1a/ffffff?text=AI+Logo",
-    };
+  async generateLogo(businessInfo) {
+    try {
+      console.log("🎭 Using mock data for logo generation");
 
-    // TODO: generate the keyword from the product and place it in the prompt for the logo generation
+      const mockLogo = {
+        logo_url: "https://via.placeholder.com/150",
+        alt_text: "Generated Logo",
+        colors: ["#2563eb", "#1e40af"],
+      };
 
-    /* Real implementation (commented out for now)
-    // Generate logo using the niche instead of name
-    const logoResponse = await fetch("/api/logo/generate-logo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: `a simple, minimal logo for a ${niche} business, vector style, line art, flat design, white on black`,
-      }),
-    });
-
-    const { imageUrl } = await logoResponse.json();
-    await saveBusiness(this.userId, { logo_url: imageUrl });
-    return { logo_url: imageUrl };
-    */
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      return mockLogo;
+    } catch (error) {
+      console.error("Failed to generate logo:", error);
+      throw error;
+    }
   }
 
   async checkDomains(names) {
@@ -97,108 +84,111 @@ export class BusinessService {
   async generateWebsiteContent(businessInfo, brandingResults) {
     try {
       // If using mock data, return mock content
-      if (this.useMockData) {
-        console.log("🎭 Using mock data for website content");
-        const mockContent = {
-          content: {
-            hero: {
-              title: `Build Your ${businessInfo.niche} Business`,
-              subtitle: "Launch faster with AI-powered tools and templates",
-              cta: "Start Free Trial",
+      // if (this.useMockData) {
+      console.log("🎭 Using mock data for website content");
+      const mockContent = {
+        content: {
+          hero: {
+            title: `Build Your ${businessInfo.niche} Business`,
+            subtitle: "Launch faster with AI-powered tools and templates",
+            cta: "Start Free Trial",
+          },
+          features: [
+            {
+              title: "AI-Powered Generation",
+              description: "Create content and designs in seconds",
             },
-            features: [
-              {
-                title: "AI-Powered Generation",
-                description: "Create content and designs in seconds",
+            {
+              title: "Professional Templates",
+              description: "Start with beautiful, ready-to-use designs",
+            },
+          ],
+          pricing: {
+            title: "Simple, Transparent Pricing",
+            description: "Start free, upgrade when you're ready",
+          },
+        },
+        theme: {
+          id: "modern-clean",
+          name: "Modern Clean",
+          colors: {
+            card: {
+              base: "bg-[#FFFFFF] border border-[#E5E7EB]",
+              hover: "hover:shadow-lg hover:border-[#BFDBFE]",
+            },
+            text: {
+              muted: "text-[#6B7280]",
+              accent: "text-[#2563EB]",
+              primary: "text-[#111827]",
+              secondary: "text-[#4B5563]",
+            },
+            border: "border-[#E5E7EB]",
+            button: {
+              primary: {
+                base: "bg-[#2563EB] text-[#FFFFFF]",
+                hover: "hover:bg-[#1D4ED8]",
               },
-              {
-                title: "Professional Templates",
-                description: "Start with beautiful, ready-to-use designs",
+              secondary: {
+                base: "bg-[#FFFFFF] text-[#111827] border border-[#E5E7EB]",
+                hover: "hover:bg-[#F9FAFB]",
               },
-            ],
-            pricing: {
-              title: "Simple, Transparent Pricing",
-              description: "Start free, upgrade when you're ready",
+            },
+            divider: "border-[#E5E7EB]",
+            overlay: "bg-[#000000]/50",
+            section: {
+              primary: "bg-[#2563EB]",
+              secondary: "bg-[#F3F4F6]",
+            },
+            surface: "bg-[#FFFFFF]",
+            highlight: "bg-[#EFF6FF]",
+            background: "bg-[#F9FAFB]",
+          },
+          audience: "SaaS & Enterprise",
+        },
+        design: {
+          id: "modern-default",
+          name: "Modern Default",
+          styles: {
+            ui: {
+              shadows: "shadow-md",
+              buttonSize: "px-4 py-2",
+              roundedness: "rounded-lg",
+              transitions: "transition duration-200",
+            },
+            spacing: {
+              stack: "space-y-6",
+              section: "py-20",
+              container: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+            },
+            typography: {
+              body: "text-base leading-relaxed",
+              button: "text-sm",
+              heading: "text-4xl tracking-tight",
+              subheading: "text-2xl",
             },
           },
-          theme: {
-            id: "modern-clean",
-            name: "Modern Clean",
-            colors: {
-              card: {
-                base: "bg-[#FFFFFF] border border-[#E5E7EB]",
-                hover: "hover:shadow-lg hover:border-[#BFDBFE]",
-              },
-              text: {
-                muted: "text-[#6B7280]",
-                accent: "text-[#2563EB]",
-                primary: "text-[#111827]",
-                secondary: "text-[#4B5563]",
-              },
-              border: "border-[#E5E7EB]",
-              button: {
-                primary: {
-                  base: "bg-[#2563EB] text-[#FFFFFF]",
-                  hover: "hover:bg-[#1D4ED8]",
-                },
-                secondary: {
-                  base: "bg-[#FFFFFF] text-[#111827] border border-[#E5E7EB]",
-                  hover: "hover:bg-[#F9FAFB]",
-                },
-              },
-              divider: "border-[#E5E7EB]",
-              overlay: "bg-[#000000]/50",
-              section: {
-                primary: "bg-[#2563EB]",
-                secondary: "bg-[#F3F4F6]",
-              },
-              surface: "bg-[#FFFFFF]",
-              highlight: "bg-[#EFF6FF]",
-              background: "bg-[#F9FAFB]",
-            },
-            audience: "SaaS & Enterprise",
+          description: "Clean and professional with balanced proportions",
+        },
+        font: {
+          id: "modernSans",
+          name: "Modern Sans",
+          styles: {
+            body: "font-normal",
+            button: "font-medium",
+            heading: "font-bold tracking-tight",
+            subheading: "font-semibold",
           },
-          design: {
-            id: "modern-default",
-            name: "Modern Default",
-            styles: {
-              ui: {
-                shadows: "shadow-md",
-                buttonSize: "px-4 py-2",
-                roundedness: "rounded-lg",
-                transitions: "transition duration-200",
-              },
-              spacing: {
-                stack: "space-y-6",
-                section: "py-20",
-                container: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
-              },
-              typography: {
-                body: "text-base leading-relaxed",
-                button: "text-sm",
-                heading: "text-4xl tracking-tight",
-                subheading: "text-2xl",
-              },
-            },
-            description: "Clean and professional with balanced proportions",
-          },
-          font: {
-            id: "modernSans",
-            name: "Modern Sans",
-            styles: {
-              body: "font-normal",
-              button: "font-medium",
-              heading: "font-bold tracking-tight",
-              subheading: "font-semibold",
-            },
-            description:
-              "Clean and contemporary typography using DM Sans + Plus Jakarta Sans",
-          },
-          previewUrl: "/landing",
-          thumbnailUrl: "/preview.png",
-        };
-        return mockContent;
-      }
+          description:
+            "Clean and contemporary typography using DM Sans + Plus Jakarta Sans",
+        },
+        previewUrl: "/landing",
+        thumbnailUrl: "/preview.png",
+      };
+
+      // updateProgress("landing", "completed", mockContent);
+      await this.saveLandingPage(businessInfo.id, mockContent);
+      return;
+      // }
 
       // Prepare the data with all required fields
       const requestData = {
@@ -284,31 +274,32 @@ export class BusinessService {
       updateProgress("logo", "completed", logo);
       console.log("✅ Logo generated");
 
-      // Step 3: Generate Landing Page
-      console.log("🌐 Generating landing page...");
-      updateProgress("landing", "loading");
-      const landingPage = await this.generateLandingPage(businessInfo);
-      updateProgress("landing", "completed", landingPage);
-      console.log("✅ Landing page generated");
+      // Step 3: Generate Names
+      console.log("🎨 Generating names...");
+      updateProgress("names", "loading");
+      const names = await this.generateName(businessInfo);
+      // Pass array of names directly to the progress update
+      updateProgress("names", "completed", names);
+      console.log("✅ Names generated:", names);
 
       // Step 4: Setup Subdomain
       console.log("🌐 Setting up subdomain...");
       updateProgress("subdomain", "loading");
-      await this.setupSubdomain(business.id, businessInfo.subdomain);
+      await this.setupSubdomain(business.id, names[0]);
       updateProgress("subdomain", "completed");
       console.log("✅ Subdomain setup complete");
 
-      // Step 5: Save Everything
-      console.log("💾 Saving all generated content...");
-      updateProgress("saving", "loading");
-      await this.saveGeneratedContent(business.id, logo, landingPage);
-      updateProgress("saving", "completed");
-      console.log("✅ All content saved");
+      // // Step 6: Save Everything
+      // console.log("💾 Saving all generated content...");
+      // updateProgress("saving", "loading");
+      // await this.saveGeneratedContent(business.id, logo, landingPage);
+      // updateProgress("saving", "completed");
+      // console.log("✅ All content saved");
 
       return {
         business,
         logo,
-        landingPage,
+        // landingPage,
       };
     } catch (error) {
       console.error("Error in generateBranding:", error);
@@ -318,101 +309,72 @@ export class BusinessService {
 
   async generatePricingPlan(businessInfo) {
     try {
-      if (this.useMockData) {
-        console.log("🎭 Using mock data for pricing plan generation");
+      console.log("🎭 Using mock data for pricing plan generation");
 
-        const mockPricing = {
-          pricing_plans: [
-            {
-              id: "essential",
-              name: "Essential",
-              description: "Perfect for getting started",
-              price: 29,
-              billingPeriod: "monthly",
-              features: [
-                "AI-powered landing page builder",
-                "3 pages per month",
-                "Basic analytics",
-                "Email support",
-              ],
-              setupFee: 0,
-              trialDays: 14,
-              limitations: "Limited to 3 pages per month",
-              mainFeature: "AI-powered landing page builder",
-              cta: "Start Free Trial",
-              stripeProductId: "prod_xyz123",
-              stripePriceId: "price_xyz123",
-            },
-            {
-              id: "professional",
-              name: "Professional",
-              description: "Best for growing businesses",
-              price: 79,
-              billingPeriod: "monthly",
-              features: [
-                "Everything in Essential",
-                "10 pages per month",
-                "Advanced analytics",
-                "Priority support",
-                "Custom domains",
-              ],
-              setupFee: 0,
-              trialDays: 14,
-              limitations: "Limited to 10 pages per month",
-              mainFeature: "Advanced features with priority support",
-              cta: "Start Free Trial",
-              stripeProductId: "prod_abc456",
-              stripePriceId: "price_abc456",
-            },
-            {
-              id: "enterprise",
-              name: "Enterprise",
-              description: "For large organizations",
-              price: 199,
-              billingPeriod: "monthly",
-              features: [
-                "Everything in Professional",
-                "Unlimited pages",
-                "Enterprise analytics",
-                "24/7 phone support",
-                "Custom integrations",
-                "Dedicated account manager",
-              ],
-              setupFee: 0,
-              trialDays: 7,
-              limitations: null,
-              mainFeature: "Unlimited everything with dedicated support",
-              cta: "Contact Sales",
-              stripeProductId: "prod_def789",
-              stripePriceId: "price_def789",
-            },
-          ],
-        };
+      // Ensure features is a simple array of strings
+      const mockPricing = {
+        pricing_plans: [
+          {
+            id: "essential-plan", // Add an ID since PricingPlans uses it as key
+            name: "Essential",
+            price: 29,
+            billingPeriod: "monthly",
+            mainFeature: "AI-powered landing page builder",
+            description:
+              "Perfect for getting started with your digital business",
+            features: ["AI-powered landing page builder"], // Keep this as array even for single feature
+            cta: "Start Free Trial",
+            trialDays: 14,
+            setupFee: 0,
+            limitations: "Limited to 3 pages per month",
+          },
+        ],
+      };
 
-        // Save pricing plan directly using the business ID from businessInfo
-        console.log("businessInfo", businessInfo);
-        await this.updateBusiness(businessInfo.id, {
-          pricing_plans: mockPricing,
-          updated_at: new Date().toISOString(),
-        });
+      // Add debug logging
+      console.log("🔍 Mock pricing plan structure:", {
+        hasFeatures: !!mockPricing.pricing_plans[0].features,
+        featuresType: typeof mockPricing.pricing_plans[0].features,
+        isArray: Array.isArray(mockPricing.pricing_plans[0].features),
+        features: mockPricing.pricing_plans[0].features,
+      });
 
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        return mockPricing;
-      }
-
-      // Real API implementation
+      /* Comment out real implementation
       const response = await fetch("/api/business/generate-pricing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ businessInfo }),
       });
 
+      console.log("💰 Pricing generation response:", response);
+
       if (!response.ok) {
         throw new Error(`Pricing generation failed: ${response.statusText}`);
       }
 
       const data = await response.json();
+
+      // Save the pricing plan to the business
+      if (businessInfo.id) {
+        await this.updateBusiness(businessInfo.id, {
+          pricing_plans: data,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
       return data;
+      */
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (businessInfo.id) {
+        await this.updateBusiness(businessInfo.id, {
+          pricing_plans: mockPricing,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      return mockPricing;
     } catch (error) {
       console.error("Failed to generate pricing plan:", error);
       throw error;
@@ -551,48 +513,28 @@ export class BusinessService {
 
   async generateLandingPage(businessInfo) {
     try {
-      if (this.useMockData) {
-        console.log("🎭 Using mock data for landing page");
-        return {
-          content: {
-            hero: {
-              title: `${businessInfo.name || businessInfo.niche}`,
-              subtitle: businessInfo.mainFeature,
-              cta: "Get Started",
-            },
-            features: [
-              {
-                title: businessInfo.mainFeature,
-                description: businessInfo.product || "Premium Solution",
-              },
-            ],
-          },
-          theme: landingThemes[0],
-          design: designPresets[0],
-          font: fontPresets[0],
-        };
-      }
+      console.log("🎭 Using mock data for landing page generation");
 
-      // For now, return a basic landing page structure
-      // Later we can integrate with AI to generate more dynamic content
-      return {
+      const mockLanding = {
+        theme: {
+          name: "Modern Minimal",
+          colors: ["#2563eb", "#1e40af", "#dbeafe"],
+          audience: "Tech-savvy professionals",
+        },
         content: {
-          hero: {
-            title: businessInfo.name || businessInfo.niche,
-            subtitle: businessInfo.mainFeature,
-            cta: "Get Started",
-          },
+          headline: "Transform Your Business with AI",
+          description:
+            "Automate your workflow and boost productivity with our intelligent solutions",
           features: [
-            {
-              title: businessInfo.mainFeature,
-              description: businessInfo.product || "Premium Solution",
-            },
+            "Smart automation tools",
+            "Real-time analytics",
+            "24/7 AI assistance",
           ],
         },
-        theme: landingThemes[0],
-        design: designPresets[0],
-        font: fontPresets[0],
       };
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      return mockLanding;
     } catch (error) {
       console.error("Failed to generate landing page:", error);
       throw error;
@@ -625,18 +567,14 @@ export class BusinessService {
 
   async setupSubdomain(businessId, subdomain) {
     try {
-      // Hardcode "quick" as the subdomain for testing
-      const testSubdomain = "quick";
-      console.log("🌐 Setting up test subdomain:", testSubdomain);
-
       // Update business with hardcoded subdomain
       await this.updateBusiness(businessId, {
-        subdomain: testSubdomain,
+        subdomain: subdomain.toLowerCase(),
         updated_at: new Date().toISOString(),
       });
 
       console.log("✅ Test subdomain setup completed");
-      return testSubdomain;
+      return subdomain;
     } catch (error) {
       console.error("Error setting up subdomain:", error);
       throw error;
@@ -706,6 +644,33 @@ export class BusinessService {
       return channels;
     } catch (error) {
       console.error("Failed to setup marketing channels:", error);
+      throw error;
+    }
+  }
+
+  async generateInstagramSetup(businessInfo) {
+    try {
+      console.log("🎭 Using mock data for Instagram setup");
+
+      const mockInstagram = {
+        instagram: {
+          suggestedUsername: "intelliflow.ai",
+          suggestedBio:
+            "🚀 Transforming businesses with AI\n💡 Smart automation tools\n⚡️ Boost your productivity\n🔗 Get started: intelliflow.ai",
+          setupSteps: [
+            "Create a business Instagram account",
+            "Add your brand logo as profile picture",
+            "Update bio with suggested text",
+            "Create 3 initial posts about your features",
+            "Follow relevant industry accounts",
+          ],
+        },
+      };
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return mockInstagram;
+    } catch (error) {
+      console.error("Failed to generate Instagram setup:", error);
       throw error;
     }
   }

@@ -6,15 +6,13 @@ const openai = new OpenAI();
 // Define template structure for each section
 const SECTION_TEMPLATES = {
   hero: {
+    badge: "",
     title: "",
     subtitle: "",
-    cta: "",
-    secondaryCta: "",
-    metrics: [],
+    cta: "Try it for free",
+    hero_image: null, // Optional, if provided will use two-column layout
     socialProof: {
-      rating: 0,
-      reviews: 0,
-      platform: "",
+      userType: "small businesses",
     },
   },
   features: [
@@ -22,156 +20,458 @@ const SECTION_TEMPLATES = {
       id: "feature-1",
       title: "",
       description: "",
-      iconName: "zap",
-      metrics: "",
+      iconName: "zap", // One of: zap, clock, box, layers, activity, trending-up
     },
   ],
-  process: {
-    title: "",
-    subtitle: "",
-    steps: [
-      {
-        number: "01",
-        title: "",
-        description: "",
-        detail: "",
-      },
-    ],
-  },
-  testimonials: {
-    title: "",
-    subtitle: "",
-    items: [
-      {
-        id: "testimonial-1",
-        quote: "",
-        author: "",
-        role: "",
-        company: {
-          name: "",
-          detail: "",
-          result: "",
-        },
-      },
-    ],
-  },
   pricing: {
-    title: "",
-    subtitle: "",
+    title: "Simple pricing for everyone",
+    subtitle: "Choose the perfect plan for your needs",
     plans: [
       {
-        name: "",
-        price: "",
+        name: "Basic",
+        price: "$9",
         period: "/month",
-        perfect: "",
-        features: [],
-        cta: "",
+        perfect: "For solo creators",
+        features: [
+          "3 social accounts",
+          "10 posts/month",
+          "Basic analytics",
+          "Standard support",
+        ],
+        cta: "Get Started",
+        highlight: false,
+      },
+      // Middle plan comes from database/API
+      {
+        name: "Enterprise",
+        price: "$99",
+        period: "/month",
+        perfect: "For large teams",
+        features: [
+          "Unlimited accounts",
+          "Unlimited posts",
+          "Advanced analytics",
+          "Priority support",
+          "Custom features",
+          "API access",
+        ],
+        cta: "Contact Sales",
+        highlight: false,
       },
     ],
   },
   faq: {
-    title: "",
+    title: "Common questions",
     items: [
       {
-        question: "",
-        answer: "",
+        question: "What social platforms do you support?",
+        answer:
+          "We support all major platforms including Twitter/X, Instagram, LinkedIn, Facebook, TikTok, and more.",
+      },
+      {
+        question: "How many social accounts can I connect?",
+        answer:
+          "The number of accounts depends on your plan - from 3 accounts on Basic to unlimited on Enterprise.",
+      },
+      {
+        question: "Can I schedule posts in advance?",
+        answer:
+          "Yes! You can schedule your content to be posted at optimal times across all your connected platforms.",
+      },
+      {
+        question: "Is there a free trial?",
+        answer:
+          "Yes, you can try all features free for 14 days, no credit card required.",
       },
     ],
   },
   final: {
-    title: "",
-    subtitle: "",
-    cta: "",
-    secondaryCta: "",
-    guarantee: "",
+    title: "Start posting everywhere in seconds",
+    subtitle: "Stop wasting time posting manually. Try it free for 14 days.",
+    cta: "Get started free",
+  },
+  painPoints: {
+    title: "Posting content shouldn't be this hard",
+    subtitle: "Other solutions and tools...",
+    items: [
+      {
+        title: "",
+        description: "",
+        iconName: "clock",
+      },
+      {
+        title: "",
+        description: "",
+        iconName: "box",
+      },
+      {
+        title: "",
+        description: "",
+        iconName: "layers",
+      },
+      {
+        title: "",
+        description: "",
+        iconName: "activity",
+      },
+    ],
+  },
+  growth: {
+    title: "Grow your social reach with less effort for less money",
+    subtitle: "Using post bridge features...",
+    features: [
+      {
+        title: "Cross-posting",
+        description:
+          "Upload your content to post bridge and post it to any of your connected social media accounts; including posting to all platforms at the same time.",
+        iconName: "zap",
+      },
+      {
+        title: "Scheduling",
+        description:
+          "Plan and schedule your content for optimal posting times across all platforms.",
+        iconName: "clock",
+      },
+      {
+        title: "Content management",
+        description:
+          "Organize and manage all your content in one central location.",
+        iconName: "layers",
+      },
+      {
+        title: "Content Studio",
+        description: "Create and edit content directly within the platform.",
+        iconName: "box",
+      },
+    ],
+    stats: {
+      title: "Watch views grow",
+      value: "6,932,049",
+      label: "Potential views",
+      cta: "Start Growing Now",
+    },
+  },
+  howItWorks: {
+    title: "How it works",
+    subtitle: "Post everywhere in 3 simple steps",
+    steps: [
+      {
+        title: "Connect your accounts",
+        description: "Link your social media accounts in just a few clicks",
+        iconName: "zap",
+      },
+      {
+        title: "Upload your content",
+        description: "Add your post, image, or video once",
+        iconName: "upload",
+      },
+      {
+        title: "Post everywhere",
+        description: "Click once to share on all platforms instantly",
+        iconName: "trending-up",
+      },
+    ],
   },
 };
 
 // Field-specific instructions for each section
 const FIELD_INSTRUCTIONS = {
   hero: {
+    badge: {
+      instructions:
+        "Create a short, attention-grabbing badge text with emoji (4-6 words)",
+      examples: [
+        "✨ AI-Powered Scheduling in Seconds →",
+        "🚀 New: Post Everywhere at Once",
+      ],
+    },
     title: {
       instructions:
-        "Create a powerful, concise headline (max 8 words) that starts with an action word. Focus on solving pain points.",
+        "Create a powerful, action-focused headline that emphasizes the pain point and the value proposition, trigger emotional reaction to the user, action-oriented (max 8 words)",
       examples: [
-        "Transform Your Business with AI",
-        "Build Landing Pages in Minutes",
+        "Schedule your content everywhere in seconds",
+        "Post once, reach all platforms instantly",
       ],
     },
     subtitle: {
       instructions:
-        "Write a clear, benefit-focused subtitle (10-15 words) that expands on the headline.",
+        "Write a clear subtitle explaining the main benefit clearly (10-15 words)",
       examples: [
-        "AI-powered landing pages that convert visitors into customers in record time",
+        "The simplest way to post and grow on all platforms. Built for creators and small teams.",
+      ],
+    },
+  },
+  painPoints: {
+    title: {
+      instructions:
+        "Create a compelling title that resonates with user frustrations (8-12 words)",
+      examples: [
+        "Posting content shouldn't be this hard",
+        "Stop wasting time with manual social posting",
+      ],
+    },
+    subtitle: {
+      instructions:
+        "Write a subtitle that acknowledges the current pain points (15-20 words)",
+      examples: [
+        "Other solutions and tools are expensive, complex, and time-consuming. There's a better way to manage your content.",
+      ],
+    },
+    items: [
+      {
+        title: {
+          instructions: "Write a short, relatable pain point title (2-4 words)",
+          examples: [
+            "Manually posting",
+            "Unfairly expensive",
+            "Complex tools",
+            "Features you don't need",
+          ],
+        },
+        description: {
+          instructions:
+            "Describe the pain point in a relatable, sometimes humorous way (10-15 words)",
+          examples: [
+            "Hours of time you can't get back - spent posting your content 1 by 1",
+            "You're not an enterprise company, so why are you paying like one?",
+            "The learning curve is steeper than a UFO's flight path. Houston, we have a problem!",
+          ],
+        },
+        iconName: {
+          instructions: "Choose an icon that represents the pain point",
+          examples: ["clock", "box", "layers", "activity"],
+        },
+      },
+    ],
+  },
+  pricing: {
+    title: {
+      instructions:
+        "Write a clear pricing section title emphasizing simplicity (3-5 words)",
+      examples: [
+        "Simple pricing for everyone",
+        "Transparent, flexible pricing",
+      ],
+    },
+    subtitle: {
+      instructions: "Write a brief subtitle about choosing plans (5-8 words)",
+      examples: [
+        "Choose the perfect plan for your needs",
+        "Find the right plan for you",
+      ],
+    },
+    plans: {
+      basic: {
+        name: {
+          instructions: "Name for the entry-level plan",
+          examples: ["Basic", "Starter"],
+        },
+        price: {
+          instructions: "Set an attractive entry price point ($9-$15)",
+          examples: ["$9", "$12"],
+        },
+        perfect: {
+          instructions: "Describe ideal user for basic plan (2-4 words)",
+          examples: ["For solo creators", "For getting started"],
+        },
+        features: {
+          instructions:
+            "List 4-5 basic features, starting with number of accounts and posts",
+          examples: [
+            [
+              "3 social accounts",
+              "10 posts/month",
+              "Basic analytics",
+              "Standard support",
+            ],
+          ],
+        },
+        cta: {
+          instructions: "Write action-oriented button text (2-3 words)",
+          examples: ["Get Started", "Try Basic"],
+        },
+      },
+      enterprise: {
+        name: {
+          instructions: "Name for the enterprise-level plan",
+          examples: ["Enterprise", "Business"],
+        },
+        price: {
+          instructions: "Set premium price point ($89-$199)",
+          examples: ["$99", "$149"],
+        },
+        perfect: {
+          instructions: "Describe ideal user for enterprise plan (2-4 words)",
+          examples: ["For large teams", "For growing companies"],
+        },
+        features: {
+          instructions:
+            "List 6-7 premium features, emphasizing unlimited usage and exclusive features",
+          examples: [
+            [
+              "Unlimited accounts",
+              "Unlimited posts",
+              "Advanced analytics",
+              "Priority support",
+              "Custom features",
+              "API access",
+            ],
+          ],
+        },
+        cta: {
+          instructions: "Write enterprise-focused button text (2-3 words)",
+          examples: ["Contact Sales", "Get Enterprise"],
+        },
+      },
+    },
+  },
+  faq: {
+    title: {
+      instructions: "Write a simple FAQ section title (2-3 words)",
+      examples: ["Common questions", "Quick answers"],
+    },
+    items: {
+      instructions:
+        "Create 3-5 essential questions focused on the core cross-posting feature, pricing, and getting started",
+      examples: [
+        {
+          question: "What social platforms do you support?",
+          answer:
+            "We support all major platforms including Twitter/X, Instagram, LinkedIn, Facebook, TikTok, and more.",
+        },
+        {
+          question: "How many social accounts can I connect?",
+          answer:
+            "The number of accounts depends on your plan - from 3 accounts on Basic to unlimited on Enterprise.",
+        },
+        {
+          question: "Is there a free trial?",
+          answer:
+            "Yes, you can try all features free for 14 days, no credit card required.",
+        },
+      ],
+    },
+  },
+  final: {
+    title: {
+      instructions:
+        "Write a compelling final CTA focused on the main action and benefit (4-7 words)",
+      examples: [
+        "Start posting everywhere in seconds",
+        "Save time, reach more people",
+      ],
+    },
+    subtitle: {
+      instructions:
+        "Write a brief subtitle emphasizing the free trial (8-12 words)",
+      examples: [
+        "Stop wasting time posting manually. Try it free for 14 days.",
+        "Join thousands of creators saving hours every week.",
       ],
     },
     cta: {
       instructions:
-        "Create a strong call-to-action (2-4 words) that drives action.",
-      examples: ["Start Free Trial", "Get Started Free"],
-    },
-    metrics: {
-      instructions: "Create 2-3 compelling metrics that build trust.",
-      examples: ["10,000+ Users", "99.9% Uptime", "$2M+ Generated"],
+        "Write a strong call-to-action emphasizing 'free' (2-4 words)",
+      examples: ["Get started free", "Try free today"],
     },
   },
-  features: {
+  growth: {
     title: {
       instructions:
-        "Write a feature title (3-5 words) that focuses on the benefit.",
-      examples: ["AI-Powered Generation", "One-Click Deployment"],
-    },
-    description: {
-      instructions:
-        "Create a clear feature description (15-20 words) that explains the benefit and how it works.",
+        "Create a compelling title that emphasizes growth and ease of use. Include 2-3 key benefits separated by line breaks (10-15 words)",
       examples: [
-        "Generate complete landing pages in minutes with our AI copywriting and design engine.",
+        "Grow your social reach with less effort\nfor less money",
+        "Scale your social presence faster\nwith smarter tools",
       ],
     },
-  },
-  process: {
-    instructions: "Describe the process of using the product/service",
-    fields: {
-      title: "Write a process section title (4-6 words)",
-      subtitle: "Write a process subtitle (8-12 words)",
-      steps: "Create 3-4 clear steps in the process",
+    subtitle: {
+      instructions: "Write a brief introduction to the features (8-12 words)",
+      examples: [
+        "Powerful features that make social media management effortless",
+        "Everything you need to grow your social presence efficiently",
+      ],
+    },
+    features: [
+      {
+        title: {
+          instructions: "Write a clear feature name (1-3 words)",
+          examples: [
+            "Cross-posting",
+            "Smart Scheduling",
+            "Content Management",
+            "Content Studio",
+          ],
+        },
+        description: {
+          instructions:
+            "Explain the feature benefit clearly and concisely (15-20 words)",
+          examples: [
+            "Upload once and post everywhere. Save hours by publishing to all platforms simultaneously.",
+            "Plan and schedule your content for optimal posting times across all platforms.",
+          ],
+        },
+        iconName: {
+          instructions: "Choose an icon that best represents the feature",
+          examples: ["zap", "clock", "layers", "box"],
+        },
+      },
+    ],
+    stats: {
+      title: {
+        instructions: "Write an engaging stats title (2-4 words)",
+        examples: ["Watch views grow", "See the impact"],
+      },
+      value: {
+        instructions:
+          "Generate a realistic but impressive number for potential views",
+        examples: ["6,932,049", "5,847,123"],
+      },
+      label: {
+        instructions: "Label the stat value (2-3 words)",
+        examples: ["Potential views", "Monthly reach"],
+      },
+      cta: {
+        instructions: "Write an action-oriented button text (3-4 words)",
+        examples: ["Start Growing Now", "Boost Your Reach"],
+      },
     },
   },
-  testimonials: {
-    instructions:
-      "Create authentic-sounding testimonials from satisfied customers",
-    fields: {
-      title: "Write a testimonials section title (3-5 words)",
-      subtitle: "Write a testimonials subtitle (8-12 words)",
-      items: "Create 2-3 compelling testimonials with customer details",
+  howItWorks: {
+    title: {
+      instructions: "Write a simple section title (2-4 words)",
+      examples: ["How it works", "Simple steps"],
     },
-  },
-  pricing: {
-    instructions:
-      "Create clear pricing plans with compelling value propositions",
-    fields: {
-      title: "Write a pricing section title (2-4 words)",
-      subtitle: "Write a pricing subtitle (6-10 words)",
-      plans: "Create 2-3 pricing plans with features and benefits",
+    subtitle: {
+      instructions: "Write a brief subtitle emphasizing simplicity (4-8 words)",
+      examples: [
+        "Post everywhere in 3 simple steps",
+        "Three steps to cross-platform posting",
+      ],
     },
-  },
-  faq: {
-    instructions:
-      "Create frequently asked questions that address common concerns",
-    fields: {
-      title: "Write an FAQ section title (2-4 words)",
-      items: "Create 3-4 common questions with clear answers",
-    },
-  },
-  final: {
-    instructions: "Create a compelling call to action section",
-    fields: {
-      title: "Write a final CTA title (5-8 words)",
-      subtitle: "Write a final CTA subtitle (10-15 words)",
-      cta: "Create a primary call-to-action (2-4 words)",
-      secondaryCta: "Create a secondary call-to-action (2-4 words)",
-      guarantee: "Write a guarantee statement (5-8 words)",
-    },
+    steps: [
+      {
+        title: {
+          instructions: "Write a clear, action-oriented step title (2-4 words)",
+          examples: [
+            "Connect your accounts",
+            "Upload your content",
+            "Post everywhere",
+          ],
+        },
+        description: {
+          instructions: "Explain the step in simple terms (5-10 words)",
+          examples: [
+            "Link your social media accounts in minutes",
+            "Add your post, image, or video once",
+            "Click once to share on all platforms",
+          ],
+        },
+        iconName: {
+          instructions: "Choose an icon that represents the step",
+          examples: ["zap", "upload", "trending-up"],
+        },
+      },
+    ],
   },
 };
 
@@ -243,7 +543,7 @@ export async function POST(req) {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       temperature: 0.7,
       messages: [
         {

@@ -88,7 +88,7 @@ export function PricingPlans({ pricingPlans, stripeConnectId }) {
           <div className="mb-6">
             <h4 className="font-semibold mb-2">Features:</h4>
             <ul className="space-y-2">
-              {plan.features.map((feature, index) => (
+              {(plan.features || [plan.mainFeature]).map((feature, index) => (
                 <li key={index} className="flex items-start">
                   <span className="text-green-500 mr-2">✓</span>
                   {feature}

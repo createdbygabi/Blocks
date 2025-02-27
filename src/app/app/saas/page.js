@@ -9,7 +9,7 @@ const fadeUp = {
   transition: { duration: 0.5 },
 };
 
-export default async function SaasPage() {
+export default async function SaasPage({ params, searchParams }) {
   const headersList = headers();
   const subdomain = headersList.get("x-subdomain");
   console.log("🎯 SaaS Page - Subdomain:", subdomain);

@@ -31,7 +31,8 @@ export async function POST(req) {
 
       Requirements:
       - Names should be unique and brandable
-      - Maximum 2-3 words per name
+      - Should be short (< 8 characters)
+      - One word only
       - Should be easy to remember and spell
       - Could include wordplay or clever combinations
       - Must be suitable for a SaaS business
@@ -40,12 +41,15 @@ export async function POST(req) {
       - Return only the names, one per line
       - No special characters, only one name per line
 
+
       Examples of good SaaS names:
       - Shopify (ecommerce platform)
       - Calendly (scheduling tool)
       - Mailchimp (email marketing)
       - Notion (productivity tool)
       - Figma (design tool)
+
+      Order them by how catchy they are
     `;
     console.log("📝 API Business Name - Generated prompt:", prompt);
 

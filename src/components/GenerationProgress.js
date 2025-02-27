@@ -18,11 +18,6 @@ const GENERATION_STEPS = {
         description: "Finding the perfect business name",
         loadingText: "AI is brainstorming names...",
       },
-      domains: {
-        title: "Checking Domains",
-        description: "Securing your online presence",
-        loadingText: "Checking domain availability...",
-      },
     },
   },
   revenue: {
@@ -99,6 +94,277 @@ const STEP_ORDER = [
   "marketing", // 6. Marketing
 ];
 
+// Add explicit step mapping
+const STEP_MAPPING = {
+  logo: "branding",
+  names: "branding",
+  pricing_plan: "revenue",
+  deploy: "app",
+  copywriting: "landing",
+  preview: "landing",
+  stripe: "payments",
+  channels: "marketing",
+};
+
+// Add these preview components right after the STEP_MAPPING constant
+
+// Logo Preview Component
+const LogoPreview = ({ logo }) => {
+  if (!logo?.logo_url) return null;
+
+  return (
+    <div className="relative w-32 h-32 bg-black/20 rounded-xl overflow-hidden">
+      <img
+        src={logo.logo_url}
+        alt="Generated Logo"
+        className="w-full h-full object-contain p-4"
+      />
+    </div>
+  );
+};
+
+// Names List Component
+const NamesList = ({ names }) => {
+  if (!names || names.length === 0) {
+    return <div className="text-sm text-gray-400">No names generated yet</div>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {names.map((name, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span className="w-5 h-5 flex items-center justify-center text-xs bg-black/30 rounded">
+            {i + 1}
+          </span>
+          <span className="font-medium">{name}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Pricing Plan Preview Component
+const PricingPlanPreview = ({ plan }) => {
+  const pricingPlan = plan?.pricing_plans?.[0] || plan;
+
+  console.log("🔍 Raw plan data:", plan);
+  console.log("🔍 Processed pricingPlan:", pricingPlan);
+
+  if (!pricingPlan) return null;
+
+  return (
+    <div className="bg-black/20 rounded-xl p-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-xl font-medium">{pricingPlan.name}</h3>
+          <p className="text-sm text-gray-400 mt-1">
+            {pricingPlan.description}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold">${pricingPlan.price}</div>
+          <div className="text-sm text-gray-400">
+            per {pricingPlan.billingPeriod}
+          </div>
+        </div>
+      </div>
+      <div className="mt-6">
+        <div className="text-sm font-medium mb-2">Features:</div>
+        {pricingPlan.feature}
+        {/* <ul className="space-y-2">
+          {features.map((feature, i) => {
+            console.log(`🔍 Rendering feature ${i}:`, feature);
+            return (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <span className="text-green-500">✓</span>
+                {feature}
+              </li>
+            );
+          })}
+        </ul> */}
+        {/* {pricingPlan.limitations && (
+          <div className="mt-4 text-sm text-gray-400">
+            <span className="font-medium">Limitations:</span>{" "}
+            {pricingPlan.limitations}
+          </div>
+        )} */}
+      </div>
+    </div>
+  );
+};
+
+// Landing Page Preview Component
+const LandingPreview = ({ landing }) => {
+  if (!landing) return null;
+
+  // Convert colors to array if it's not already
+  const colors = landing.theme?.colors
+    ? Array.isArray(landing.theme.colors)
+      ? landing.theme.colors
+      : [landing.theme.colors]
+    : [];
+
+  return (
+    <div className="bg-black/20 rounded-xl p-6">
+      <h3 className="text-lg font-medium mb-4">Landing Page Preview</h3>
+      <div className="space-y-4">
+        {landing.theme && (
+          <div>
+            <h4 className="text-sm font-medium mb-2">Theme</h4>
+            <div className="bg-black/30 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{landing.theme.name}</span>
+                {colors.length > 0 && (
+                  <div className="flex gap-1">
+                    {colors.map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              {landing.theme.audience && (
+                <div className="text-sm text-gray-400 mt-1">
+                  {landing.theme.audience}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {landing.content && (
+          <div>
+            <h4 className="text-sm font-medium mb-2">Content</h4>
+            <div className="bg-black/30 rounded-lg p-3 space-y-3">
+              {typeof landing.content === "string" ? (
+                <p className="text-sm">{landing.content}</p>
+              ) : (
+                <>
+                  {landing.content.headline && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Headline</div>
+                      <p className="text-sm font-medium">
+                        {landing.content.headline}
+                      </p>
+                    </div>
+                  )}
+                  {landing.content.description && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">
+                        Description
+                      </div>
+                      <p className="text-sm">{landing.content.description}</p>
+                    </div>
+                  )}
+                  {/* {landing.content.features && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Features</div>
+                      <ul className="space-y-1">
+                        {landing.content.features.map((feature, i) => (
+                          <li
+                            key={i}
+                            className="text-sm flex items-start gap-2"
+                          >
+                            <span className="text-green-500">✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )} */}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Instagram Setup Preview Component
+const InstagramSetupPreview = ({ data }) => {
+  if (!data?.instagram) return null;
+  const { suggestedUsername, suggestedBio, setupSteps } = data.instagram;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-sm font-medium mb-2">Suggested Username</h4>
+        <div className="bg-black/20 p-3 rounded-lg font-mono text-sm">
+          @{suggestedUsername}
+        </div>
+      </div>
+      <div>
+        <h4 className="text-sm font-medium mb-2">Bio</h4>
+        <div className="bg-black/20 p-3 rounded-lg text-sm whitespace-pre-line">
+          {suggestedBio}
+        </div>
+      </div>
+      <div>
+        <h4 className="text-sm font-medium mb-2">Setup Steps</h4>
+        <ol className="space-y-2 text-sm">
+          {setupSteps.map((step, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="text-blue-400">{i + 1}.</span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+};
+
+// Status Icon Component
+const StatusIcon = ({ status }) => {
+  if (!status) return null;
+
+  const icons = {
+    pending: <div className="w-5 h-5 rounded-full border-2 border-gray-600" />,
+    loading: (
+      <div className="w-5 h-5">
+        <div className="animate-spin rounded-full h-full w-full border-2 border-blue-500 border-t-transparent" />
+      </div>
+    ),
+    completed: (
+      <div className="w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center">
+        <svg
+          className="w-3 h-3 text-green-500"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </div>
+    ),
+    error: (
+      <div className="w-5 h-5 bg-red-500/20 rounded-full flex items-center justify-center">
+        <svg
+          className="w-3 h-3 text-red-500"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </div>
+    ),
+  };
+
+  return icons[status] || null;
+};
+
 export function GenerationProgress({ businessInfo, onComplete }) {
   const { user } = useUser();
   const [businessId, setBusinessId] = useState(null);
@@ -108,7 +374,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     error: null,
   });
   const [isGenerating, setIsGenerating] = useState(false);
-  const [expandedStep, setExpandedStep] = useState("branding");
+  const [expandedSteps, setExpandedSteps] = useState(new Set(["branding"]));
   const [isCompleted, setIsCompleted] = useState(false);
   const [accountCreatePending, setAccountCreatePending] = useState(false);
   const [accountLinkCreatePending, setAccountLinkCreatePending] =
@@ -116,43 +382,100 @@ export function GenerationProgress({ businessInfo, onComplete }) {
   const [stripeError, setStripeError] = useState(false);
   const [connectedAccountId, setConnectedAccountId] = useState();
   const [isStripeWindowOpen, setIsStripeWindowOpen] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState(new Set());
 
-  const updateProgress = useCallback((step, status, data = null) => {
-    console.log(`🔄 Updating progress for ${step}:`, { status, data });
+  // Define step progress state
+  const [stepProgress, setStepProgress] = useState({
+    branding: { started: false, completed: false },
+    revenue: { started: false, completed: false },
+    landing: { started: false, completed: false },
+    app: { started: false, completed: false },
+    payments: { started: false, completed: false },
+    marketing: { started: false, completed: false },
+  });
 
-    setGenerationState((prev) => {
-      const nextStep = status === "completed" ? getNextStep(step) : step;
-      const mainStep = getMainStepForSubstep(step);
-      console.log("Next step will be:", nextStep);
-      console.log("Main step is:", mainStep);
+  // Update this to track completed steps
+  const updateProgress = useCallback(
+    (step, status, data = null) => {
+      const mainStep = STEP_MAPPING[step];
 
-      // If this is the first substep of a main step, expand its accordion
-      if (mainStep && !prev.results[step]) {
-        setExpandedStep(mainStep);
+      setGenerationState((prev) => {
+        const nextStep = status === "completed" ? getNextStep(step) : step;
+
+        // If this step is completed, add its main step to completedSteps
+        // and keep it expanded
+        if (status === "completed") {
+          setCompletedSteps((prev) => {
+            const next = new Set(prev);
+            next.add(mainStep);
+            return next;
+          });
+
+          // Keep completed step expanded and expand next step
+          setExpandedSteps((prev) => {
+            const next = new Set(prev);
+            next.add(mainStep); // Keep current step expanded
+            const nextMainStep = STEP_MAPPING[nextStep];
+            if (nextMainStep) {
+              next.add(nextMainStep); // Expand next step
+            }
+            return next;
+          });
+        }
+
+        return {
+          ...prev,
+          currentStep: nextStep,
+          results: {
+            ...prev.results,
+            [step]: { status, data },
+          },
+          error: status === "error" ? step : null,
+        };
+      });
+    },
+    [STEP_MAPPING]
+  );
+
+  // Modify canExpandStep to consider completed steps
+  const canExpandStep = useCallback(
+    (stepKey) => {
+      const stepIndex = STEP_ORDER.indexOf(stepKey);
+
+      // First step is always expandable
+      if (stepIndex === 0) return true;
+
+      // Previous step must be completed to expand current step
+      const previousStep = STEP_ORDER[stepIndex - 1];
+      return completedSteps.has(previousStep);
+    },
+    [completedSteps]
+  );
+
+  // Update handleStepClick to handle multiple expanded steps
+  const handleStepClick = useCallback(
+    (stepKey) => {
+      if (canExpandStep(stepKey)) {
+        setExpandedSteps((prev) => {
+          const next = new Set(prev);
+          if (next.has(stepKey)) {
+            next.delete(stepKey);
+          } else {
+            next.add(stepKey);
+          }
+          return next;
+        });
       }
-
-      // Log the state update
-      const newState = {
-        ...prev,
-        currentStep: nextStep,
-        results: {
-          ...prev.results,
-          [step]: { status, data },
-        },
-        error: status === "error" ? step : null,
-      };
-      console.log("New generation state will be:", newState);
-      return newState;
-    });
-  }, []);
+    },
+    [canExpandStep]
+  );
 
   const getNextStep = (currentStep) => {
     console.log("🔄 Getting next step from:", currentStep);
 
     const steps = {
       logo: "names",
-      names: "domains",
-      domains: "pricing_plan",
+      names: "pricing_plan",
       pricing_plan: "deploy",
       deploy: "copywriting",
       copywriting: "preview",
@@ -171,14 +494,9 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     );
   };
 
-  // Add a function to get the main step for a substep
+  // Update getMainStepForSubstep
   const getMainStepForSubstep = (substep) => {
-    for (const [mainStep, data] of Object.entries(GENERATION_STEPS)) {
-      if (Object.keys(data.substeps).includes(substep)) {
-        return mainStep;
-      }
-    }
-    return null;
+    return STEP_MAPPING[substep] || null;
   };
 
   // Add a function to check if a step can be accessed
@@ -300,33 +618,24 @@ export function GenerationProgress({ businessInfo, onComplete }) {
   // Update the step expansion effect
   useEffect(() => {
     // Use the STEP_ORDER array instead of hardcoding
-    const currentIndex = STEP_ORDER.indexOf(expandedStep);
+    const currentIndex = STEP_ORDER.indexOf(generationState.currentStep);
 
     // Only proceed if we're not on the last step
     if (currentIndex === -1 || currentIndex === STEP_ORDER.length - 1) return;
 
     // Check if current step is completed
-    const isCurrentStepDone = isStepCompleted(expandedStep);
+    const isCurrentStepDone = isStepCompleted(generationState.currentStep);
 
     // If current step is done, expand next step
     if (isCurrentStepDone) {
       const nextStep = STEP_ORDER[currentIndex + 1];
-      setExpandedStep(nextStep);
+      setExpandedSteps((prev) => {
+        const next = new Set(prev);
+        next.add(nextStep);
+        return next;
+      });
     }
-  }, [generationState.results, expandedStep]);
-
-  // Update the handleStepClick function
-  const handleStepClick = (stepKey) => {
-    const canExpand =
-      stepKey === "branding" ||
-      canAccessStep(stepKey) ||
-      expandedStep === stepKey ||
-      isStepCompleted(stepKey);
-
-    if (canExpand) {
-      setExpandedStep(stepKey === expandedStep ? null : stepKey);
-    }
-  };
+  }, [generationState.results, generationState.currentStep]);
 
   // Add this effect to listen for completion message
   useEffect(() => {
@@ -456,228 +765,6 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     return <div>Error: {generationState.error}</div>;
   }
 
-  // Add result display components
-  const NamesList = ({ names }) => (
-    <div className="space-y-2">
-      {names.map((name, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <span className="w-5 h-5 flex items-center justify-center text-xs bg-black/30 rounded">
-            {i + 1}
-          </span>
-          <span className="font-medium">{name}</span>
-        </div>
-      ))}
-    </div>
-  );
-
-  const DomainsList = ({ domains }) => {
-    if (!Array.isArray(domains)) {
-      console.error("Invalid domains data:", domains);
-      return <div>Error loading domain data</div>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {domains.map((result, i) => (
-          <div key={i} className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">{result.name}</span>
-              {result.cheapestDomain && (
-                <span className="text-xs px-2 py-1 bg-green-500/20 text-green-300 rounded-full">
-                  Best price: ${result.domains[0]?.prices?.registration_price}
-                </span>
-              )}
-            </div>
-
-            <div className="grid gap-1">
-              {result.domains.map((domain, j) => (
-                <div
-                  key={j}
-                  className={`flex items-center justify-between p-2 rounded text-xs ${
-                    domain.available
-                      ? domain.domain === result.cheapestDomain
-                        ? "bg-green-500/10 border border-green-500/30"
-                        : "bg-black/30"
-                      : "bg-red-500/10 border border-red-500/30"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono">{domain.domain}</span>
-                    {domain.available ? (
-                      domain.domain === result.cheapestDomain && (
-                        <span className="px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded text-[10px]">
-                          Best Value
-                        </span>
-                      )
-                    ) : (
-                      <span className="px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded text-[10px]">
-                        Unavailable
-                      </span>
-                    )}
-                  </div>
-                  {domain.available && domain.prices && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-400">
-                        ${domain.prices.registration_price}
-                      </span>
-                      <a
-                        href={`https://www.namecheap.com/domains/registration/results/?domain=${domain.domain}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2 py-1 bg-blue-500 hover:bg-blue-600 rounded transition-colors"
-                      >
-                        Register
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const LogoPreview = ({ url }) => {
-    // Handle both string URL and object with logo_url
-    const logoUrl = typeof url === "string" ? url : url?.logo_url;
-
-    return (
-      <div className="aspect-square w-32 bg-black/30 border border-gray-800 rounded-xl p-4">
-        <img
-          src={logoUrl}
-          alt="Generated logo"
-          className="w-full h-full object-contain"
-        />
-      </div>
-    );
-  };
-
-  // Update the PricingPlanPreview component to handle the new format
-  const PricingPlanPreview = ({ plan }) => {
-    // If plan is part of pricing_plans array, extract the first plan
-    const pricingPlan = plan.pricing_plans ? plan.pricing_plans[0] : plan;
-
-    return (
-      <div className="mt-4 bg-black/30 rounded-xl border border-gray-800 p-4 space-y-4">
-        <div>
-          <div className="text-sm text-gray-400 mb-1">Plan</div>
-          <div className="text-lg font-medium">{pricingPlan.name}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-400 mb-1">Price</div>
-          <div className="text-2xl font-bold text-blue-400">
-            ${pricingPlan.price}
-            <span className="text-sm text-gray-400">
-              /{pricingPlan.billingPeriod}
-            </span>
-          </div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-400 mb-1">Features</div>
-          <ul className="space-y-2">
-            {pricingPlan.features?.map((feature, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <span className="text-green-400">✓</span>
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {pricingPlan.limitations && (
-          <div>
-            <div className="text-sm text-gray-400 mb-1">Limitations</div>
-            <div className="text-sm">{pricingPlan.limitations}</div>
-          </div>
-        )}
-        {pricingPlan.trialDays > 0 && (
-          <div>
-            <div className="text-sm text-gray-400 mb-1">Trial Period</div>
-            <div className="text-sm text-green-400">
-              {pricingPlan.trialDays} days free trial
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Update the InstagramSetupPreview component
-  const InstagramSetupPreview = ({ data }) => {
-    console.log("🎨 InstagramSetupPreview rendering with data:", data);
-
-    const instagram = data?.instagram;
-    if (!instagram) {
-      console.log("⚠️ No Instagram data found in:", data);
-      return null;
-    }
-
-    console.log("✅ Instagram data looks good:", instagram);
-
-    return (
-      <div className="mt-4 space-y-6">
-        {/* Instagram Preview Card */}
-        <div className="bg-gradient-to-tr from-purple-600/20 to-pink-600/20 rounded-xl border border-purple-500/20 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
-              📸
-            </div>
-            <div>
-              <div className="text-lg font-medium">
-                @{instagram.suggestedUsername}
-              </div>
-              <div className="text-sm text-gray-400">Business Account</div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Suggested Bio</div>
-              <div className="whitespace-pre-line text-sm bg-black/30 rounded-lg p-3 border border-gray-800">
-                {instagram.suggestedBio}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-400 mb-2">
-                Quick Setup Guide
-              </div>
-              <div className="bg-black/30 rounded-lg p-4 border border-gray-800">
-                <ol className="space-y-3">
-                  {instagram.setupSteps.map((step, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-xs text-purple-400">
-                        {i + 1}
-                      </span>
-                      <span className="text-gray-300">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <a
-          href="https://instagram.com/signup"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl p-4 text-center font-medium transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xl">📸</span>
-            <span>Create Instagram Business Account</span>
-          </div>
-          <div className="text-sm text-white/80 mt-1">
-            Follow the setup guide to establish your presence
-          </div>
-        </a>
-      </div>
-    );
-  };
-
   return (
     <div className="max-w-6xl mx-auto p-8">
       <div className="grid md:grid-cols-[1fr,320px] gap-8">
@@ -696,353 +783,141 @@ export function GenerationProgress({ businessInfo, onComplete }) {
 
             {/* Progress Timeline */}
             <div className="space-y-6">
-              {Object.entries(GENERATION_STEPS).map(([stepKey, step]) => {
-                const isCompleted = isStepCompleted(stepKey);
-                const isExpanded = expandedStep === stepKey;
-
-                return (
-                  <div key={stepKey} className="relative">
-                    {/* Main Step Header */}
-                    <button
-                      onClick={() => handleStepClick(stepKey)}
-                      disabled={
-                        !canAccessStep(stepKey) && stepKey !== "branding"
+              {STEP_ORDER.map((stepKey) => (
+                <div
+                  key={stepKey}
+                  className="border border-gray-800 rounded-xl overflow-hidden"
+                >
+                  <div
+                    role="button"
+                    aria-expanded={expandedSteps.has(stepKey)}
+                    aria-controls={`step-content-${stepKey}`}
+                    tabIndex={0}
+                    className={`p-6 cursor-pointer bg-[#0C0F17] ${
+                      canExpandStep(stepKey) ? "" : "opacity-50"
+                    } ${
+                      completedSteps.has(stepKey)
+                        ? "border-l-4 border-green-500"
+                        : ""
+                    }`}
+                    onClick={() => handleStepClick(stepKey)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleStepClick(stepKey);
                       }
-                      className={`w-full flex items-center gap-3 mb-6 transition-colors ${
-                        isCompleted ? "text-gray-400" : ""
-                      } ${
-                        !canAccessStep(stepKey) && stepKey !== "branding"
-                          ? "opacity-50 cursor-not-allowed"
-                          : "hover:bg-gray-800/30"
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-                        <span className="text-blue-400 font-medium">
-                          {STEP_ORDER.indexOf(stepKey) + 1}
-                        </span>
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h2 className="font-medium text-lg">{step.title}</h2>
-                        <p className="text-sm text-gray-400">
-                          {step.description}
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-medium">
+                          {GENERATION_STEPS[stepKey].title}
+                        </h3>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {GENERATION_STEPS[stepKey].description}
                         </p>
                       </div>
-                      {isCompleted && (
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
-                        </div>
-                      )}
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        <svg
-                          className={`w-4 h-4 transform transition-transform ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
+                      <div className="text-gray-400">
+                        {expandedSteps.has(stepKey) ? "−" : "+"}
                       </div>
-                    </button>
-
-                    {/* Substeps */}
-                    <div
-                      className={`ml-5 pl-8 border-l border-gray-800 space-y-6 transition-all duration-300 ${
-                        isExpanded
-                          ? "opacity-100 max-h-[2000px] visible"
-                          : "opacity-0 max-h-0 invisible overflow-hidden"
-                      }`}
-                      style={{
-                        transitionProperty: "max-height, opacity, visibility",
-                        transitionDuration: "300ms",
-                        transitionTimingFunction: "ease-in-out",
-                      }}
-                    >
-                      {Object.entries(step.substeps).map(
-                        ([subKey, substep]) => {
-                          const isActive =
-                            generationState.currentStep === subKey;
-                          const isCompleted =
-                            generationState.results[subKey]?.status ===
-                            "completed";
-
-                          return (
-                            <div key={subKey} className="relative">
-                              <div className="flex gap-4">
-                                {/* Status Icon */}
-                                <div className="relative">
-                                  <div className="absolute -left-[41px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gray-800" />
-                                  {isActive && (
-                                    <div className="absolute -left-[41px] top-1/2 -translate-y-1/2 w-3 h-3">
-                                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-ping" />
-                                      <div className="absolute inset-0 w-3 h-3 bg-blue-500 rounded-full" />
-                                    </div>
-                                  )}
-                                  {isCompleted && (
-                                    <div className="absolute -left-[41px] top-1/2 -translate-y-1/2 w-3 h-3 bg-green-500 rounded-full" />
-                                  )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="flex-1">
-                                  <h3 className="font-medium text-sm">
-                                    {substep.title}
-                                  </h3>
-                                  <p className="text-sm text-gray-400">
-                                    {substep.description}
-                                  </p>
-
-                                  {/* Results */}
-                                  {subKey === "names" &&
-                                    generationState.results[subKey]?.data && (
-                                      <NamesList
-                                        names={
-                                          generationState.results[subKey].data
-                                        }
-                                      />
-                                    )}
-                                  {subKey === "domains" &&
-                                    generationState.results[subKey]?.data && (
-                                      <DomainsList
-                                        domains={
-                                          generationState.results[subKey].data
-                                        }
-                                      />
-                                    )}
-                                  {subKey === "logo" &&
-                                    generationState.results[subKey]?.data && (
-                                      <LogoPreview
-                                        url={
-                                          generationState.results[subKey].data
-                                            .logo_url
-                                        }
-                                      />
-                                    )}
-                                  {subKey === "copywriting" &&
-                                    generationState.results[subKey]?.data && (
-                                      <div className="mt-4 bg-black/30 rounded-xl border border-gray-800 p-4 space-y-4">
-                                        {/* Hero Section */}
-                                        {generationState.results[subKey].data
-                                          .content?.hero && (
-                                          <>
-                                            <div>
-                                              <div className="text-sm text-gray-400 mb-1">
-                                                Headline
-                                              </div>
-                                              <div className="text-lg font-medium">
-                                                {
-                                                  generationState.results[
-                                                    subKey
-                                                  ].data.content.hero.title
-                                                }
-                                              </div>
-                                            </div>
-                                            <div>
-                                              <div className="text-sm text-gray-400 mb-1">
-                                                Subtitle
-                                              </div>
-                                              <div className="text-gray-300">
-                                                {
-                                                  generationState.results[
-                                                    subKey
-                                                  ].data.content.hero.subtitle
-                                                }
-                                              </div>
-                                            </div>
-                                            <div>
-                                              <div className="text-sm text-gray-400 mb-1">
-                                                Call to Action
-                                              </div>
-                                              <div className="text-blue-400 font-medium">
-                                                {
-                                                  generationState.results[
-                                                    subKey
-                                                  ].data.content.hero.cta
-                                                }
-                                              </div>
-                                            </div>
-                                          </>
-                                        )}
-
-                                        {/* Features Section */}
-                                        {generationState.results[subKey].data
-                                          .content?.features && (
-                                          <div>
-                                            <div className="text-sm text-gray-400 mb-2">
-                                              Features
-                                            </div>
-                                            <div className="space-y-2">
-                                              {generationState.results[
-                                                subKey
-                                              ].data.content.features.map(
-                                                (feature, i) => (
-                                                  <div
-                                                    key={i}
-                                                    className="bg-black/20 p-2 rounded"
-                                                  >
-                                                    <div className="font-medium">
-                                                      {feature.title}
-                                                    </div>
-                                                    <div className="text-sm text-gray-400">
-                                                      {feature.description}
-                                                    </div>
-                                                  </div>
-                                                )
-                                              )}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  {subKey === "preview" &&
-                                    generationState.results[subKey]?.data && (
-                                      <div className="mt-4">
-                                        <a
-                                          href="/landing"
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
-                                        >
-                                          <span>View Landing Page Preview</span>
-                                          <svg
-                                            className="w-4 h-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                          >
-                                            <path
-                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                              strokeWidth="2"
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                            />
-                                          </svg>
-                                        </a>
-                                      </div>
-                                    )}
-                                  {subKey === "stripe" && (
-                                    <div className="mt-4">
-                                      {!connectedAccountId &&
-                                        !accountCreatePending && (
-                                          <button
-                                            onClick={handleStripeSetup}
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
-                                            disabled={accountCreatePending}
-                                          >
-                                            <span>
-                                              {accountCreatePending
-                                                ? "Setting up Stripe..."
-                                                : "Connect Stripe Account"}
-                                            </span>
-                                            {!accountCreatePending && (
-                                              <svg
-                                                className="w-4 h-4"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                              >
-                                                <path
-                                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                                  strokeWidth="2"
-                                                  strokeLinecap="round"
-                                                  strokeLinejoin="round"
-                                                />
-                                              </svg>
-                                            )}
-                                          </button>
-                                        )}
-
-                                      {(accountCreatePending ||
-                                        connectedAccountId) && (
-                                        <div className="mt-2 text-sm text-gray-400">
-                                          {accountCreatePending && (
-                                            <p>
-                                              Setting up your Stripe account...
-                                            </p>
-                                          )}
-                                          {connectedAccountId &&
-                                            !isStripeWindowOpen && (
-                                              <p>
-                                                Account created! Complete your
-                                                setup to start accepting
-                                                payments.
-                                              </p>
-                                            )}
-                                          {connectedAccountId &&
-                                            isStripeWindowOpen && (
-                                              <p>
-                                                Completing Stripe setup...{" "}
-                                                <span className="animate-pulse">
-                                                  ⌛
-                                                </span>
-                                              </p>
-                                            )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  {subKey === "deploy" &&
-                                    generationState.results[subKey]?.data && (
-                                      <div className="mt-4">
-                                        <a
-                                          href="http://landingai.localhost:3000/"
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
-                                        >
-                                          <span>View Your App</span>
-                                          <svg
-                                            className="w-4 h-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                          >
-                                            <path
-                                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                              strokeWidth="2"
-                                              strokeLinecap="round"
-                                              strokeLinejoin="round"
-                                            />
-                                          </svg>
-                                        </a>
-                                      </div>
-                                    )}
-                                  {subKey === "pricing_plan" &&
-                                    generationState.results[subKey]?.data && (
-                                      <PricingPlanPreview
-                                        plan={
-                                          generationState.results[subKey].data
-                                        }
-                                      />
-                                    )}
-                                  {subKey === "channels" &&
-                                    generationState.results[subKey]?.data &&
-                                    (console.log(
-                                      "🎯 Attempting to render InstagramSetupPreview with:",
-                                      generationState.results[subKey].data
-                                    ) || (
-                                      <InstagramSetupPreview
-                                        data={
-                                          generationState.results[subKey].data
-                                        }
-                                      />
-                                    ))}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                      )}
                     </div>
                   </div>
-                );
-              })}
+
+                  {expandedSteps.has(stepKey) && (
+                    <div
+                      id={`step-content-${stepKey}`}
+                      className="p-6 bg-[#0C0F17]/50 border-t border-gray-800"
+                    >
+                      <div className="space-y-8">
+                        {Object.entries(GENERATION_STEPS[stepKey].substeps).map(
+                          ([subKey, subStep]) => {
+                            const result = generationState.results[subKey];
+                            const status = result?.status || "pending";
+
+                            return (
+                              <div key={subKey} className="relative">
+                                <div className="flex items-start gap-4">
+                                  <div className="relative">
+                                    <StatusIcon status={status} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium flex items-center gap-2">
+                                      {subStep.title}
+                                      {status === "loading" && (
+                                        <span className="text-sm text-blue-400 animate-pulse">
+                                          {subStep.loadingText}
+                                        </span>
+                                      )}
+                                    </h4>
+
+                                    <p className="text-sm text-gray-400 mt-1">
+                                      {subStep.description}
+                                    </p>
+
+                                    {/* Results Display */}
+                                    {status === "completed" && result.data && (
+                                      <div className="mt-4">
+                                        {subKey === "logo" && (
+                                          <LogoPreview logo={result.data} />
+                                        )}
+                                        {subKey === "names" && (
+                                          <NamesList names={result.data} />
+                                        )}
+                                        {subKey === "pricing_plan" && (
+                                          <PricingPlanPreview
+                                            plan={result.data}
+                                          />
+                                        )}
+                                        {subKey === "copywriting" && (
+                                          <LandingPreview
+                                            landing={result.data}
+                                          />
+                                        )}
+                                        {subKey === "preview" && (
+                                          <LandingPreview
+                                            landing={result.data}
+                                          />
+                                        )}
+                                        {subKey === "deploy" && (
+                                          <a
+                                            href={`http://${result.data.subdomain}.localhost:3000`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+                                          >
+                                            <span>View Your App</span>
+                                            <svg
+                                              className="w-4 h-4"
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                              />
+                                            </svg>
+                                          </a>
+                                        )}
+                                        {subKey === "channels" && (
+                                          <InstagramSetupPreview
+                                            data={result.data}
+                                          />
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

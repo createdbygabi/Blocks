@@ -1,6 +1,7 @@
 export async function POST(req) {
   try {
     const { prompt } = await req.json();
+    console.log("API being called");
     console.log("🚀 API Logo - Starting generation with prompt:", prompt);
     console.log(
       "🔑 API Logo - Checking token:",

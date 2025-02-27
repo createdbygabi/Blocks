@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { StreamingTextResponse } from "ai";
+import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
@@ -11,10 +11,14 @@ export async function POST(req) {
   try {
     const { businessInfo } = await req.json();
 
+    console.log("💰 API Pricing - Received business info:", businessInfo);
+
     const prompt = `Generate a minimal starter pricing plan for a ${businessInfo.niche} business.
 The business offers: ${businessInfo.product}
 Core feature/benefit: ${businessInfo.mainFeature}
 Target audience: ${businessInfo.targetAudience}
+
+The revenue strategy has to be based on the core feature/benefit, market for the product, and the target audience.
 
 Important: Generate a plan with ONLY THE SINGLE MOST ESSENTIAL FEATURE.
 
@@ -32,21 +36,25 @@ Generate a JSON response with this structure:
   "limitations": "clear usage limits"
 }
 
-Focus on making the single-feature plan attractive and valuable while keeping it simple.
-The price should reflect that this is a focused, single-feature offering.`;
+Focus on making the single-feature plan attractive and valuable while keeping it minimalistic (one feature only).`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
-      stream: true,
+      stream: false,
     });
 
-    return new StreamingTextResponse(response);
+    const generatedText = completion.choices[0].message.content;
+    console.log("✅ API Pricing - Generated pricing:", generatedText);
+
+    const pricingPlan = JSON.parse(generatedText);
+
+    return NextResponse.json({ pricing_plans: [pricingPlan] });
   } catch (error) {
-    console.error("Pricing generation error:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to generate pricing plan" }),
+    console.error("❌ API Pricing - Error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate pricing plan" },
       { status: 500 }
     );
   }
