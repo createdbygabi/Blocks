@@ -18,9 +18,12 @@ const FIELD_INSTRUCTIONS = {
     },
     subtitle: {
       instructions:
-        "Write a clear, benefit-focused subtitle (10-15 words) that expands on the headline.",
+        "Write a clear, benefit-focused subtitle (15-20 words) that expands on the headline.",
       examples: [
         "AI-powered analytics that help you make smarter decisions in half the time",
+        "The NextJS boilerplate with all you need to build your SaaS, AI tool, or any other web app and make your first $ online fast.",
+        "The simplest way to post and grow on all platforms. Built for creators and small teams without the ridiculous price tag.",
+        "Get sales, growth and new networks. Faster than what you're currently trying.",
       ],
     },
     cta: {

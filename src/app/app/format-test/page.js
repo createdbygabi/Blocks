@@ -18,7 +18,7 @@ export default function FormatTestPage() {
       format_id: e.target.format.value,
       niche: e.target.niche.value,
       product: e.target.product.value,
-      test_mode: e.target.testMode.checked,
+      test_mode: true,
     };
 
     console.log("Sending request with data:", formData);
@@ -81,13 +81,6 @@ export default function FormatTestPage() {
               className="w-full bg-black/20 border border-gray-600 rounded px-3 py-2"
               required
             />
-          </div>
-
-          <div>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" name="testMode" />
-              <span>Test Mode</span>
-            </label>
           </div>
 
           <button

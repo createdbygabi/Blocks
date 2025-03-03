@@ -135,7 +135,11 @@ export function TabNavigation() {
     }
   };
 
-  if (pathname === "/landing" || pathname === "/onboarding") {
+  if (
+    pathname === "/app/landing" ||
+    pathname === "/app/onboarding" ||
+    pathname === "/app/format-test"
+  ) {
     return null;
   }
 

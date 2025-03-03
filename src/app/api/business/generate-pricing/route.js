@@ -22,35 +22,56 @@ The revenue strategy has to be based on the core feature/benefit, market for the
 
 Important: Generate a plan with ONLY THE SINGLE MOST ESSENTIAL FEATURE.
 
-Generate a JSON response with this structure:
+Return ONLY a raw JSON object (no markdown, no code fences) with this structure:
 {
-  "name": "plan name (should indicate it's a basic/essential tier)",
+  "name": "plan name",
   "price": "price in USD (should be entry-level pricing)",
   "billingPeriod": "monthly",
   "mainFeature": "the single core feature",
   "description": "short plan description focusing on the core feature",
   "features": ["only the single most essential feature"],
   "cta": "call to action text",
-  "trialDays": number of trial days,
   "setupFee": "setup fee in USD",
   "limitations": "clear usage limits"
 }
 
-Focus on making the single-feature plan attractive and valuable while keeping it minimalistic (one feature only).`;
+Focus on making the single-feature plan attractive and valuable while keeping it minimalistic (one feature only).
+IMPORTANT: Return only the raw JSON object, no markdown formatting or code fences.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a JSON API that returns only valid JSON objects without any markdown formatting or explanation.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
       stream: false,
     });
 
     const generatedText = completion.choices[0].message.content;
     console.log("✅ API Pricing - Generated pricing:", generatedText);
 
-    const pricingPlan = JSON.parse(generatedText);
+    // Clean the response by removing any markdown code fences or extra formatting
+    const cleanedText = generatedText
+      .replace(/```json\n?/, "") // Remove opening code fence
+      .replace(/```\n?$/, "") // Remove closing code fence
+      .trim(); // Remove any extra whitespace
 
-    return NextResponse.json({ pricing_plans: [pricingPlan] });
+    try {
+      const pricingPlan = JSON.parse(cleanedText);
+      return NextResponse.json({ pricing_plans: [pricingPlan] });
+    } catch (parseError) {
+      console.error("❌ API Pricing - JSON Parse Error:", parseError);
+      console.error("Raw text:", generatedText);
+      console.error("Cleaned text:", cleanedText);
+      throw new Error("Failed to parse pricing plan JSON");
+    }
   } catch (error) {
     console.error("❌ API Pricing - Error:", error);
     return NextResponse.json(

@@ -123,22 +123,18 @@ const LogoPreview = ({ logo }) => {
   );
 };
 
-// Names List Component
-const NamesList = ({ names }) => {
-  if (!names || names.length === 0) {
-    return <div className="text-sm text-gray-400">No names generated yet</div>;
+// Name Display Component
+const NameDisplay = ({ name }) => {
+  if (!name) {
+    return <div className="text-sm text-gray-400">No name generated yet</div>;
   }
 
   return (
-    <div className="space-y-2">
-      {names.map((name, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <span className="w-5 h-5 flex items-center justify-center text-xs bg-black/30 rounded">
-            {i + 1}
-          </span>
-          <span className="font-medium">{name}</span>
-        </div>
-      ))}
+    <div className="flex items-center gap-2">
+      <span className="w-5 h-5 flex items-center justify-center text-xs bg-black/30 rounded">
+        ✓
+      </span>
+      <span className="font-medium">{name}</span>
     </div>
   );
 };
@@ -547,6 +543,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
             businessInfo,
             updateProgress
           );
+          console.log("🔍 Branding results:", brandingResults);
           setBusinessId(brandingResults.business.id);
           console.log(
             "✅ Business created with ID:",
@@ -566,7 +563,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
           const websiteContent = await businessService.generateWebsiteContent(
             { ...businessInfo, id: brandingResults.business.id },
             {
-              ...brandingResults,
+              ...brandingResults.business,
               pricing_plan: pricingPlan,
             }
           );
@@ -767,7 +764,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
 
   return (
     <div className="max-w-6xl mx-auto p-8">
-      <div className="grid md:grid-cols-[1fr,320px] gap-8">
+      <div className="grid gap-8">
         {/* Main Content */}
         <div className="space-y-8">
           <div className="bg-[#0C0F17] rounded-2xl border border-gray-800/50 p-8">
@@ -860,7 +857,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
                                           <LogoPreview logo={result.data} />
                                         )}
                                         {subKey === "names" && (
-                                          <NamesList names={result.data} />
+                                          <NameDisplay name={result.data} />
                                         )}
                                         {subKey === "pricing_plan" && (
                                           <PricingPlanPreview
@@ -918,58 +915,6 @@ export function GenerationProgress({ businessInfo, onComplete }) {
                   )}
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: Quick Actions */}
-        <div className="space-y-6">
-          <div className="bg-[#0C0F17] rounded-2xl border border-gray-800/50 p-6">
-            <h3 className="text-lg font-medium mb-4">While You Wait...</h3>
-            <p className="text-sm text-gray-400 mb-6">
-              Get ahead by setting up these essential business tools. They'll
-              help you start earning and growing faster.
-            </p>
-
-            <div className="space-y-4">
-              <QuickActionCard
-                title="Accept Payments"
-                description="Set up Stripe to receive payments from customers instantly"
-                icon="💳"
-                action="/stripe-account"
-                badge="Essential"
-              />
-              <QuickActionCard
-                title="Grow Your Audience"
-                description="Connect Instagram to start building your organic presence"
-                icon="📱"
-                action="/instagram-connect"
-              />
-            </div>
-
-            <p className="text-xs text-gray-500 mt-6">
-              You can always set these up later from your dashboard
-            </p>
-          </div>
-
-          {/* Tips Section */}
-          <div className="bg-[#0C0F17] rounded-2xl border border-gray-800/50 p-6">
-            <h3 className="text-lg font-medium mb-4">Quick Tips</h3>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <div className="text-blue-400">💡</div>
-                <p className="text-sm text-gray-400">
-                  Setting up Stripe early helps you accept payments as soon as
-                  your business launches
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <div className="text-blue-400">💡</div>
-                <p className="text-sm text-gray-400">
-                  Instagram is great for building brand awareness and connecting
-                  with potential customers
-                </p>
-              </div>
             </div>
           </div>
         </div>

@@ -4,28 +4,45 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiCheck } from "react-icons/fi";
 
-export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
+export function PricingSection({ styles, pricing, business }) {
   const [loading, setLoading] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState("monthly");
-  const [freeTrialEnabled, setFreeTrialEnabled] = useState(true);
 
-  // Get the active plan (middle plan) from pricingPlans
-  const activePlan = pricingPlans?.[0] || {
-    name: "Creator",
-    description: "Best for growing creators",
-    price: 10,
-    yearlyPrice: 129,
+  console.log("business.pricing_plans", business.pricing_plans);
+
+  // Get the active plan (middle plan) from business pricing_plans
+  const activePlan = business?.pricing_plans;
+
+  // Get the starter and pro plans from the landing page content
+  const starterPlan = pricing?.plans?.[0] || {
+    name: "Starter",
+    description: "Best for beginner creators",
+    price: 5.33,
+    yearlyPrice: 64,
     features: [
-      "15 connected social accounts",
-      "Unlimited posts",
-      "Schedule posts",
-      "Content studio access",
+      "5 connected social accounts",
+      "10 posts/month",
+      "Basic analytics",
+      "Content calendar",
+    ],
+  };
+
+  const proPlan = pricing?.plans?.[1] || {
+    name: "Agency",
+    description: "For marketing teams",
+    price: 49.99,
+    yearlyPrice: 599,
+    features: [
+      "Unlimited social accounts",
+      "Advanced analytics",
+      "Team collaboration",
+      "Priority support",
     ],
   };
 
   const handleSubscribe = async (plan) => {
     try {
-      if (!stripeConnectId) {
+      if (!business?.stripeConnectId) {
         console.error("No Stripe Connect account ID found");
         return;
       }
@@ -39,7 +56,7 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
         },
         body: JSON.stringify({
           plan,
-          stripeConnectId,
+          stripeConnectId: business.stripeConnectId,
           successUrl: `${window.location.origin}/success`,
           cancelUrl: `${window.location.origin}/cancel`,
         }),
@@ -72,9 +89,13 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
           <h2
             className={`text-4xl md:text-5xl font-bold mb-6 ${styles.text.primary}`}
           >
-            Get more views,{" "}
-            <span className={styles.text.accent}>with less effort.</span>
+            {pricing?.title || "Simple pricing for every kitchen"}
           </h2>
+          <p
+            className={`text-lg text-center mb-8 text-gray-600 ${styles.text.secondary}`}
+          >
+            {pricing?.subtitle || "Choose the perfect plan for your family"}
+          </p>
         </motion.div>
 
         {/* Pricing Toggle */}
@@ -108,27 +129,11 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
               </span>
             </button>
           </motion.div>
-          <div className="flex items-center gap-2">
-            <span className={`text-sm ${styles.text.secondary}`}>
-              Free trial
-            </span>
-            <button
-              onClick={() => setFreeTrialEnabled(!freeTrialEnabled)}
-              className={`w-12 h-6 rounded-full ${styles.utils.highlight} p-1 transition-all`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full ${
-                  styles.text.accent
-                } bg-current transform transition-transform
-                  ${freeTrialEnabled ? "translate-x-6" : "translate-x-0"}`}
-              />
-            </button>
-          </div>
         </div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Starter Plan (Static) */}
+          {/* Starter Plan (Inactive) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -141,10 +146,10 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
               40% OFF
             </div>
             <h3 className={`text-xl font-bold mb-2 ${styles.text.primary}`}>
-              Starter
+              {starterPlan.name}
             </h3>
             <p className={`text-sm mb-6 ${styles.text.secondary}`}>
-              Best for beginner creators
+              {starterPlan.description}
             </p>
 
             <div className="mb-6">
@@ -153,20 +158,21 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
                   $
                 </span>
                 <span className={`text-5xl font-bold ${styles.text.primary}`}>
-                  5
-                </span>
-                <span className={`text-2xl font-bold ${styles.text.primary}`}>
-                  .33
+                  {billingPeriod === "yearly"
+                    ? Math.round(starterPlan.price * 0.6)
+                    : starterPlan.price}
                 </span>
                 <span className={`ml-2 text-sm ${styles.text.secondary}`}>
                   /month
                 </span>
               </div>
               <p className={`text-sm ${styles.text.secondary} mt-2`}>
-                Billed as $64/year
+                Billed as ${starterPlan.yearlyPrice}
+                /year
               </p>
               <p className={`text-sm ${styles.text.accent} mt-1`}>
-                Save $44 with yearly pricing (40% off)
+                Save ${starterPlan.yearlyPrice - starterPlan.price * 12} with
+                yearly pricing (40% off)
               </p>
             </div>
 
@@ -174,19 +180,25 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  5 connected social accounts
+                  {starterPlan.features[0]}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  Basic scheduling
+                  {starterPlan.features[1]}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  Content calendar
+                  {starterPlan.features[2]}
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
+                <span className={`text-sm ${styles.text.secondary}`}>
+                  {starterPlan.features[3]}
                 </span>
               </li>
             </ul>
@@ -200,7 +212,7 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
             </button>
           </motion.div>
 
-          {/* Creator Plan (Active) */}
+          {/* Active Plan (from business.pricing_plans) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -281,7 +293,7 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
             </p>
           </motion.div>
 
-          {/* Pro Plan (Static) */}
+          {/* Pro Plan (Inactive) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -289,7 +301,6 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
             transition={{ delay: 0.2 }}
             className={`${styles.card} p-8 rounded-2xl border border-gray-200/20 relative opacity-75 hover:opacity-100 transition-opacity`}
           >
-            {/* Pro plan content similar to Starter plan but with different values */}
             <div
               className={`absolute -top-3 -right-3 px-3 py-1 text-xs font-medium rounded-full ${styles.utils.highlight} ${styles.text.accent}`}
             >
@@ -301,33 +312,33 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
               Enterprise
             </div>
             <h3 className={`text-xl font-bold mb-2 ${styles.text.primary}`}>
-              Agency
+              {proPlan.name}
             </h3>
             <p className={`text-sm mb-6 ${styles.text.secondary}`}>
-              For marketing teams
+              {proPlan.description}
             </p>
 
-            {/* Similar price structure as other plans */}
             <div className="mb-6">
               <div className="flex items-start">
                 <span className={`text-3xl font-bold ${styles.text.primary}`}>
                   $
                 </span>
                 <span className={`text-5xl font-bold ${styles.text.primary}`}>
-                  49
-                </span>
-                <span className={`text-2xl font-bold ${styles.text.primary}`}>
-                  .99
+                  {billingPeriod === "yearly"
+                    ? Math.round(proPlan.price * 0.6)
+                    : proPlan.price}
                 </span>
                 <span className={`ml-2 text-sm ${styles.text.secondary}`}>
                   /month
                 </span>
               </div>
               <p className={`text-sm ${styles.text.secondary} mt-2`}>
-                Billed as $599/year
+                Billed as ${proPlan.yearlyPrice}
+                /year
               </p>
               <p className={`text-sm ${styles.text.accent} mt-1`}>
-                Save $399 with yearly pricing (40% off)
+                Save ${proPlan.yearlyPrice - proPlan.price * 12} with yearly
+                pricing (40% off)
               </p>
             </div>
 
@@ -335,25 +346,25 @@ export function PricingSection({ styles, pricingPlans, stripeConnectId }) {
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  Unlimited social accounts
+                  {proPlan.features[0]}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  Advanced analytics
+                  {proPlan.features[1]}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  Team collaboration
+                  {proPlan.features[2]}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  Priority support
+                  {proPlan.features[3]}
                 </span>
               </li>
             </ul>

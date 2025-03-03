@@ -31,8 +31,8 @@ import {
   workSans,
 } from "@/app/app/fonts";
 import { Navbar } from "./Navbar";
-import { PricingPlans } from "./PricingPlans";
 import { PricingSection } from "./PricingSection";
+import { Testimonials } from "./Testimonials";
 import { useState } from "react";
 
 // Fade up animation variant
@@ -62,20 +62,12 @@ export function LandingPage({ data }) {
   console.log("🚀 Landing Page Data:", { business, landingPage });
 
   // Extract content sections
-  const {
-    hero,
-    features,
-    testimonials,
-    process,
-    comparison,
-    pricing,
-    faq,
-    final,
-  } = content;
+  const { hero, painPoints, howItWorks, benefits, pricing, faq, final } =
+    content;
 
   // Find the theme from landingThemes that matches the selected theme
   const theme =
-    landingThemes.find((t) => t.id === selectedTheme?.id) || landingThemes[0];
+    landingThemes.find((t) => t.id === selectedTheme?.id) || landingThemes[2];
   const design =
     designPresets.find((d) => d.id === selectedDesign?.id) || designPresets[0];
   const font =
@@ -99,11 +91,11 @@ export function LandingPage({ data }) {
 
   const [openFaq, setOpenFaq] = useState(null);
 
-  const faqItems = [
+  const faqItems = faq?.items || [
     {
-      question: "What social platforms do you support?",
+      question: "Can I customize for dietary restrictions?",
       answer:
-        "We support all major social media platforms including Twitter/X, Instagram, LinkedIn, Facebook, TikTok, YouTube, Bluesky, Threads, and Pinterest.",
+        "Yes! We support all major dietary preferences including vegetarian, vegan, keto, paleo, gluten-free, and more.",
     },
     {
       question: "How many social accounts can I connect?",
@@ -172,7 +164,7 @@ export function LandingPage({ data }) {
                     <span
                       className={`text-sm font-medium tracking-wide ${styles.text.accent}`}
                     >
-                      {hero.badge || "✨ AI-Powered Landing Pages in Minutes →"}
+                      {hero.badge || "✨ AI-Powered Meal Planning in Minutes →"}
                     </span>
                   </motion.div>
 
@@ -185,14 +177,13 @@ export function LandingPage({ data }) {
                     <h1
                       className={`text-2xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 ${styles.text.primary}`}
                     >
-                      {hero.title ||
-                        "Schedule your content everywhere in seconds"}
+                      {hero.title || "Plan your meals, save time and money"}
                     </h1>
                     <p
                       className={`text-base md:text-xl mb-6 md:mb-8 ${styles.text.secondary}`}
                     >
                       {hero.subtitle ||
-                        "The simplest way to post and grow on all platforms. Built for creators and small teams without the ridiculous price tag."}
+                        "The easiest way to plan meals, generate shopping lists, and cook delicious food. Perfect for busy families."}
                     </p>
                   </motion.div>
 
@@ -306,7 +297,7 @@ export function LandingPage({ data }) {
                   <span
                     className={`text-sm font-medium tracking-wide ${styles.text.accent}`}
                   >
-                    {hero.badge || "✨ AI-Powered Landing Pages in Minutes →"}
+                    {hero?.badge || "✨ AI-Powered Meal Planning in Minutes →"}
                   </span>
                 </motion.div>
 
@@ -317,12 +308,12 @@ export function LandingPage({ data }) {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.1] tracking-tight ${styles.text.primary}`}
                 >
-                  {hero.title || (
+                  {hero?.title || (
                     <>
-                      Schedule your content
+                      Plan your meals,
                       <br />
                       <span className={styles.text.accent}>
-                        everywhere in seconds
+                        save time and money
                       </span>
                     </>
                   )}
@@ -335,7 +326,7 @@ export function LandingPage({ data }) {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className={`text-lg md:text-xl mb-10 leading-relaxed max-w-2xl mx-auto ${styles.text.secondary}`}
                 >
-                  {hero.subtitle}
+                  {hero?.subtitle}
                 </motion.p>
 
                 {/* CTA Section */}
@@ -350,7 +341,7 @@ export function LandingPage({ data }) {
                     whileTap={{ scale: 0.95 }}
                     className={`${styles.button.primary} px-8 py-4 rounded-xl text-lg font-bold`}
                   >
-                    {hero.cta || "Get Started Free"}
+                    {hero?.cta || "Get Started Free"}
                     <span className="ml-2">→</span>
                   </motion.button>
                 </motion.div>
@@ -397,107 +388,7 @@ export function LandingPage({ data }) {
         </motion.section>
 
         {/* Testimonials Section */}
-        <section className={`py-16 ${styles.layout.surface}`}>
-          <div className="max-w-7xl mx-auto px-4">
-            {/* Featured Testimonial */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`${styles.card} max-w-3xl mx-auto p-8 rounded-2xl relative`}
-            >
-              {/* Success Metrics */}
-              <div
-                className={`absolute -top-3 -right-3 px-4 py-2 rounded-full text-sm font-medium ${styles.utils.highlight} ${styles.text.accent}`}
-              >
-                10x faster workflow
-              </div>
-
-              {/* Profile and Quote */}
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                {/* Left: Profile */}
-                <div className="flex-shrink-0 text-center md:text-left">
-                  <img
-                    src="/testimonials/user1.jpg"
-                    alt="Sarah Chen"
-                    className="w-16 h-16 rounded-full object-cover mx-auto md:mx-0 mb-3"
-                  />
-                  <div className={`font-semibold ${styles.text.primary}`}>
-                    Sarah Chen
-                  </div>
-                  <div className={`text-sm ${styles.text.secondary}`}>
-                    Digital Marketing Manager
-                  </div>
-                  <div className={`text-sm ${styles.text.accent} mt-1`}>
-                    @socialmedia_sarah
-                  </div>
-                </div>
-
-                {/* Right: Quote and Results */}
-                <div>
-                  <blockquote className={`text-xl ${styles.text.primary} mb-4`}>
-                    "I was spending 3 hours every day manually posting content.
-                    Now I schedule a week's worth of content in just 15 minutes.
-                    This tool has literally given me my weekends back!"
-                  </blockquote>
-
-                  {/* Results */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100/10">
-                    <div>
-                      <div
-                        className={`text-2xl font-bold ${styles.text.accent}`}
-                      >
-                        85%
-                      </div>
-                      <div className={`text-sm ${styles.text.secondary}`}>
-                        Time saved
-                      </div>
-                    </div>
-                    <div>
-                      <div
-                        className={`text-2xl font-bold ${styles.text.accent}`}
-                      >
-                        2.3x
-                      </div>
-                      <div className={`text-sm ${styles.text.secondary}`}>
-                        Engagement
-                      </div>
-                    </div>
-                    <div>
-                      <div
-                        className={`text-2xl font-bold ${styles.text.accent}`}
-                      >
-                        12k+
-                      </div>
-                      <div className={`text-sm ${styles.text.secondary}`}>
-                        New followers
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trust Indicators */}
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100/10">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg
-                      key={star}
-                      className={`w-5 h-5 ${styles.text.accent}`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <div className={`text-sm ${styles.text.muted}`}>
-                  Verified Customer • 6 months ago
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
+        {/* <Testimonials styles={styles} testimonial={data.testimonials} /> */}
 
         {/* Pain Points Section */}
         <motion.section className={`relative py-20 ${styles.layout.surface}`}>
@@ -513,13 +404,14 @@ export function LandingPage({ data }) {
               <h2
                 className={`text-3xl md:text-4xl font-bold mb-4 ${styles.text.primary}`}
               >
-                Posting content shouldn't be this{" "}
-                <span className={`${styles.text.accent}`}>hard</span>
+                {painPoints?.title ||
+                  "Meal planning shouldn't be this stressful"}
               </h2>
               <p
                 className={`text-lg max-w-2xl mx-auto ${styles.text.secondary} opacity-80`}
               >
-                Other solutions and tools...
+                {painPoints?.subtitle ||
+                  "Traditional meal planning is time-consuming, wasteful, and often leads to expensive takeout. There's a smarter way to feed your family."}
               </p>
             </motion.div>
 
@@ -534,17 +426,17 @@ export function LandingPage({ data }) {
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`p-3 rounded-xl bg-red-500/10`}>
-                    <FiClock className="w-6 h-6 text-red-500" />
+                    <FiBox className="w-6 h-6 text-red-500" />
                   </div>
                   <div>
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Manually posting
+                      {painPoints?.items?.[0]?.title || "Wasted groceries"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      Hours of time you can't get back - spent posting your
-                      content 1 by 1 to each platform (ouch)
+                      {painPoints?.items?.[0]?.description ||
+                        "Throwing away expired food because you didn't have a plan? Your wallet feels the pain."}
                     </p>
                   </div>
                 </div>
@@ -559,17 +451,17 @@ export function LandingPage({ data }) {
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`p-3 rounded-xl bg-red-500/10`}>
-                    <FiBox className="w-6 h-6 text-red-500" />
+                    <FiClock className="w-6 h-6 text-red-500" />
                   </div>
                   <div>
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Unfairly expensive
+                      {painPoints?.items?.[1]?.title || "Last-minute takeout"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      You're not an enterprise, or a Fortune 500 company, so why
-                      are you paying as much as one?
+                      {painPoints?.items?.[1]?.description ||
+                        "When you're tired and hungry, another $50 disappears on delivery apps."}
                     </p>
                   </div>
                 </div>
@@ -591,11 +483,11 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Features you don't need
+                      {painPoints?.items?.[2]?.title || "Recipe overwhelm"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      99 features and you only need one... but you'll have to
-                      pay for all of them.
+                      {painPoints?.items?.[2]?.description ||
+                        "Endless scrolling through recipes, never knowing what to make. Decision paralysis is real!"}
                     </p>
                   </div>
                 </div>
@@ -617,11 +509,11 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Complex tools
+                      {painPoints?.items?.[3]?.title || "Shopping chaos"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      The learning curve is steeper than a UFO's flight path.
-                      Houston, we have a problem!
+                      {painPoints?.items?.[3]?.description ||
+                        "Multiple trips to the store, forgotten ingredients, and disorganized lists. The struggle is real."}
                     </p>
                   </div>
                 </div>
@@ -630,7 +522,7 @@ export function LandingPage({ data }) {
           </div>
         </motion.section>
 
-        {/* Growth & Benefits Section */}
+        {/* Benefits & Features Section */}
         <motion.section className={`relative py-24 ${styles.layout.surface}`}>
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
           <div className="relative max-w-6xl mx-auto px-4">
@@ -642,17 +534,16 @@ export function LandingPage({ data }) {
               className="text-center mb-16"
             >
               <h2
-                className={`text-4xl md:text-5xl font-bold mb-6 leading-tight ${styles.text.primary}`}
+                className={`text-3xl md:text-4xl font-bold mb-6 leading-tight ${styles.text.primary}`}
               >
-                Grow your social reach with{" "}
-                <span className={styles.text.accent}>less effort</span>
-                <br />
-                for <span className={styles.text.accent}>less money</span>
+                {benefits?.title ||
+                  "Save time and money\nwith smarter meal planning"}
               </h2>
               <p
                 className={`text-lg max-w-2xl mx-auto ${styles.text.secondary} opacity-80`}
               >
-                Using post bridge features...
+                {benefits?.subtitle ||
+                  "Powerful features that make meal planning and cooking effortless"}
               </p>
             </motion.div>
 
@@ -673,12 +564,11 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Cross-posting
+                      {benefits?.features?.[0]?.title || "Cross-posting"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      Upload your content to post bridge and post it to any of
-                      your connected social media accounts; including posting to
-                      all platforms at the same time.
+                      {benefits?.features?.[0]?.description ||
+                        "Upload your content to post bridge and post it to any of your connected social media accounts; including posting to all platforms at the same time."}
                     </p>
                   </div>
                 </div>
@@ -692,11 +582,11 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Scheduling
+                      {benefits?.features?.[1]?.title || "Scheduling"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      Plan and schedule your content for optimal posting times
-                      across all platforms.
+                      {benefits?.features?.[1]?.description ||
+                        "Plan and schedule your content for optimal posting times across all platforms."}
                     </p>
                   </div>
                 </div>
@@ -710,11 +600,11 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Content management
+                      {benefits?.features?.[2]?.title || "Content management"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      Organize and manage all your content in one central
-                      location.
+                      {benefits?.features?.[2]?.description ||
+                        "Organize and manage all your content in one central location."}
                     </p>
                   </div>
                 </div>
@@ -728,10 +618,11 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-xl font-semibold mb-2 ${styles.text.primary}`}
                     >
-                      Content Studio
+                      {benefits?.features?.[3]?.title || "Content Studio"}
                     </h3>
                     <p className={`${styles.text.secondary} leading-relaxed`}>
-                      Create and edit content directly within the platform.
+                      {benefits?.features?.[3]?.description ||
+                        "Create and edit content directly within the platform."}
                     </p>
                   </div>
                 </div>
@@ -744,23 +635,18 @@ export function LandingPage({ data }) {
                 viewport={{ once: true }}
                 className={`${styles.card} p-8 rounded-2xl`}
               >
-                <div className="text-center mb-6">
+                <div className={`text-center mb-6 ${styles.text.primary}`}>
                   <h3 className="text-xl font-semibold mb-2">
-                    Watch views grow
+                    {benefits?.stats?.title || "Watch views grow"}
                   </h3>
                   <div
                     className={`text-5xl font-bold ${styles.text.accent} mb-2`}
                   >
-                    6,932,049
+                    {benefits?.stats?.value || "6,932,049"}
                   </div>
-                  <p className={`${styles.text.secondary}`}>Potential views</p>
-                </div>
-
-                <div
-                  className={`h-48 w-full bg-black/10 rounded-xl mb-6 relative overflow-hidden`}
-                >
-                  {/* Add your graph/chart component here */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-accent/20 to-transparent" />
+                  <p className={`${styles.text.secondary}`}>
+                    {benefits?.stats?.label || "Potential views"}
+                  </p>
                 </div>
 
                 <motion.button
@@ -768,7 +654,7 @@ export function LandingPage({ data }) {
                   whileTap={{ scale: 0.98 }}
                   className={`w-full ${styles.button.primary} py-3 rounded-xl`}
                 >
-                  Start Growing Now
+                  {benefits?.stats?.cta || "Start Growing Now"}
                 </motion.button>
               </motion.div>
             </div>
@@ -797,13 +683,13 @@ export function LandingPage({ data }) {
               <h2
                 className={`text-4xl md:text-5xl font-bold mb-6 ${styles.text.primary}`}
               >
-                Get started in{" "}
-                <span className={styles.text.accent}>minutes</span>
+                {howItWorks?.title || "Get started in minutes"}
               </h2>
               <p
                 className={`text-lg max-w-2xl mx-auto ${styles.text.secondary} opacity-80`}
               >
-                No complex setup. No learning curve. Just results.
+                {howItWorks?.subtitle ||
+                  "No complex setup. No learning curve. Just results."}
               </p>
             </motion.div>
 
@@ -827,11 +713,11 @@ export function LandingPage({ data }) {
                   <h3
                     className={`text-xl font-semibold mb-4 ${styles.text.primary}`}
                   >
-                    Connect your accounts
+                    {howItWorks?.steps?.[0]?.title || "Connect your accounts"}
                   </h3>
                   <p className={`${styles.text.secondary} mb-6`}>
-                    Link your social media profiles with one click. We support
-                    all major platforms.
+                    {howItWorks?.steps?.[0]?.description ||
+                      "Link your social media profiles with one click. We support all major platforms."}
                   </p>
                   <div className="flex flex-wrap gap-3">
                     <div className={`p-2 rounded-lg bg-black/10`}>
@@ -848,7 +734,6 @@ export function LandingPage({ data }) {
                         className="w-6 h-6"
                       />
                     </div>
-                    {/* Add more platform icons */}
                   </div>
                 </div>
               </motion.div>
@@ -872,11 +757,11 @@ export function LandingPage({ data }) {
                   <h3
                     className={`text-xl font-semibold mb-4 ${styles.text.primary}`}
                   >
-                    Upload your content
+                    {howItWorks?.steps?.[1]?.title || "Upload your content"}
                   </h3>
                   <p className={`${styles.text.secondary} mb-6`}>
-                    Drag & drop your content or create it directly in our
-                    studio. One content, all platforms.
+                    {howItWorks?.steps?.[1]?.description ||
+                      "Drag & drop your content or create it directly in our studio. One content, all platforms."}
                   </p>
                   <div
                     className={`p-4 rounded-lg border-2 border-dashed ${styles.utils.divider} text-center`}
@@ -885,7 +770,7 @@ export function LandingPage({ data }) {
                       className={`w-8 h-8 mx-auto mb-2 ${styles.text.muted}`}
                     />
                     <span className={`text-sm ${styles.text.muted}`}>
-                      Drag files here
+                      {howItWorks?.steps?.[1]?.uploadText || "Drag files here"}
                     </span>
                   </div>
                 </div>
@@ -910,62 +795,28 @@ export function LandingPage({ data }) {
                   <h3
                     className={`text-xl font-semibold mb-4 ${styles.text.primary}`}
                   >
-                    Schedule & publish
+                    {howItWorks?.steps?.[2]?.title || "Schedule & publish"}
                   </h3>
                   <p className={`${styles.text.secondary} mb-6`}>
-                    Set it and forget it. We'll post your content at the perfect
-                    time for maximum engagement.
+                    {howItWorks?.steps?.[2]?.description ||
+                      "Set it and forget it. We'll post your content at the perfect time for maximum engagement."}
                   </p>
                   <div
                     className={`flex items-center gap-2 ${styles.text.accent}`}
                   >
                     <FiClock className="w-5 h-5" />
                     <span className="text-sm font-medium">
-                      Auto-scheduling enabled
+                      {howItWorks?.steps?.[2]?.statusText ||
+                        "Auto-scheduling enabled"}
                     </span>
                   </div>
                 </div>
               </motion.div>
             </div>
-
-            {/* Action Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`mt-16 p-8 rounded-2xl bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 max-w-3xl mx-auto text-center`}
-            >
-              <h3 className={`text-2xl font-bold mb-4 ${styles.text.primary}`}>
-                Ready to streamline your social media?
-              </h3>
-              <p className={`${styles.text.secondary} mb-6 max-w-xl mx-auto`}>
-                Join thousands of creators who are saving time and growing
-                faster with our platform.
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`${styles.button.primary} px-8 py-4 rounded-xl text-lg font-bold`}
-              >
-                Get Started Free
-                <span className="ml-2">→</span>
-              </motion.button>
-            </motion.div>
           </div>
         </motion.section>
 
-        <section id="pricing" className="py-12 bg-gray-50">
-          <div className="container mx-auto">
-            <h2 className="text-4xl font-bold text-center mb-8">
-              Pricing Plans
-            </h2>
-            <PricingSection
-              styles={styles}
-              pricingPlans={business.pricing_plans}
-              stripeConnectId={business.stripe_account_id}
-            />
-          </div>
-        </section>
+        <PricingSection styles={styles} pricing={pricing} business={business} />
 
         {/* FAQ Section */}
         <section className={`py-24 ${styles.layout.surface}`}>
@@ -978,13 +829,13 @@ export function LandingPage({ data }) {
               <h2
                 className={`text-3xl md:text-4xl font-bold mt-2 ${styles.text.primary}`}
               >
-                Frequently Asked Questions
+                {faq?.title || "Common questions"}
               </h2>
             </div>
 
             {/* FAQ Items */}
             <div className="space-y-4">
-              {faqItems.map((item, index) => (
+              {faqItems?.map((item, index) => (
                 <div
                   key={index}
                   className={`${styles.card} rounded-xl overflow-hidden`}
@@ -996,7 +847,7 @@ export function LandingPage({ data }) {
                     <h3
                       className={`text-lg font-semibold ${styles.text.primary}`}
                     >
-                      {item.question}
+                      {item?.question}
                     </h3>
                     <span
                       className={`text-2xl ${
@@ -1010,7 +861,7 @@ export function LandingPage({ data }) {
                   </button>
                   {openFaq === index && (
                     <div className={`px-6 pb-6 ${styles.text.secondary}`}>
-                      {item.answer}
+                      {item?.answer}
                     </div>
                   )}
                 </div>
@@ -1031,18 +882,18 @@ export function LandingPage({ data }) {
               <h2
                 className={`text-4xl md:text-5xl font-bold mb-8 ${styles.text.primary}`}
               >
-                Get more views,{" "}
-                <span className={styles.text.accent}>with less effort</span>
+                {final?.title || "Start planning smarter meals today"}
               </h2>
               <p className={`text-lg mb-12 ${styles.text.secondary}`}>
-                Post to all platforms in 30 seconds instead of 30 minutes.
+                {final?.subtitle ||
+                  "Stop stressing about dinner. Try it free for 14 days."}
               </p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={`${styles.button.primary} px-8 py-4 rounded-xl text-lg font-bold`}
               >
-                Try for free
+                {final?.cta || "Get started free"}
                 <span className="ml-2">→</span>
               </motion.button>
             </motion.div>
@@ -1063,18 +914,18 @@ export function LandingPage({ data }) {
                   className={`w-8 h-8 rounded-lg ${styles.utils.highlight} flex items-center justify-center`}
                 >
                   <span className={`text-lg font-bold ${styles.text.accent}`}>
-                    {business.name.charAt(0)}
+                    {business?.name?.charAt(0)}
                   </span>
                 </div>
                 <span
                   className={`text-base font-medium ${styles.text.primary}`}
                 >
-                  {business.name}
+                  {business?.name}
                 </span>
               </div>
               <p className={`text-sm ${styles.text.secondary}`}>
-                Post content to multiple social media platforms at the same
-                time, all-in-one place. Cross posting made easy.
+                {business?.description ||
+                  "The easiest way to plan meals, generate shopping lists, and cook delicious food. Perfect for busy families."}
               </p>
               <p className={`text-sm ${styles.text.muted}`}>
                 Copyright © {new Date().getFullYear()} - All rights reserved

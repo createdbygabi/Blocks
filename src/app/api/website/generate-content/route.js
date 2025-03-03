@@ -64,35 +64,31 @@ const SECTION_TEMPLATES = {
     title: "Common questions",
     items: [
       {
-        question: "What social platforms do you support?",
-        answer:
-          "We support all major platforms including Twitter/X, Instagram, LinkedIn, Facebook, TikTok, and more.",
+        question: "",
+        answer: "",
       },
       {
-        question: "How many social accounts can I connect?",
-        answer:
-          "The number of accounts depends on your plan - from 3 accounts on Basic to unlimited on Enterprise.",
+        question: "",
+        answer: "",
       },
       {
-        question: "Can I schedule posts in advance?",
-        answer:
-          "Yes! You can schedule your content to be posted at optimal times across all your connected platforms.",
+        question: "",
+        answer: "",
       },
       {
-        question: "Is there a free trial?",
-        answer:
-          "Yes, you can try all features free for 14 days, no credit card required.",
+        question: "",
+        answer: "",
       },
     ],
   },
   final: {
-    title: "Start posting everywhere in seconds",
-    subtitle: "Stop wasting time posting manually. Try it free for 14 days.",
-    cta: "Get started free",
+    title: "",
+    subtitle: "",
+    cta: "",
   },
   painPoints: {
-    title: "Posting content shouldn't be this hard",
-    subtitle: "Other solutions and tools...",
+    title: "",
+    subtitle: "",
     items: [
       {
         title: "",
@@ -116,58 +112,55 @@ const SECTION_TEMPLATES = {
       },
     ],
   },
-  growth: {
-    title: "Grow your social reach with less effort for less money",
-    subtitle: "Using post bridge features...",
+  benefits: {
+    title: "",
+    subtitle: "",
     features: [
       {
-        title: "Cross-posting",
-        description:
-          "Upload your content to post bridge and post it to any of your connected social media accounts; including posting to all platforms at the same time.",
+        title: "",
+        description: "",
         iconName: "zap",
       },
       {
-        title: "Scheduling",
-        description:
-          "Plan and schedule your content for optimal posting times across all platforms.",
+        title: "",
+        description: "",
         iconName: "clock",
       },
       {
-        title: "Content management",
-        description:
-          "Organize and manage all your content in one central location.",
+        title: "",
+        description: "",
         iconName: "layers",
       },
       {
-        title: "Content Studio",
-        description: "Create and edit content directly within the platform.",
+        title: "",
+        description: "",
         iconName: "box",
       },
     ],
     stats: {
-      title: "Watch views grow",
-      value: "6,932,049",
-      label: "Potential views",
-      cta: "Start Growing Now",
+      title: "",
+      value: "",
+      label: "",
+      cta: "",
     },
   },
   howItWorks: {
-    title: "How it works",
-    subtitle: "Post everywhere in 3 simple steps",
+    title: "",
+    subtitle: "",
     steps: [
       {
-        title: "Connect your accounts",
-        description: "Link your social media accounts in just a few clicks",
+        title: "",
+        description: "",
         iconName: "zap",
       },
       {
-        title: "Upload your content",
-        description: "Add your post, image, or video once",
+        title: "",
+        description: "",
         iconName: "upload",
       },
       {
-        title: "Post everywhere",
-        description: "Click once to share on all platforms instantly",
+        title: "",
+        description: "",
         iconName: "trending-up",
       },
     ],
@@ -187,18 +180,28 @@ const FIELD_INSTRUCTIONS = {
     },
     title: {
       instructions:
-        "Create a powerful, action-focused headline that emphasizes the pain point and the value proposition, trigger emotional reaction to the user, action-oriented (max 8 words)",
+        "Create a powerful, concise headline (max 8 words) that immediately grabs attention and starts with an action word. It should be trigger emotionnally by focusing on the user pain point. Only uppercase the first letter of the first word.",
       examples: [
-        "Schedule your content everywhere in seconds",
-        "Post once, reach all platforms instantly",
+        "Give your X posts the engagement they deserve",
+        "Ship your startup in days, not weeks",
+        "Save hours on social media posting",
+        "Build & monetize your audience, fast",
       ],
     },
     subtitle: {
       instructions:
-        "Write a clear subtitle explaining the main benefit clearly (10-15 words)",
+        "Write a clear, benefit-focused subtitle (15-20 words) that expands on the headline. One sentence.",
       examples: [
-        "The simplest way to post and grow on all platforms. Built for creators and small teams.",
+        "AI-powered analytics that help you make smarter decisions in half the time",
+        "The NextJS boilerplate with all you need to build your SaaS, AI tool, or any other web app and make your first $ online fast.",
+        "The simplest way to post and grow on all platforms. Built for creators and small teams without the ridiculous price tag.",
+        "Get sales, growth and new networks. Faster than what you're currently trying.",
       ],
+    },
+    cta: {
+      instructions:
+        "Create a strong call-to-action (2-4 words) that drives action, related to the main feature (no Try it for free or smilar phrases).",
+      examples: ["Get Started", "Generate content", "Start Generating"],
     },
   },
   painPoints: {
@@ -230,7 +233,7 @@ const FIELD_INSTRUCTIONS = {
         },
         description: {
           instructions:
-            "Describe the pain point in a relatable, sometimes humorous way (10-15 words)",
+            "Describe the pain point in a relatable way understanding the pain point of the user (10-15 words)",
           examples: [
             "Hours of time you can't get back - spent posting your content 1 by 1",
             "You're not an enterprise company, so why are you paying like one?",
@@ -330,27 +333,28 @@ const FIELD_INSTRUCTIONS = {
       instructions: "Write a simple FAQ section title (2-3 words)",
       examples: ["Common questions", "Quick answers"],
     },
-    items: {
-      instructions:
-        "Create 3-5 essential questions focused on the core cross-posting feature, pricing, and getting started",
-      examples: [
-        {
-          question: "What social platforms do you support?",
-          answer:
+    items: [
+      {
+        question: {
+          instructions:
+            "Write a clear, concise question about the product (5-10 words)",
+          examples: [
+            "What social platforms do you support?",
+            "How many social accounts can I connect?",
+            "Is there a free trial?",
+          ],
+        },
+        answer: {
+          instructions:
+            "Provide a helpful, straightforward answer (10-20 words)",
+          examples: [
             "We support all major platforms including Twitter/X, Instagram, LinkedIn, Facebook, TikTok, and more.",
-        },
-        {
-          question: "How many social accounts can I connect?",
-          answer:
             "The number of accounts depends on your plan - from 3 accounts on Basic to unlimited on Enterprise.",
-        },
-        {
-          question: "Is there a free trial?",
-          answer:
             "Yes, you can try all features free for 14 days, no credit card required.",
+          ],
         },
-      ],
-    },
+      },
+    ],
   },
   final: {
     title: {
@@ -375,63 +379,59 @@ const FIELD_INSTRUCTIONS = {
       examples: ["Get started free", "Try free today"],
     },
   },
-  growth: {
+  benefits: {
     title: {
       instructions:
-        "Create a compelling title that emphasizes growth and ease of use. Include 2-3 key benefits separated by line breaks (10-15 words)",
+        "Create a compelling title that emphasizes the main benefits (6-8 words)",
       examples: [
-        "Grow your social reach with less effort\nfor less money",
-        "Scale your social presence faster\nwith smarter tools",
+        "Grow your social reach with less effort for less money",
+        "Save time and reach more people with smart automation",
       ],
     },
     subtitle: {
-      instructions: "Write a brief introduction to the features (8-12 words)",
+      instructions: "Write a subtitle that introduces the features (5-8 words)",
       examples: [
-        "Powerful features that make social media management effortless",
-        "Everything you need to grow your social presence efficiently",
+        "Using our powerful platform features",
+        "Powerful features to grow your presence",
       ],
     },
     features: [
       {
         title: {
-          instructions: "Write a clear feature name (1-3 words)",
-          examples: [
-            "Cross-posting",
-            "Smart Scheduling",
-            "Content Management",
-            "Content Studio",
-          ],
+          instructions: "Write a clear feature title (2-4 words)",
+          examples: ["Cross-posting", "Smart Scheduling", "Content Management"],
         },
         description: {
-          instructions:
-            "Explain the feature benefit clearly and concisely (15-20 words)",
+          instructions: "Explain the feature benefit clearly (10-15 words)",
           examples: [
-            "Upload once and post everywhere. Save hours by publishing to all platforms simultaneously.",
-            "Plan and schedule your content for optimal posting times across all platforms.",
+            "Upload your content once and post it to all platforms instantly",
+            "Plan and schedule your content for optimal posting times",
           ],
-        },
-        iconName: {
-          instructions: "Choose an icon that best represents the feature",
-          examples: ["zap", "clock", "layers", "box"],
         },
       },
     ],
     stats: {
       title: {
         instructions: "Write an engaging stats title (2-4 words)",
-        examples: ["Watch views grow", "See the impact"],
+        examples: ["Watch views grow", "See results fast"],
+      },
+      label: {
+        instructions:
+          "Write a clear realistic label that is relevant to the user problem, such as time saved, posts automated, conversion rate, etc. (2-4 words)",
+        examples: [
+          "Monthly posts",
+          "Posts automated",
+          "Time saved",
+          "Conversion rate",
+        ],
       },
       value: {
         instructions:
-          "Generate a realistic but impressive number for potential views",
-        examples: ["6,932,049", "5,847,123"],
-      },
-      label: {
-        instructions: "Label the stat value (2-3 words)",
-        examples: ["Potential views", "Monthly reach"],
+          "Write a VERY REALISTIC result number of the metric above, has to not sound fake or exaggerated (2-4 words)",
+        examples: ["100K", "2.5M", "500K+", "+20%"],
       },
       cta: {
-        instructions: "Write an action-oriented button text (3-4 words)",
+        instructions: "Write an action-focused button text (2-4 words)",
         examples: ["Start Growing Now", "Boost Your Reach"],
       },
     },
@@ -443,32 +443,21 @@ const FIELD_INSTRUCTIONS = {
     },
     subtitle: {
       instructions: "Write a brief subtitle emphasizing simplicity (4-8 words)",
-      examples: [
-        "Post everywhere in 3 simple steps",
-        "Three steps to cross-platform posting",
-      ],
+      examples: ["Post everywhere in 3 simple steps"],
     },
     steps: [
       {
         title: {
-          instructions: "Write a clear, action-oriented step title (2-4 words)",
-          examples: [
-            "Connect your accounts",
-            "Upload your content",
-            "Post everywhere",
-          ],
+          instructions: "Write a clear step title (2-4 words)",
+          examples: ["Connect accounts", "Upload content", "Post everywhere"],
         },
         description: {
-          instructions: "Explain the step in simple terms (5-10 words)",
+          instructions: "Explain the step clearly (8-12 words)",
           examples: [
-            "Link your social media accounts in minutes",
+            "Link your social media accounts in just a few clicks",
             "Add your post, image, or video once",
-            "Click once to share on all platforms",
+            "Click once to share on all platforms instantly",
           ],
-        },
-        iconName: {
-          instructions: "Choose an icon that represents the step",
-          examples: ["zap", "upload", "trending-up"],
         },
       },
     ],
@@ -483,11 +472,41 @@ function getFieldInstructions(section, path) {
   // Get section-specific instructions
   const sectionInstructions = FIELD_INSTRUCTIONS[section] || {};
 
-  // Try to match exact field path
-  for (const [key, value] of Object.entries(sectionInstructions)) {
-    if (path.endsWith(key)) {
-      return value;
+  // Special handling for array items
+  const arrayMatch = path.match(/items\[(\d+)\]\.(\w+)/);
+  if (arrayMatch) {
+    const [_, index, itemField] = arrayMatch;
+    // Get instructions from the first item in the items array (used as template)
+    if (sectionInstructions.items?.[0]?.[itemField]) {
+      return sectionInstructions.items[0][itemField];
     }
+  }
+
+  // First try to find exact path match
+  let currentObj = sectionInstructions;
+  for (const part of pathParts) {
+    const arrayPart = part.match(/(\w+)\[(\d+)\]/);
+    if (arrayPart) {
+      // Skip array indices when looking up instructions
+      if (currentObj[arrayPart[1]]) {
+        currentObj = currentObj[arrayPart[1]][0];
+      } else {
+        break;
+      }
+    } else if (currentObj && currentObj[part]) {
+      currentObj = currentObj[part];
+    } else {
+      break;
+    }
+  }
+
+  if (currentObj && currentObj.instructions) {
+    return currentObj;
+  }
+
+  // If no exact match found, try to match the last field name
+  if (sectionInstructions[fieldName]) {
+    return sectionInstructions[fieldName];
   }
 
   // Default instructions based on field patterns
@@ -497,7 +516,6 @@ function getFieldInstructions(section, path) {
       examples: ["Transform Your Business with AI"],
     };
   }
-  // ... other default patterns
 
   return {
     instructions:
@@ -513,14 +531,16 @@ function getTextFields(obj, path = "") {
   for (const [key, value] of Object.entries(obj)) {
     const currentPath = path ? `${path}.${key}` : key;
 
-    if (typeof value === "string") {
+    if (typeof value === "string" && value === "") {
       fields.push({ path: currentPath, currentValue: value });
     } else if (Array.isArray(value)) {
+      // Handle arrays properly by using array indices in the path
       value.forEach((item, index) => {
-        if (typeof item === "string") {
-          fields.push({ path: `${currentPath}[${index}]`, currentValue: item });
-        } else if (typeof item === "object") {
-          fields.push(...getTextFields(item, `${currentPath}[${index}]`));
+        if (typeof item === "object" && item !== null) {
+          // For nested objects within arrays, include the index in the path
+          const arrayItemPath = `${currentPath}[${index}]`;
+          const nestedFields = getTextFields(item, arrayItemPath);
+          fields.push(...nestedFields);
         }
       });
     } else if (typeof value === "object" && value !== null) {
@@ -542,80 +562,171 @@ export async function POST(req) {
       );
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      temperature: 0.7,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert conversion copywriter who specializes in creating high-converting landing page copy.",
-        },
-        {
-          role: "user",
-          content: `Generate a complete landing page for a ${
-            businessInfo.niche
-          } business named "${brandingResults.name}".
+    // Initialize only the sections we're generating
+    const sections = [
+      "hero",
+      "painPoints",
+      "benefits",
+      "howItWorks",
+      // "pricing",
+      "faq",
+      "final",
+    ];
+    const generatedContent = {};
 
-Business Details:
-- Main Feature: ${businessInfo.mainFeature}
-- Pain Point: ${businessInfo.painPoint}
-- Target Audience: ${businessInfo.targetAudience}
+    for (const section of sections) {
+      try {
+        console.log(`\n📝 Starting generation for ${section} section...`);
 
-Generate persuasive content for each section while:
-1. Being clear and benefit-focused
-2. Addressing pain points directly
-3. Matching the target audience
-4. Using persuasive language
-5. Maintaining authenticity
+        // Get template structure just for this section
+        const sectionTemplate = SECTION_TEMPLATES[section];
 
-For each field below, provide the content using this format:
+        // Get fields for just this section
+        const textFields = getTextFields(sectionTemplate);
+        console.log(
+          `\n📋 Fields to generate for ${section}:`,
+          JSON.stringify(textFields, null, 2)
+        );
+
+        // Construct the prompt
+        const prompt = `As an expert conversion copywriter, generate new text content for the "${section}" section of a landing page.
+
+Product main feature:
+${businessInfo.mainFeature}
+
+Audience Pain Points:
+${businessInfo.painPoint}
+
+Generate new, persuasive content for each field while:
+1. Following the specific instructions EXACTLY (especially word count requirements)
+2. Using the examples as style guides - match their tone and structure
+3. Addressing the pain points directly
+4. Emphasizing the unique value proposition
+5. Using persuasive, benefit-focused language
+6. Maintaining authenticity and credibility
+7. Avoiding using double quotes and other special characters
+
+IMPORTANT: For each field, make sure your generated text:
+- Matches the exact word count specified in instructions
+- Follows the style and structure of the examples
+- Expands on previous sections (e.g. subtitle should expand on title)
+
+Don't forget that it is a copywriting for a landing page of a MVP so only one main feature, no complex features.
+Also, no free trials.
+
+Here are the fields that need new content:
+
+${textFields
+  .map((field) => {
+    const instructions = getFieldInstructions(section, field.path);
+    return `Path: ${field.path}
+Current text: ${field.currentValue}
+Instructions: ${instructions.instructions}
+${
+  instructions.examples.length > 0
+    ? `Examples (MATCH THIS STYLE):\n${instructions.examples
+        .map((ex) => `- ${ex}`)
+        .join("\n")}\n`
+    : ""
+}
+---`;
+  })
+  .join("\n\n")}
+
+For each field, respond with:
 PATH: [field path]
 NEW TEXT: [your generated text]
----
+---`;
 
-${Object.entries(SECTION_TEMPLATES)
-  .map(([section, template]) => {
-    const fields = getTextFields(template);
-    return fields
-      .map((field) => {
-        const instructions = getFieldInstructions(section, field.path);
-        return `
-PATH: ${field.path}
-INSTRUCTIONS: ${instructions.instructions}
-${
-  instructions.examples.length
-    ? `EXAMPLES:\n${instructions.examples.join("\n")}`
-    : ""
-}`;
-      })
-      .join("\n---\n");
-  })
-  .join("\n---\n")}`,
-        },
-      ],
-    });
+        // Log the API request
+        console.log("\n🔍 API Request for section:", section);
+        console.log("Model:", "gpt-4o");
+        console.log(
+          "System Message:",
+          "You are an expert conversion copywriter who specializes in creating high-converting landing page copy..."
+        );
+        console.log("User Message:", prompt);
 
-    // Parse the response and update all sections at once
-    const generatedText = completion.choices[0].message.content;
-    const content = JSON.parse(JSON.stringify(SECTION_TEMPLATES));
+        // Call OpenAI
+        console.log(`\n🤖 Calling OpenAI API for ${section}...`);
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an expert conversion copywriter who specializes in creating high-converting landing page copy. Provide new text content for each field as requested, following the exact format specified and adhering strictly to the length and style guidelines provided.",
+            },
+            { role: "user", content: prompt },
+          ],
+        });
 
-    const blocks = generatedText
-      .split(/\n*---\n*/)
-      .filter((block) => block.trim());
-    blocks.forEach((block) => {
-      const pathMatch = block.match(/PATH:\s*([^\n]+)/i);
-      const textMatch = block.match(/NEW TEXT:\s*([\s\S]+?)(?=\n*PATH:|$)/i);
+        // Log the API response
+        console.log("\n📥 API Response:");
+        console.log("Status:", completion.choices[0].finish_reason);
+        console.log("Generated Text:", completion.choices[0].message.content);
+        console.log("Usage:", {
+          prompt_tokens: completion.usage?.prompt_tokens,
+          completion_tokens: completion.usage?.completion_tokens,
+          total_tokens: completion.usage?.total_tokens,
+        });
 
-      if (pathMatch && textMatch) {
-        const path = pathMatch[1].trim();
-        const newText = textMatch[1].trim();
-        setValueAtPath(content, path, newText);
+        const generatedText = completion.choices[0].message.content;
+        console.log(
+          `\n📥 Received response for ${section}:`,
+          JSON.stringify(generatedText, null, 2)
+        );
+
+        // Initialize section content with template
+        generatedContent[section] = JSON.parse(JSON.stringify(sectionTemplate));
+
+        // Modify the blocks parsing section
+        const blocks = generatedText
+          .split(/\n*---\n*/)
+          .filter((block) => block.trim());
+
+        console.log(`\n🔍 Parsing response for ${section}...`);
+
+        // Process all PATH/NEW TEXT pairs in the entire response
+        const allPairs = generatedText
+          .split(/\n*(?=PATH:)/g)
+          .filter((pair) => pair.trim().startsWith("PATH:"));
+
+        allPairs.forEach((pair) => {
+          const pathMatch = pair.match(/PATH:\s*([^\n]+)/i);
+          const textMatch = pair.match(
+            /NEW TEXT:\s*([\s\S]+?)(?=\n*(?:PATH:|$))/i
+          );
+
+          if (pathMatch && textMatch) {
+            const path = pathMatch[1].trim();
+            let newText = textMatch[1].trim();
+
+            // Remove trailing "---" if present
+            newText = newText.replace(/---\s*$/, "").trim();
+
+            console.log(`✏️ Setting value for path "${path}":`, newText);
+            setValueAtPath(generatedContent[section], path, newText);
+          }
+        });
+
+        console.log(
+          `\n✅ Final content for ${section}:`,
+          JSON.stringify(generatedContent[section], null, 2)
+        );
+      } catch (error) {
+        console.error(`\n❌ Error generating ${section} section:`, error);
+        console.error("Error details:", {
+          message: error.message,
+          code: error.code,
+          type: error.type,
+          stack: error.stack,
+        });
       }
-    });
+    }
 
     return NextResponse.json({
-      content,
+      content: generatedContent,
       previewUrl: `/preview/${Date.now()}`,
       thumbnailUrl: `https://placehold.co/1200x630/1a1a1a/ffffff?text=${encodeURIComponent(
         brandingResults.name
@@ -632,17 +743,40 @@ ${
 
 // Helper function to set value at path
 function setValueAtPath(obj, path, value) {
-  const parts = path.replace(/\[(\d+)\]/g, ".$1").split(".");
+  const parts = path.split(".");
   let current = obj;
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
-    if (!(part in current)) {
-      current[part] = {};
+    // Handle array indices in the path
+    const match = part.match(/(\w+)\[(\d+)\]/);
+    if (match) {
+      const [_, arrayName, index] = match;
+      if (!current[arrayName]) {
+        current[arrayName] = [];
+      }
+      if (!current[arrayName][index]) {
+        current[arrayName][index] = {};
+      }
+      current = current[arrayName][index];
+    } else {
+      if (!(part in current)) {
+        current[part] = {};
+      }
+      current = current[part];
     }
-    current = current[part];
   }
 
   const lastPart = parts[parts.length - 1];
-  current[lastPart] = value;
+  // Handle array index in the last part
+  const match = lastPart.match(/(\w+)\[(\d+)\]/);
+  if (match) {
+    const [_, arrayName, index] = match;
+    if (!current[arrayName]) {
+      current[arrayName] = [];
+    }
+    current[arrayName][index] = value;
+  } else {
+    current[lastPart] = value;
+  }
 }
