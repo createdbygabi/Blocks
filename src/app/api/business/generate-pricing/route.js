@@ -65,7 +65,8 @@ IMPORTANT: Return only the raw JSON object, no markdown formatting or code fence
 
     try {
       const pricingPlan = JSON.parse(cleanedText);
-      return NextResponse.json({ pricing_plans: [pricingPlan] });
+      console.log("pricing plan, api response", pricingPlan);
+      return NextResponse.json(pricingPlan);
     } catch (parseError) {
       console.error("❌ API Pricing - JSON Parse Error:", parseError);
       console.error("Raw text:", generatedText);

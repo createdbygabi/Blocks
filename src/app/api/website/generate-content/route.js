@@ -24,39 +24,44 @@ const SECTION_TEMPLATES = {
     },
   ],
   pricing: {
-    title: "Simple pricing for everyone",
-    subtitle: "Choose the perfect plan for your needs",
+    title: "",
+    subtitle: "",
     plans: [
       {
-        name: "Basic",
-        price: "$9",
+        name: "",
+        price: "",
         period: "/month",
-        perfect: "For solo creators",
-        features: [
-          "3 social accounts",
-          "10 posts/month",
-          "Basic analytics",
-          "Standard support",
-        ],
+        description: "",
+        feature1: "",
+        feature2: "",
+        feature3: "",
+        feature4: "",
         cta: "Get Started",
         highlight: false,
+        setupFee: "0",
+        mainFeature: "",
+        limitations: "",
+        billingPeriod: "monthly",
       },
-      // Middle plan comes from database/API
+      null, // Middle plan comes from pricingPlan
       {
-        name: "Enterprise",
-        price: "$99",
+        name: "",
+        price: "",
         period: "/month",
-        perfect: "For large teams",
-        features: [
-          "Unlimited accounts",
-          "Unlimited posts",
-          "Advanced analytics",
-          "Priority support",
-          "Custom features",
-          "API access",
-        ],
+        description: "",
+        feature1: "",
+        feature2: "",
+        feature3: "",
+        feature4: "",
+        feature5: "",
+        feature6: "",
+        feature7: "",
         cta: "Contact Sales",
         highlight: false,
+        setupFee: "0",
+        mainFeature: "",
+        limitations: "",
+        billingPeriod: "monthly",
       },
     ],
   },
@@ -250,82 +255,102 @@ const FIELD_INSTRUCTIONS = {
   pricing: {
     title: {
       instructions:
-        "Write a clear pricing section title emphasizing simplicity (3-5 words)",
-      examples: [
-        "Simple pricing for everyone",
-        "Transparent, flexible pricing",
-      ],
+        "Write a clear pricing section title emphasizing value (3-5 words)",
+      examples: ["Simple pricing for everyone", "Plans for every creator"],
     },
     subtitle: {
       instructions: "Write a brief subtitle about choosing plans (5-8 words)",
+      examples: ["Choose the perfect plan for your needs"],
+    },
+    // Basic plan fields
+    "plans[0].name": {
+      instructions: "Name for the basic plan (40-50% of middle plan price)",
+      examples: ["Basic", "Starter"],
+    },
+    "plans[0].price": {
+      instructions: "Set price at 40-50% of middle plan price (number only)",
+      examples: ["9", "12"],
+    },
+    "plans[0].description": {
+      instructions:
+        "Write a brief description for basic features (10-15 words)",
       examples: [
-        "Choose the perfect plan for your needs",
-        "Find the right plan for you",
+        "Perfect for individuals and small teams just getting started",
       ],
     },
-    plans: {
-      basic: {
-        name: {
-          instructions: "Name for the entry-level plan",
-          examples: ["Basic", "Starter"],
-        },
-        price: {
-          instructions: "Set an attractive entry price point ($9-$15)",
-          examples: ["$9", "$12"],
-        },
-        perfect: {
-          instructions: "Describe ideal user for basic plan (2-4 words)",
-          examples: ["For solo creators", "For getting started"],
-        },
-        features: {
-          instructions:
-            "List 4-5 basic features, starting with number of accounts and posts",
-          examples: [
-            [
-              "3 social accounts",
-              "10 posts/month",
-              "Basic analytics",
-              "Standard support",
-            ],
-          ],
-        },
-        cta: {
-          instructions: "Write action-oriented button text (2-3 words)",
-          examples: ["Get Started", "Try Basic"],
-        },
-      },
-      enterprise: {
-        name: {
-          instructions: "Name for the enterprise-level plan",
-          examples: ["Enterprise", "Business"],
-        },
-        price: {
-          instructions: "Set premium price point ($89-$199)",
-          examples: ["$99", "$149"],
-        },
-        perfect: {
-          instructions: "Describe ideal user for enterprise plan (2-4 words)",
-          examples: ["For large teams", "For growing companies"],
-        },
-        features: {
-          instructions:
-            "List 6-7 premium features, emphasizing unlimited usage and exclusive features",
-          examples: [
-            [
-              "Unlimited accounts",
-              "Unlimited posts",
-              "Advanced analytics",
-              "Priority support",
-              "Custom features",
-              "API access",
-            ],
-          ],
-        },
-        cta: {
-          instructions: "Write enterprise-focused button text (2-3 words)",
-          examples: ["Contact Sales", "Get Enterprise"],
-        },
-      },
+    "plans[0].mainFeature": {
+      instructions: "Describe the main feature for basic plan",
+      examples: ["Essential AI features"],
+    },
+    "plans[0].limitations": {
+      instructions: "List usage limits for basic plan",
+      examples: ["Up to 3 projects per month"],
+    },
+    "plans[0].feature1": {
+      instructions: "First core feature for basic plan",
+      examples: ["1 landing page per month"],
+    },
+    "plans[0].feature2": {
+      instructions: "Second core feature for basic plan",
+      examples: ["Basic AI assistance"],
+    },
+    "plans[0].feature3": {
+      instructions: "Third core feature for basic plan",
+      examples: ["Standard support"],
+    },
+    "plans[0].feature4": {
+      instructions: "Fourth core feature for basic plan",
+      examples: ["Essential analytics"],
+    },
+    // Enterprise plan fields
+    "plans[2].name": {
+      instructions: "Name for the premium plan (2.5-3x middle plan price)",
+      examples: ["Enterprise", "Business Pro"],
+    },
+    "plans[2].price": {
+      instructions: "Set price at 2.5-3x middle plan price (number only)",
+      examples: ["99", "149"],
+    },
+    "plans[2].description": {
+      instructions:
+        "Write a brief description for premium features (10-15 words)",
+      examples: ["Advanced features and priority support for growing teams"],
+    },
+    "plans[2].mainFeature": {
+      instructions: "Describe the main feature for premium plan",
+      examples: ["Advanced AI suite with priority features"],
+    },
+    "plans[2].limitations": {
+      instructions: "List usage limits for premium plan",
+      examples: ["Unlimited usage", "No restrictions"],
+    },
+    "plans[2].feature1": {
+      instructions: "First premium feature",
+      examples: ["Unlimited landing pages"],
+    },
+    "plans[2].feature2": {
+      instructions: "Second premium feature",
+      examples: ["Advanced AI features"],
+    },
+    "plans[2].feature3": {
+      instructions: "Third premium feature",
+      examples: ["Priority support"],
+    },
+    "plans[2].feature4": {
+      instructions: "Fourth premium feature",
+      examples: ["Custom branding"],
+    },
+    "plans[2].feature5": {
+      instructions: "Fifth premium feature",
+      examples: ["A/B testing"],
+    },
+    "plans[2].feature6": {
+      instructions: "Sixth premium feature",
+      examples: ["API access"],
+    },
+    "plans[2].feature7": {
+      instructions: "Seventh premium feature",
+      examples: ["Team collaboration"],
     },
   },
   faq: {
@@ -534,10 +559,13 @@ function getTextFields(obj, path = "") {
     if (typeof value === "string" && value === "") {
       fields.push({ path: currentPath, currentValue: value });
     } else if (Array.isArray(value)) {
-      // Handle arrays properly by using array indices in the path
+      // Include empty arrays as fields that need generation
+      if (value.length === 0) {
+        fields.push({ path: currentPath, currentValue: value });
+      }
+      // Continue with normal array processing
       value.forEach((item, index) => {
         if (typeof item === "object" && item !== null) {
-          // For nested objects within arrays, include the index in the path
           const arrayItemPath = `${currentPath}[${index}]`;
           const nestedFields = getTextFields(item, arrayItemPath);
           fields.push(...nestedFields);
@@ -553,9 +581,9 @@ function getTextFields(obj, path = "") {
 
 export async function POST(req) {
   try {
-    const { businessInfo, brandingResults } = await req.json();
+    const { businessInfo, brandingResults, pricingPlan } = await req.json();
 
-    if (!businessInfo || !brandingResults?.name) {
+    if (!businessInfo || !brandingResults?.name || !pricingPlan) {
       return NextResponse.json(
         { error: "Missing required information" },
         { status: 400 }
@@ -564,13 +592,13 @@ export async function POST(req) {
 
     // Initialize only the sections we're generating
     const sections = [
-      "hero",
-      "painPoints",
-      "benefits",
-      "howItWorks",
-      // "pricing",
-      "faq",
-      "final",
+      // "hero",
+      // "painPoints",
+      // "benefits",
+      // "howItWorks",
+      "pricing",
+      // "faq",
+      // "final",
     ];
     const generatedContent = {};
 
@@ -638,6 +666,65 @@ PATH: [field path]
 NEW TEXT: [your generated text]
 ---`;
 
+        const pricingPrompt = `As an expert conversion copywriter, generate pricing tiers around this main plan:
+
+MIDDLE TIER PLAN:
+Name: ${pricingPlan.name}
+Price: $${pricingPlan.price}
+Description: ${pricingPlan.description}
+Main Feature: ${pricingPlan.mainFeature}
+Features: ${pricingPlan.features.join(", ")}
+Limitations: ${pricingPlan.limitations}
+
+Generate TWO complementary pricing tiers:
+1. Basic Tier (40-50% of middle tier price)
+   - 3-4 core features (subset of middle plan features)
+   - More limitations
+   - Focus on essential features
+
+2. Enterprise Tier (2.5-3x middle tier price)
+   - 6-7 features total
+   - Include ALL middle tier features
+   - Add 2-3 premium features like "API access", "Priority support", "Advanced customization"
+   - Focus on scalability and advanced needs
+
+IMPORTANT: Each plan MUST include a features array with actual features, not an empty array.
+
+Each plan must include:
+- name
+- price
+- description
+- features list (3-4 for basic, 6-7 for enterprise)
+- main feature
+- limitations
+- period ("/month")
+- setupFee ("0")
+- billingPeriod ("monthly")
+- cta text
+
+Here are the fields that need new content:
+
+${textFields
+  .map((field) => {
+    const instructions = getFieldInstructions("pricing", field.path);
+
+    return `Path: ${field.path}
+Current text: ${field.currentValue}
+Instructions: ${instructions.instructions}
+${
+  instructions.examples.length > 0
+    ? `Examples:\n${instructions.examples.map((ex) => `- ${ex}`).join("\n")}\n`
+    : ""
+}
+---`;
+  })
+  .join("\n\n")}
+
+For each field, respond with:
+PATH: [field path]
+NEW TEXT: [your generated text]
+---`;
+
         // Log the API request
         console.log("\n🔍 API Request for section:", section);
         console.log("Model:", "gpt-4o");
@@ -657,7 +744,10 @@ NEW TEXT: [your generated text]
               content:
                 "You are an expert conversion copywriter who specializes in creating high-converting landing page copy. Provide new text content for each field as requested, following the exact format specified and adhering strictly to the length and style guidelines provided.",
             },
-            { role: "user", content: prompt },
+            {
+              role: "user",
+              content: section === "pricing" ? pricingPrompt : prompt,
+            },
           ],
         });
 

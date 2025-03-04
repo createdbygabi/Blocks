@@ -557,6 +557,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
             id: brandingResults.business.id,
           });
           updateProgress("pricing_plan", "completed", pricingPlan);
+          console.log("pricing plan from GenerationProgress", pricingPlan);
 
           // Step 3: Generate landing page content
           updateProgress("copywriting", "loading");
@@ -564,8 +565,8 @@ export function GenerationProgress({ businessInfo, onComplete }) {
             { ...businessInfo, id: brandingResults.business.id },
             {
               ...brandingResults.business,
-              pricing_plan: pricingPlan,
-            }
+            },
+            pricingPlan
           );
           updateProgress("copywriting", "completed", websiteContent);
 

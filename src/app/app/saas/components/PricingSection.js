@@ -8,12 +8,12 @@ export function PricingSection({ styles, pricing, business }) {
   const [loading, setLoading] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState("monthly");
 
-  console.log("business.pricing_plans", business.pricing_plans);
-
   // Get the active plan (middle plan) from business pricing_plans
   const activePlan = business?.pricing_plans;
+  console.log("active plan", activePlan);
 
-  // Get the starter and pro plans from the landing page content
+  // Get the starter and pro plans from the landing page Content
+  console.log("pricing", pricing);
   const starterPlan = pricing?.plans?.[0] || {
     name: "Starter",
     description: "Best for beginner creators",
@@ -27,7 +27,7 @@ export function PricingSection({ styles, pricing, business }) {
     ],
   };
 
-  const proPlan = pricing?.plans?.[1] || {
+  const proPlan = pricing?.plans?.[2] || {
     name: "Agency",
     description: "For marketing teams",
     price: 49.99,
@@ -75,8 +75,23 @@ export function PricingSection({ styles, pricing, business }) {
     }
   };
 
+  const getFeatures = (plan) => {
+    if (!plan) return [];
+
+    const features = [];
+    let i = 1;
+    while (plan[`feature${i}`]) {
+      features.push(plan[`feature${i}`]);
+      i++;
+    }
+    return features;
+  };
+
   return (
-    <motion.section className={`relative py-24 ${styles.layout.surface}`}>
+    <motion.section
+      className={`relative py-24 ${styles.layout.surface}`}
+      id="pricing"
+    >
       <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
       <div className="relative max-w-6xl mx-auto px-4">
         {/* Section Header */}
@@ -180,25 +195,25 @@ export function PricingSection({ styles, pricing, business }) {
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  {starterPlan.features[0]}
+                  {starterPlan.feature1}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  {starterPlan.features[1]}
+                  {starterPlan.feature2}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  {starterPlan.features[2]}
+                  {starterPlan.feature3}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                 <span className={`text-sm ${styles.text.secondary}`}>
-                  {starterPlan.features[3]}
+                  {starterPlan.feature4}
                 </span>
               </li>
             </ul>
@@ -267,7 +282,7 @@ export function PricingSection({ styles, pricing, business }) {
             </div>
 
             <ul className="space-y-4 mb-8">
-              {activePlan.features.map((feature, index) => (
+              {getFeatures(activePlan).map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
                   <span className={`text-sm ${styles.text.secondary}`}>
@@ -343,30 +358,14 @@ export function PricingSection({ styles, pricing, business }) {
             </div>
 
             <ul className="space-y-4 mb-8">
-              <li className="flex items-start gap-3">
-                <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
-                <span className={`text-sm ${styles.text.secondary}`}>
-                  {proPlan.features[0]}
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
-                <span className={`text-sm ${styles.text.secondary}`}>
-                  {proPlan.features[1]}
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
-                <span className={`text-sm ${styles.text.secondary}`}>
-                  {proPlan.features[2]}
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
-                <span className={`text-sm ${styles.text.secondary}`}>
-                  {proPlan.features[3]}
-                </span>
-              </li>
+              {getFeatures(proPlan).map((feature, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <FiCheck className={`w-5 h-5 ${styles.text.accent} mt-0.5`} />
+                  <span className={`text-sm ${styles.text.secondary}`}>
+                    {feature}
+                  </span>
+                </li>
+              ))}
             </ul>
 
             <button

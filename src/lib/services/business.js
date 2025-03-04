@@ -90,7 +90,7 @@ export class BusinessService {
     return { website_url: websiteUrl };
   }
 
-  async generateWebsiteContent(businessInfo, brandingResults) {
+  async generateWebsiteContent(businessInfo, brandingResults, pricingPlan) {
     try {
       // If using mock data, return mock content
       // if (this.useMockData) {
@@ -208,6 +208,7 @@ export class BusinessService {
       const requestData = {
         businessInfo,
         brandingResults,
+        pricingPlan,
       };
 
       console.log("📤 Sending website content request:", requestData);
@@ -435,13 +436,15 @@ export class BusinessService {
         body: JSON.stringify({ businessInfo }),
       });
 
-      console.log("💰 Pricing generation response:", response);
-
       if (!response.ok) {
         throw new Error(`Pricing generation failed: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log(
+        "pricing data from api that we're saving in the database",
+        data
+      );
 
       // Save the pricing plan to the business
       if (businessInfo.id) {
