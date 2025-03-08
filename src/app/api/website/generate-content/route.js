@@ -9,7 +9,7 @@ const SECTION_TEMPLATES = {
     badge: "",
     title: "",
     subtitle: "",
-    cta: "Try it for free",
+    cta: "",
     hero_image: null, // Optional, if provided will use two-column layout
     socialProof: {
       userType: "small businesses",
@@ -205,7 +205,7 @@ const FIELD_INSTRUCTIONS = {
     },
     cta: {
       instructions:
-        "Create a strong call-to-action (2-4 words) that drives action, related to the main feature (no Try it for free or smilar phrases).",
+        "Create a strong call-to-action (2 words) that drives action related to the main feature (should not contain any mention of free or similar phrases).",
       examples: ["Get Started", "Generate content", "Start Generating"],
     },
   },
@@ -255,61 +255,62 @@ const FIELD_INSTRUCTIONS = {
   pricing: {
     title: {
       instructions:
-        "Write a clear pricing section title emphasizing value (3-5 words)",
-      examples: ["Simple pricing for everyone", "Plans for every creator"],
+        "Write a headline emphasizing the solving of the user problem (6-8 words)",
+      examples: ["Get more views, with less effort"],
     },
     subtitle: {
       instructions: "Write a brief subtitle about choosing plans (5-8 words)",
       examples: ["Choose the perfect plan for your needs"],
     },
-    // Basic plan fields
+    // Middle plan fields (position [0])
     "plans[0].name": {
-      instructions: "Name for the basic plan (40-50% of middle plan price)",
-      examples: ["Basic", "Starter"],
+      instructions:
+        "Name for the middle plan consistent with the product (one word)",
+      examples: ["Professional", "Growth"],
     },
     "plans[0].price": {
-      instructions: "Set price at 40-50% of middle plan price (number only)",
-      examples: ["9", "12"],
+      instructions:
+        "Price for middle plan (number only, without currency or $ sign)",
+      examples: ["49"],
     },
     "plans[0].description": {
-      instructions:
-        "Write a brief description for basic features (10-15 words)",
-      examples: [
-        "Perfect for individuals and small teams just getting started",
-      ],
+      instructions: "Brief description of middle plan value",
+      examples: ["Perfect for growing businesses and teams"],
     },
     "plans[0].mainFeature": {
-      instructions: "Describe the main feature for basic plan",
-      examples: ["Essential AI features"],
+      instructions: "Describe the main feature for middle plan",
+      examples: ["Advanced AI features"],
     },
     "plans[0].limitations": {
-      instructions: "List usage limits for basic plan",
-      examples: ["Up to 3 projects per month"],
+      instructions: "List usage limits for middle plan",
+      examples: ["Up to 10 projects per month"],
     },
     "plans[0].feature1": {
-      instructions: "First core feature for basic plan",
-      examples: ["1 landing page per month"],
+      instructions: "First core feature for middle plan",
+      examples: ["5 landing pages per month"],
     },
     "plans[0].feature2": {
-      instructions: "Second core feature for basic plan",
-      examples: ["Basic AI assistance"],
+      instructions: "Second core feature for middle plan",
+      examples: ["Advanced AI assistance"],
     },
     "plans[0].feature3": {
-      instructions: "Third core feature for basic plan",
-      examples: ["Standard support"],
+      instructions: "Third core feature for middle plan",
+      examples: ["Priority support"],
     },
     "plans[0].feature4": {
-      instructions: "Fourth core feature for basic plan",
-      examples: ["Essential analytics"],
+      instructions: "Fourth core feature for middle plan",
+      examples: ["Advanced analytics"],
     },
     // Enterprise plan fields
     "plans[2].name": {
-      instructions: "Name for the premium plan (2.5-3x middle plan price)",
-      examples: ["Enterprise", "Business Pro"],
+      instructions:
+        "Name for the premium plan (2.5-3x middle plan price), one word only",
+      examples: ["Enterprise", "Pro"],
     },
     "plans[2].price": {
-      instructions: "Set price at 2.5-3x middle plan price (number only)",
-      examples: ["99", "149"],
+      instructions:
+        "Price for enterprise plan (number only, without currency or $ sign)",
+      examples: ["99"],
     },
     "plans[2].description": {
       instructions:
@@ -400,8 +401,8 @@ const FIELD_INSTRUCTIONS = {
     },
     cta: {
       instructions:
-        "Write a strong call-to-action emphasizing 'free' (2-4 words)",
-      examples: ["Get started free", "Try free today"],
+        "Write a strong call-to-action related to the main feature emotionally appealing to the pain point of the user (2 words)",
+      examples: ["Generate content"],
     },
   },
   benefits: {
@@ -463,8 +464,9 @@ const FIELD_INSTRUCTIONS = {
   },
   howItWorks: {
     title: {
-      instructions: "Write a simple section title (2-4 words)",
-      examples: ["How it works", "Simple steps"],
+      instructions:
+        "Write a headline emphasizing the main feature solving the pain point (6-8 words)",
+      examples: ["Create Viral Videos in Seconds"],
     },
     subtitle: {
       instructions: "Write a brief subtitle emphasizing simplicity (4-8 words)",
@@ -592,13 +594,13 @@ export async function POST(req) {
 
     // Initialize only the sections we're generating
     const sections = [
-      // "hero",
-      // "painPoints",
-      // "benefits",
-      // "howItWorks",
+      "hero",
+      "painPoints",
+      "benefits",
+      "howItWorks",
       "pricing",
-      // "faq",
-      // "final",
+      "faq",
+      "final",
     ];
     const generatedContent = {};
 
@@ -668,7 +670,7 @@ NEW TEXT: [your generated text]
 
         const pricingPrompt = `As an expert conversion copywriter, generate pricing tiers around this main plan:
 
-MIDDLE TIER PLAN:
+STARTER PLAN (from pricingPlan):
 Name: ${pricingPlan.name}
 Price: $${pricingPlan.price}
 Description: ${pricingPlan.description}
@@ -677,24 +679,27 @@ Features: ${pricingPlan.features.join(", ")}
 Limitations: ${pricingPlan.limitations}
 
 Generate TWO complementary pricing tiers:
-1. Basic Tier (40-50% of middle tier price)
-   - 3-4 core features (subset of middle plan features)
-   - More limitations
-   - Focus on essential features
+1. Middle Tier (1.5x-2x starter plan price)
+   - 4-5 core features
+   - Include all starter plan features
+   - Add 1-2 enhanced features
+   - Focus on growing businesses
+   - Less limitations than starter
 
-2. Enterprise Tier (2.5-3x middle tier price)
+2. Pro Tier (2.5x starter plan price)
    - 6-7 features total
    - Include ALL middle tier features
    - Add 2-3 premium features like "API access", "Priority support", "Advanced customization"
    - Focus on scalability and advanced needs
+   - Minimal limitations
 
 IMPORTANT: Each plan MUST include a features array with actual features, not an empty array.
 
 Each plan must include:
 - name
-- price
+- price (number only, without currency or $ sign)
 - description
-- features list (3-4 for basic, 6-7 for enterprise)
+- features list (3-4 for middle, 6-7 for pro)
 - main feature
 - limitations
 - period ("/month")

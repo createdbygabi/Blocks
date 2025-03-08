@@ -1,6 +1,21 @@
 export const mockData = {
   onboarding: {
     business: {
+      niche: "Content Repurposing & Audience Growth",
+      services: [
+        "Tool that transforms previous LinkedIn posts into newsletters",
+      ],
+      uniqueValue:
+        "Tool that creates newsletters with the help of AI based on previous Linkedin posts of the user",
+      goals: ["Time saving", "Increase audience growth"],
+      targetAudience: "Linkedin influencers",
+    },
+  },
+
+  // Original mock data commented out for reference
+  /*
+  onboarding: {
+    business: {
       niche: "Landing Page Builder",
       targetAudience:
         "Entrepreneurs and marketers who need high-converting landing pages without coding",
@@ -20,6 +35,7 @@ export const mockData = {
       ],
     },
   },
+  */
 
   businessNames: {
     names: [

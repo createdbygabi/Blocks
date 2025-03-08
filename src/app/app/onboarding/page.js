@@ -26,6 +26,8 @@ export default function OnboardingPage() {
     const businessService = new BusinessService(user.id);
     const mockData = businessService.getMockBusinessInfo();
 
+    console.log("mockData", mockData);
+
     if (mockData) {
       setFormData({
         niche: mockData.niche || "",

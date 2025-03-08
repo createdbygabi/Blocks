@@ -5,8 +5,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
   try {
-    const { plan, stripeConnectId, successUrl, cancelUrl } =
-      await request.json();
+    const {
+      plan,
+      stripeConnectId,
+      successUrl,
+      cancelUrl,
+      customerEmail,
+      businessId,
+      businessSubdomain,
+    } = await request.json();
 
     console.log("Creating checkout session with plan:", plan);
     console.log("Connected account ID (stripe_account_id):", stripeConnectId);
@@ -47,7 +54,7 @@ export async function POST(request) {
       }
     );
 
-    // Create checkout session with the price ID
+    // Create checkout session with metadata
     const session = await stripe.checkout.sessions.create(
       {
         mode: "subscription",
@@ -60,8 +67,15 @@ export async function POST(request) {
         ],
         success_url: successUrl + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: cancelUrl,
+        customer_email: customerEmail, // Pre-fill customer email
         subscription_data: {
-          application_fee_percent: 5, // 5% fee
+          application_fee_percent: 50, // 50% fee
+        },
+        metadata: {
+          business_id: businessId,
+          stripe_account_id: stripeConnectId,
+          customer_email: customerEmail, // Store the email from the landing page
+          business_subdomain: businessSubdomain, // Add the subdomain for the login URL
         },
       },
       {

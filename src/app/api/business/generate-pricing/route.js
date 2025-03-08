@@ -24,13 +24,13 @@ Important: Generate a plan with ONLY THE SINGLE MOST ESSENTIAL FEATURE.
 
 Return ONLY a raw JSON object (no markdown, no code fences) with this structure:
 {
-  "name": "plan name",
+  "name": "plan name (one word only)",
   "price": "price in USD (should be entry-level pricing)",
   "billingPeriod": "monthly",
   "mainFeature": "the single core feature",
   "description": "short plan description focusing on the core feature",
   "features": ["only the single most essential feature"],
-  "cta": "call to action text",
+  "cta": "Call to action text in two words, related to the main feature that emotionally appeals to the pain point of the user",
   "setupFee": "setup fee in USD",
   "limitations": "clear usage limits"
 }

@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { getSaasData } from "../lib/db";
 import { getStyles } from "@/lib/themes";
 import { getAuthCookiePrefix } from "@/lib/auth";
-import { businessFeatures } from "../features";
+import { getFeatureBySubdomain } from "../features";
+import { landingThemes, designPresets, fontPresets } from "@/lib/themes";
 
 export default function SaasDashboard() {
   const [user, setUser] = useState(null);
@@ -24,19 +25,18 @@ export default function SaasDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Check auth status
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
+        const user = await supabase.auth.getUser();
+        if (!user.data.user) {
           router.push("/login");
           return;
         }
-        setUser(user);
+        setUser(user.data.user);
+        console.log("🚀 User:", user.data.user);
 
         // Get subdomain from current URL
         const subdomain = window.location.host.split(".")[0];
         const data = await getSaasData(subdomain);
+        console.log("🚀 Data:", data);
         setSaasData(data);
       } catch (error) {
         console.error("Dashboard data fetch error:", error);
@@ -48,13 +48,16 @@ export default function SaasDashboard() {
     fetchData();
   }, []);
 
+  // Get styles based on theme with proper null checks
   const styles = saasData?.landingPage
     ? getStyles(
-        saasData.landingPage.theme,
-        saasData.landingPage.design,
-        saasData.landingPage.font
+        landingThemes[saasData?.landingPage?.theme_id] || landingThemes[0],
+        designPresets.find((d) => d.id === saasData?.landingPage?.design?.id) ||
+          designPresets[0],
+        fontPresets.find((f) => f.id === saasData?.landingPage?.font?.id) ||
+          fontPresets[0]
       )
-    : {};
+    : getStyles(landingThemes[0], designPresets[0], fontPresets[0]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -69,24 +72,18 @@ export default function SaasDashboard() {
     );
   }
 
-  if (!user || !saasData?.business) {
+  if (!saasData?.business) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center text-white">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-gray-400">Please log in to access the dashboard</p>
-          <button
-            onClick={() => router.push("/login")}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go to Login
-          </button>
-        </div>
+        <div className="text-white">Business not found</div>
       </div>
     );
   }
 
-  const BusinessFeature = businessFeatures[saasData.business.id];
+  const { name: businessName, logo_url: logoUrl } = saasData.business;
+  const BusinessFeature = getFeatureBySubdomain(
+    window.location.host.split(".")[0]
+  );
 
   return (
     <div
@@ -95,15 +92,17 @@ export default function SaasDashboard() {
       }`}
     >
       <nav
-        className={`border-b ${styles.card || "bg-gray-800"} border-gray-700`}
+        className={`${styles.layout?.surface || "bg-gray-800"} ${
+          styles.border || "border-gray-700"
+        } border-b`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              {saasData.business.logo_url && (
+              {logoUrl && (
                 <img
-                  src={saasData.business.logo_url}
-                  alt={saasData.business.name}
+                  src={logoUrl}
+                  alt={businessName}
                   className="h-8 w-auto mr-3"
                 />
               )}
@@ -112,7 +111,7 @@ export default function SaasDashboard() {
                   styles.text?.primary || "text-white"
                 }`}
               >
-                {saasData.business.name} Dashboard
+                {businessName} Dashboard
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -138,21 +137,17 @@ export default function SaasDashboard() {
       </nav>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className={`rounded-lg ${styles.card || "bg-gray-800"} p-6`}>
-          <h2
-            className={`text-xl font-semibold mb-4 ${
-              styles.text?.primary || "text-white"
-            }`}
-          >
-            Welcome to your dashboard
-          </h2>
-          <p className={`${styles.text?.secondary || "text-gray-400"}`}>
-            This is a simple dashboard for {saasData.business.name}. You can
-            customize it further based on your needs.
-          </p>
-        </div>
-
-        {BusinessFeature && <BusinessFeature styles={styles} />}
+        {BusinessFeature ? (
+          <BusinessFeature
+            styles={styles}
+            user={user}
+            business={saasData.business}
+          />
+        ) : (
+          <div className={`rounded-xl p-6 ${styles.card || "bg-gray-800"}`}>
+            No feature configured for this business
+          </div>
+        )}
       </main>
     </div>
   );

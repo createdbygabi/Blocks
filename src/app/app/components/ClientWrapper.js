@@ -31,7 +31,7 @@ export function ClientWrapper({ children }) {
       >
         <AnimatedWrapper>{children}</AnimatedWrapper>
       </main>
-      <AppNotifications />
+      {/* <AppNotifications /> */}
     </>
   );
 }

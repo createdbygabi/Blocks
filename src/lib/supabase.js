@@ -50,3 +50,15 @@ export function onAuthStateChange(callback) {
     callback(session);
   });
 }
+
+// Send magic link email
+export async function sendMagicLink(email, businessSubdomain) {
+  return await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      type: "magiclink",
+      emailRedirectTo: `http://${businessSubdomain}.localhost:3000/dashboard`,
+      shouldCreateUser: true,
+    },
+  });
+}

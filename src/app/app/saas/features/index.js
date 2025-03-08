@@ -1,10 +1,12 @@
 import dynamic from "next/dynamic";
 
-// Simple mapping of business IDs to their feature components
+// Map of business subdomains to their feature components
 export const businessFeatures = {
-  // Digistry's feature
-  "7cf7f069-5925-4048-9521-8540d15ea846": dynamic(() => import("./digistry"), {
-    loading: () => <div>Loading feature...</div>,
-  }),
-  // Add more businesses as needed
+  intelliflow: dynamic(() => import("./intelliflow")),
+  // Add more features as needed
 };
+
+// Helper to get feature by subdomain
+export function getFeatureBySubdomain(subdomain) {
+  return businessFeatures[subdomain] || null;
+}

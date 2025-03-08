@@ -29,6 +29,16 @@ export const landingThemes = [
         },
       },
 
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
+
       // Component styles
       card: {
         base: "bg-[#FFFFFF] border border-[#E5E7EB]",
@@ -93,6 +103,16 @@ export const landingThemes = [
       highlight: "bg-cyan-500/10",
       overlay: "bg-black/50",
       divider: "border-zinc-800",
+
+      input: {
+        base: "bg-zinc-900/50 text-white border border-zinc-800",
+        hover: "hover:border-zinc-700",
+        focus: "focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50",
+        placeholder: "placeholder-zinc-500",
+        text: "text-white",
+        disabled:
+          "disabled:bg-zinc-900/30 disabled:text-zinc-500 disabled:border-zinc-800",
+      },
     },
   },
   {
@@ -142,6 +162,16 @@ export const landingThemes = [
       highlight: "bg-orange-100",
       overlay: "bg-black/50",
       divider: "border-orange-100",
+
+      input: {
+        base: "bg-white/90 text-orange-900 border border-orange-200",
+        hover: "hover:border-orange-300",
+        focus: "focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50",
+        placeholder: "placeholder-orange-300",
+        text: "text-orange-900",
+        disabled:
+          "disabled:bg-orange-50 disabled:text-orange-300 disabled:border-orange-100",
+      },
     },
   },
   {
@@ -191,6 +221,16 @@ export const landingThemes = [
       highlight: "bg-emerald-100",
       overlay: "bg-black/50",
       divider: "border-emerald-100",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -240,6 +280,16 @@ export const landingThemes = [
       highlight: "bg-violet-500/10",
       overlay: "bg-black/50",
       divider: "border-gray-700",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -288,6 +338,16 @@ export const landingThemes = [
       highlight: "bg-rose-100",
       overlay: "bg-black/50",
       divider: "border-rose-100",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -336,6 +396,16 @@ export const landingThemes = [
       highlight: "bg-sky-100",
       overlay: "bg-black/50",
       divider: "border-sky-100",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -385,6 +455,16 @@ export const landingThemes = [
       highlight: "bg-amber-100",
       overlay: "bg-black/50",
       divider: "border-amber-100",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -433,6 +513,16 @@ export const landingThemes = [
       highlight: "bg-[#38BDF8]/10",
       overlay: "bg-[#0F172A]/80",
       divider: "border-[#334155]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -481,6 +571,16 @@ export const landingThemes = [
       highlight: "bg-[#F0ABFC]/10",
       overlay: "bg-[#1F1147]/80",
       divider: "border-[#6B21A8]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -529,6 +629,16 @@ export const landingThemes = [
       highlight: "bg-[#F0F9FF]",
       overlay: "bg-[#0F172A]/50",
       divider: "border-[#E2E8F0]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -577,6 +687,16 @@ export const landingThemes = [
       highlight: "bg-[#FCD34D]/10",
       overlay: "bg-[#0C0A09]/80",
       divider: "border-[#44403C]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -625,6 +745,16 @@ export const landingThemes = [
       highlight: "bg-[#ECFDF5]",
       overlay: "bg-[#064E3B]/50",
       divider: "border-[#D1FAE5]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -673,6 +803,16 @@ export const landingThemes = [
       highlight: "bg-[#FDF2F8]",
       overlay: "bg-[#831843]/50",
       divider: "border-[#FCE7F3]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -721,6 +861,16 @@ export const landingThemes = [
       highlight: "bg-[#FB923C]/10",
       overlay: "bg-[#18181B]/80",
       divider: "border-[#3F3F46]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -769,6 +919,16 @@ export const landingThemes = [
       highlight: "bg-[#F5F3FF]",
       overlay: "bg-[#4C1D95]/50",
       divider: "border-[#EDE9FE]",
+
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
 ];
@@ -971,6 +1131,7 @@ export const getThemeClasses = (theme) => ({
     overlay: theme.colors.overlay,
     divider: theme.colors.divider,
   },
+  input: `${theme.colors.input.base} ${theme.colors.input.hover} ${theme.colors.input.focus} ${theme.colors.input.placeholder} ${theme.colors.input.text} ${theme.colors.input.disabled}`,
 });
 
 // Helper to combine theme and design classes
@@ -1015,6 +1176,7 @@ export function getStyles(theme, design, font = fontPresets[0]) {
       ...themeClasses.utils,
       stack: design.styles.spacing.stack,
     },
+    input: `${themeClasses.input} ${design.styles.ui.roundedness} ${design.styles.ui.transitions} ${design.styles.typography.body} ${font.styles.body}`,
   };
 
   console.log("Combined styles:", combinedStyles);

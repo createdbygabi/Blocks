@@ -33,7 +33,7 @@ import {
 import { Navbar } from "./Navbar";
 import { PricingSection } from "./PricingSection";
 import { Testimonials } from "./Testimonials";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 // Fade up animation variant
 const fadeUp = {
@@ -47,7 +47,7 @@ export function LandingPage({ data }) {
 
   // Use landing page data or fallback to defaults
   const {
-    theme: selectedTheme = landingThemes[0],
+    theme_id = 0, // Get theme_id directly from landingPage
     design: selectedDesign = designPresets[0],
     font: selectedFont = fontPresets[0],
     content = {
@@ -65,9 +65,8 @@ export function LandingPage({ data }) {
   const { hero, painPoints, howItWorks, benefits, pricing, faq, final } =
     content;
 
-  // Find the theme from landingThemes that matches the selected theme
-  const theme =
-    landingThemes.find((t) => t.id === selectedTheme?.id) || landingThemes[2];
+  // Use theme_id directly from the landing page to get the theme
+  const theme = landingThemes[theme_id] || landingThemes[0];
   const design =
     designPresets.find((d) => d.id === selectedDesign?.id) || designPresets[0];
   const font =
@@ -90,6 +89,22 @@ export function LandingPage({ data }) {
   };
 
   const [openFaq, setOpenFaq] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const emailInputRef = useRef(null);
+
+  const scrollToHeroAndFocus = () => {
+    // Smooth scroll to top
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+    // Focus the email input after scrolling
+    setTimeout(() => {
+      emailInputRef.current?.focus();
+    }, 500); // Wait for scroll to complete
+  };
 
   const faqItems = faq?.items || [
     {
@@ -134,9 +149,59 @@ export function LandingPage({ data }) {
     },
   ];
 
+  const handleSubscribe = async (e) => {
+    e.preventDefault(); // Prevent form submission
+
+    if (!email) {
+      alert("Please enter your email first");
+      return;
+    }
+
+    try {
+      if (!business?.stripe_account_id) {
+        console.error("No Stripe Connect account ID found");
+        return;
+      }
+
+      setLoading(true);
+
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan: business.pricing_plans, // Use the business's active plan
+          stripeConnectId: business.stripe_account_id,
+          successUrl: `${window.location.origin}/success`,
+          cancelUrl: `${window.location.origin}/cancel`,
+          customerEmail: email, // Pass the email to pre-fill checkout
+          businessId: business.id, // Add business ID
+          businessSubdomain: business.subdomain, // Add business subdomain
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      const { sessionUrl } = await response.json();
+      window.location.href = sessionUrl;
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={`w-full min-h-screen ${fontVariables}`}>
-      <Navbar styles={styles} business={business} />
+      <Navbar
+        styles={styles}
+        business={business}
+        onCtaClick={scrollToHeroAndFocus}
+      />
       <main className={`w-full ${styles.layout.background}`}>
         {/* Hero Section */}
         <motion.section
@@ -217,18 +282,35 @@ export function LandingPage({ data }) {
                     ))}
                   </motion.ul> */}
 
-                  {/* CTA Button */}
-                  <motion.button
+                  {/* Updated CTA Form */}
+                  <motion.form
+                    onSubmit={handleSubscribe}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`${styles.button.primary} px-6 md:px-8 py-3 md:py-4 rounded-xl text-base md:text-lg font-bold`}
+                    className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center"
                   >
-                    Try it for free
-                    <span className="ml-2">→</span>
-                  </motion.button>
+                    <input
+                      ref={emailInputRef}
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      disabled={loading}
+                      className={`w-full sm:w-auto min-w-[300px] px-6 md:px-8 py-3 md:py-4 rounded-xl text-base md:text-lg ${styles.input}`}
+                    />
+                    <motion.button
+                      type="submit"
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`${styles.button.primary} w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 rounded-xl text-base md:text-lg font-bold disabled:opacity-50`}
+                    >
+                      {loading ? "Loading..." : hero?.cta || "Get Started"}
+                      {!loading && <span className="ml-2">→</span>}
+                    </motion.button>
+                  </motion.form>
 
                   {/* Testimonial Section */}
                   <motion.div
@@ -238,10 +320,10 @@ export function LandingPage({ data }) {
                     className="mt-12 mb-12 md:mb-0 flex flex-col md:flex-row items-center md:items-start gap-4"
                   >
                     <div className="flex -space-x-2">
-                      {[1, 2, 3, 4, 5].map((i) => (
+                      {landingPage?.hero_icons?.map((imgNumber) => (
                         <img
-                          key={i}
-                          src={`/testimonials/avatar${i}.jpg`}
+                          key={imgNumber}
+                          src={`/images/hero/face_${imgNumber}.jpg`}
                           alt=""
                           className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-900"
                         />
@@ -329,22 +411,35 @@ export function LandingPage({ data }) {
                   {hero?.subtitle}
                 </motion.p>
 
-                {/* CTA Section */}
-                <motion.div
+                {/* Updated CTA Form */}
+                <motion.form
+                  onSubmit={handleSubscribe}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex justify-center gap-4"
+                  className="mt-8 flex flex-col sm:flex-row gap-2 justify-center items-center"
                 >
+                  <input
+                    ref={emailInputRef}
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    disabled={loading}
+                    className={`w-full sm:w-auto min-w-[300px] px-6 md:px-8 py-3 md:py-4 rounded-xl text-base md:text-lg ${styles.input}`}
+                  />
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`${styles.button.primary} px-8 py-4 rounded-xl text-lg font-bold`}
+                    type="submit"
+                    disabled={loading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`${styles.button.primary} w-full sm:w-auto px-8 py-4 rounded-xl text-lg font-bold disabled:opacity-50`}
                   >
-                    {hero?.cta || "Get Started Free"}
-                    <span className="ml-2">→</span>
+                    {loading ? "Loading..." : hero?.cta || "Get Started"}
+                    {!loading && <span className="ml-2">→</span>}
                   </motion.button>
-                </motion.div>
+                </motion.form>
 
                 {/* Testimonial Section */}
                 <motion.div
@@ -354,12 +449,12 @@ export function LandingPage({ data }) {
                   className="mt-12 flex flex-col items-center gap-4"
                 >
                   <div className="flex -space-x-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
+                    {landingPage?.hero_icons?.map((imgNumber) => (
                       <img
-                        key={i}
-                        src={`/testimonials/avatar${i}.jpg`}
+                        key={imgNumber}
+                        src={`http://localhost:3000/images/hero/face_${imgNumber}.jpg`}
                         alt=""
-                        className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-900"
+                        className="w-11 h-11 rounded-full border-4 border-white dark:border-white"
                       />
                     ))}
                   </div>
@@ -369,7 +464,7 @@ export function LandingPage({ data }) {
                         <svg
                           key={star}
                           className="w-5 h-5"
-                          fill="#f5cb44"
+                          fill="#fce063"
                           viewBox="0 0 20 20"
                         >
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -523,7 +618,10 @@ export function LandingPage({ data }) {
         </motion.section>
 
         {/* Benefits & Features Section */}
-        <motion.section className={`relative py-24 ${styles.layout.surface}`}>
+        <motion.section
+          className={`relative py-24 ${styles.layout.surface}`}
+          id="features"
+        >
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
           <div className="relative max-w-6xl mx-auto px-4">
             {/* Section Header */}
@@ -557,7 +655,9 @@ export function LandingPage({ data }) {
               >
                 {/* Cross-posting Feature */}
                 <div className="flex gap-4">
-                  <div className={`p-2 rounded-xl ${styles.utils.highlight}`}>
+                  <div
+                    className={`p-2.5 rounded-lg ${styles.utils.highlight} w-fit h-fit`}
+                  >
                     <FiZap className={`w-6 h-6 ${styles.text.accent}`} />
                   </div>
                   <div>
@@ -575,7 +675,9 @@ export function LandingPage({ data }) {
 
                 {/* Scheduling Feature */}
                 <div className="flex gap-4">
-                  <div className={`p-2 rounded-xl ${styles.utils.highlight}`}>
+                  <div
+                    className={`p-2.5 rounded-lg ${styles.utils.highlight} w-fit h-fit`}
+                  >
                     <FiClock className={`w-6 h-6 ${styles.text.accent}`} />
                   </div>
                   <div>
@@ -593,7 +695,9 @@ export function LandingPage({ data }) {
 
                 {/* Content Management */}
                 <div className="flex gap-4">
-                  <div className={`p-2 rounded-xl ${styles.utils.highlight}`}>
+                  <div
+                    className={`p-2.5 rounded-lg ${styles.utils.highlight} w-fit h-fit`}
+                  >
                     <FiLayers className={`w-6 h-6 ${styles.text.accent}`} />
                   </div>
                   <div>
@@ -611,7 +715,9 @@ export function LandingPage({ data }) {
 
                 {/* Content Studio */}
                 <div className="flex gap-4">
-                  <div className={`p-2 rounded-xl ${styles.utils.highlight}`}>
+                  <div
+                    className={`p-2.5 rounded-lg ${styles.utils.highlight} w-fit h-fit`}
+                  >
                     <FiBox className={`w-6 h-6 ${styles.text.accent}`} />
                   </div>
                   <div>
@@ -681,7 +787,7 @@ export function LandingPage({ data }) {
                 </span>
               </div>
               <h2
-                className={`text-4xl md:text-5xl font-bold mb-6 ${styles.text.primary}`}
+                className={`text-3xl md:text-4xl font-bold mb-6 ${styles.text.primary}`}
               >
                 {howItWorks?.title || "Get started in minutes"}
               </h2>
@@ -719,7 +825,7 @@ export function LandingPage({ data }) {
                     {howItWorks?.steps?.[0]?.description ||
                       "Link your social media profiles with one click. We support all major platforms."}
                   </p>
-                  <div className="flex flex-wrap gap-3">
+                  {/* <div className="flex flex-wrap gap-3">
                     <div className={`p-2 rounded-lg bg-black/10`}>
                       <img
                         src="/icons/instagram.svg"
@@ -734,7 +840,7 @@ export function LandingPage({ data }) {
                         className="w-6 h-6"
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </motion.div>
 
@@ -763,7 +869,7 @@ export function LandingPage({ data }) {
                     {howItWorks?.steps?.[1]?.description ||
                       "Drag & drop your content or create it directly in our studio. One content, all platforms."}
                   </p>
-                  <div
+                  {/* <div
                     className={`p-4 rounded-lg border-2 border-dashed ${styles.utils.divider} text-center`}
                   >
                     <FiUpload
@@ -772,7 +878,7 @@ export function LandingPage({ data }) {
                     <span className={`text-sm ${styles.text.muted}`}>
                       {howItWorks?.steps?.[1]?.uploadText || "Drag files here"}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </motion.div>
 
@@ -801,7 +907,7 @@ export function LandingPage({ data }) {
                     {howItWorks?.steps?.[2]?.description ||
                       "Set it and forget it. We'll post your content at the perfect time for maximum engagement."}
                   </p>
-                  <div
+                  {/* <div
                     className={`flex items-center gap-2 ${styles.text.accent}`}
                   >
                     <FiClock className="w-5 h-5" />
@@ -809,17 +915,22 @@ export function LandingPage({ data }) {
                       {howItWorks?.steps?.[2]?.statusText ||
                         "Auto-scheduling enabled"}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </motion.div>
             </div>
           </div>
         </motion.section>
 
-        <PricingSection styles={styles} pricing={pricing} business={business} />
+        <PricingSection
+          styles={styles}
+          pricing={pricing}
+          business={business}
+          onCtaClick={scrollToHeroAndFocus}
+        />
 
         {/* FAQ Section */}
-        <section className={`py-24 ${styles.layout.surface}`}>
+        <section className={`py-24 ${styles.layout.surface}`} id="faq">
           <div className="max-w-4xl mx-auto px-4">
             {/* Section Header */}
             <div className="text-center mb-16">
@@ -880,7 +991,7 @@ export function LandingPage({ data }) {
               className="text-center max-w-3xl mx-auto py-8"
             >
               <h2
-                className={`text-4xl md:text-5xl font-bold mb-8 ${styles.text.primary}`}
+                className={`text-3xl md:text-4xl font-bold mb-8 ${styles.text.primary}`}
               >
                 {final?.title || "Start planning smarter meals today"}
               </h2>
@@ -889,6 +1000,7 @@ export function LandingPage({ data }) {
                   "Stop stressing about dinner. Try it free for 14 days."}
               </p>
               <motion.button
+                onClick={scrollToHeroAndFocus}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={`${styles.button.primary} px-8 py-4 rounded-xl text-lg font-bold`}

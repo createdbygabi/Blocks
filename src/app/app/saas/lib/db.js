@@ -45,27 +45,22 @@ export async function getBusinessLandingPage(businessId) {
   }
 
   try {
+    console.log("businessId", businessId);
     const { data: landingPage, error } = await supabase
       .from("landing_pages")
       .select("*")
       .eq("business_id", businessId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error fetching landing page:", error);
-      throw error;
-    }
-
-    if (!landingPage) {
-      console.log("No landing page found for business:", businessId);
       return null;
     }
 
-    console.log("Found landing page:", landingPage);
     return landingPage;
   } catch (error) {
     console.error("Unexpected error in getBusinessLandingPage:", error);
-    throw error;
+    return null;
   }
 }
 
