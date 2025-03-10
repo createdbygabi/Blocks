@@ -1026,7 +1026,11 @@ export function LandingPage({ data }) {
                   className={`w-8 h-8 rounded-lg ${styles.utils.highlight} flex items-center justify-center`}
                 >
                   <span className={`text-lg font-bold ${styles.text.accent}`}>
-                    {business?.name?.charAt(0)}
+                    <img
+                      src={business?.logo_url}
+                      alt={business?.name}
+                      className="w-full h-full object-cover"
+                    />
                   </span>
                 </div>
                 <span

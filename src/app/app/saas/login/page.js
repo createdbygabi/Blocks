@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { getStyles } from "@/lib/themes";
 import { getBusinessBySubdomain } from "../lib/db";
@@ -66,15 +66,28 @@ export default function SaasLoginPage() {
     });
   }, []);
 
-  // Get styles based on theme
-  const styles = getStyles(landingThemes[0], designPresets[0], fontPresets[0]);
+  // Get styles based on theme from landing page data
+  const styles = useMemo(() => {
+    if (!business?.landing_pages?.[0])
+      return getStyles(landingThemes[0], designPresets[0], fontPresets[0]);
+
+    const landingPage = business.landing_pages[0];
+    const theme = landingThemes[landingPage.theme_id || 0];
+    const design =
+      designPresets.find((d) => d.id === landingPage.design?.id) ||
+      designPresets[0];
+    const font =
+      fontPresets.find((f) => f.id === landingPage.font?.id) || fontPresets[0];
+
+    return getStyles(theme, design, font);
+  }, [business]);
 
   console.log("🎨 Login Page - Applied styles:", {
-    hasLandingPage: Boolean(business),
-    theme_id: business?.theme_id,
-    theme: landingThemes[business?.theme_id],
-    design: business?.design,
-    font: business?.font,
+    hasLandingPage: Boolean(business?.landing_pages?.[0]),
+    theme_id: business?.landing_pages?.[0]?.theme_id,
+    theme: landingThemes[business?.landing_pages?.[0]?.theme_id || 0],
+    design: business?.landing_pages?.[0]?.design,
+    font: business?.landing_pages?.[0]?.font,
     styles,
   });
 
@@ -84,13 +97,29 @@ export default function SaasLoginPage() {
     setError(null);
 
     try {
+      const verifyResponse = await fetch("/api/auth/verify-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          businessId: business.id,
+        }),
+      });
+
+      const data = await verifyResponse.json();
+
+      if (!verifyResponse.ok) {
+        throw new Error(data.error);
+      }
+
       const currentOrigin = window.location.origin;
-      // Remove /saas from callback path since middleware will handle it
       const redirectTo = `${currentOrigin}/auth/callback`;
 
       console.log("🔐 Login redirect URL:", redirectTo);
 
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error: signInError } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: redirectTo,
@@ -100,11 +129,14 @@ export default function SaasLoginPage() {
         },
       });
 
-      if (error) throw error;
+      if (signInError) throw signInError;
       setSent(true);
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.message);
+      setError({
+        message: error.message,
+        isHtml: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -139,11 +171,6 @@ export default function SaasLoginPage() {
         {!sent ? (
           <motion.div variants={fadeUp} className="space-y-8">
             {/* Logo */}
-            {logoUrl && (
-              <div className="flex justify-center">
-                <img src={logoUrl} alt={businessName} className="h-14 w-auto" />
-              </div>
-            )}
 
             <div className="space-y-3">
               <motion.h2
@@ -195,7 +222,11 @@ export default function SaasLoginPage() {
                     styles.utils?.error || "bg-red-500/10 text-red-400"
                   }`}
                 >
-                  {error}
+                  {error.isHtml ? (
+                    <span dangerouslySetInnerHTML={{ __html: error.message }} />
+                  ) : (
+                    error.message
+                  )}
                 </div>
               )}
 

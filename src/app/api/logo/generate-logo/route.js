@@ -1,20 +1,66 @@
+import OpenAI from "openai";
+import { NextResponse } from "next/server";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function generateSymbol(businessInfo) {
+  const symbolPrompt = `Generate a SINGLE word that represents the most iconic and recognizable symbol for this business:
+  - Business niche: ${businessInfo.niche}
+  - Main feature: ${businessInfo.main_feature}
+  - Target audience: ${businessInfo.target_audience}
+
+  Requirements:
+  - Must be a single word representing a visual symbol (e.g., "lightning" for speed, "leaf" for nature)
+  - Must be universally recognizable
+  - Must be simple enough to work as a logo
+  - Must capture the essence of the business
+  - Must be timeless and not trendy
+  - Must not be abstract or a concept but a physical object
+  
+  Examples:
+  - Fast shipping service → "lightning"
+  - Eco-friendly products → "leaf"
+  - Cloud storage → "cloud"
+  - AI technology → "brain"
+  - Security service → "shield"
+  
+
+  Return ONLY the single word, nothing else, no special characters.`;
+
+  const completion = await openai.chat.completions.create({
+    messages: [{ role: "user", content: symbolPrompt }],
+    model: "gpt-4o",
+    temperature: 0.7,
+    max_tokens: 10,
+  });
+
+  return completion.choices[0].message.content.trim().toLowerCase();
+}
+
 export async function POST(req) {
   try {
-    const { prompt } = await req.json();
-    console.log("API being called");
-    console.log("🚀 API Logo - Starting generation with prompt:", prompt);
-    console.log(
-      "🔑 API Logo - Checking token:",
-      process.env.REPLICATE_API_TOKEN ? "Present" : "Missing"
-    );
+    const { businessInfo } = await req.json();
+    console.log("🚀 API Logo - Starting generation process");
+
+    // Step 1: Generate the symbolic word
+    console.log("generated businessInfo", businessInfo);
+    console.log("🎯 API Logo - Generating symbol word");
+    const symbol = await generateSymbol(businessInfo);
+    console.log("✨ API Logo - Generated symbol:", symbol);
+
+    // Step 2: Create the logo prompt
+    const logoPrompt = `a minimal ${symbol} symbol as a logo, fully filled with black color on white background, vector style, clean lines, simple`;
+
+    console.log("🎨 API Logo - Final prompt:", logoPrompt);
 
     const requestBody = {
       input: {
-        prompt,
+        prompt: logoPrompt,
         prompt_upsampling: true,
       },
     };
-    console.log("📦 API Logo - Request body:", requestBody);
 
     const response = await fetch(
       "https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions",
@@ -29,9 +75,7 @@ export async function POST(req) {
       }
     );
 
-    console.log("📡 API Logo - Response status:", response.status);
     const result = await response.json();
-    console.log("✅ API Logo - Raw response:", result);
 
     if (result.error) {
       console.error("❌ API Logo - Replicate error:", result.error);
@@ -41,7 +85,11 @@ export async function POST(req) {
     const imageUrl = result.output;
     console.log("🖼️ API Logo - Final image URL:", imageUrl);
 
-    return Response.json({ imageUrl });
+    return Response.json({
+      imageUrl,
+      symbol, // Return the symbol for reference
+      prompt: logoPrompt, // Return the final prompt used
+    });
   } catch (error) {
     console.error("❌ API Logo - Error details:", {
       name: error.name,

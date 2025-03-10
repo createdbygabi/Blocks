@@ -30,7 +30,6 @@ export default function Home() {
           setCount(0);
           return;
         }
-
         // Set the actual count and add base number for social proof
         const actualCount = data?.length ?? 0;
         console.log("Actual count from database:", actualCount);

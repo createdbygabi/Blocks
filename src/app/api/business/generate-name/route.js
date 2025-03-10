@@ -23,11 +23,11 @@ export async function POST(req) {
     );
 
     const prompt = `
-      Generate 5 creative and memorable business names based on these details:
+      Generate 10 creative and memorable business names based on these details:
       - Niche: ${businessInfo.niche}
       - Main Feature/Product: ${businessInfo.product}
-      - Pain Point Solved: ${businessInfo.pain_point}
-      - Target Audience: ${businessInfo.target_audience}
+      - Pain Point Solved: ${businessInfo.painPoint}
+      - Target Audience: ${businessInfo.targetAudience}
 
       Requirements:
       - Names should be unique and brandable
@@ -48,15 +48,17 @@ export async function POST(req) {
       - Mailchimp (email marketing)
       - Notion (productivity tool)
       - Figma (design tool)
+      - Tailwind (CSS framework)
 
-      Order them by how catchy they are
+      Order them by how catchy and memorable they are
+      Make sure to include one name per line, nothing else
     `;
     console.log("📝 API Business Name - Generated prompt:", prompt);
 
     console.log("🤖 API Business Name - Calling OpenAI...");
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4",
+      model: "gpt-4o",
     });
     console.log("📦 API Business Name - Raw OpenAI response:", completion);
 

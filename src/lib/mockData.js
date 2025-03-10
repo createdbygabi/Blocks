@@ -1,14 +1,16 @@
 export const mockData = {
   onboarding: {
     business: {
-      niche: "Content Repurposing & Audience Growth",
+      niche: "AI wrapper for English translation and text optimization",
       services: [
-        "Tool that transforms previous LinkedIn posts into newsletters",
+        "App to rewrite correctly English text, correcting grammar and punctuation",
       ],
-      uniqueValue:
-        "Tool that creates newsletters with the help of AI based on previous Linkedin posts of the user",
-      goals: ["Time saving", "Increase audience growth"],
-      targetAudience: "Linkedin influencers",
+      uniqueValue: "Take your text and correct any mistakes",
+      goals: [
+        "Time saving",
+        "Make your text sound like a native English speaker",
+      ],
+      targetAudience: "Non-native English speakers",
     },
   },
 

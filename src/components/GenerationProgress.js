@@ -124,17 +124,35 @@ const LogoPreview = ({ logo }) => {
 };
 
 // Name Display Component
-const NameDisplay = ({ name }) => {
-  if (!name) {
-    return <div className="text-sm text-gray-400">No name generated yet</div>;
+const NameDisplay = ({ names, onNameSelect, selectedName }) => {
+  // Convert names to array if it's not already one
+  const nameArray = Array.isArray(names) ? names : names ? [names] : [];
+
+  if (!nameArray || nameArray.length === 0) {
+    return <div className="text-sm text-gray-400">No names generated yet</div>;
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-5 h-5 flex items-center justify-center text-xs bg-black/30 rounded">
-        ✓
-      </span>
-      <span className="font-medium">{name}</span>
+    <div className="space-y-4">
+      <div className="text-sm text-gray-400 mb-2">
+        {selectedName ? "Selected name:" : "Click to select a name:"}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {nameArray.map((name, index) => (
+          <button
+            key={index}
+            onClick={() => onNameSelect(name)}
+            className={`p-4 rounded-xl text-left transition-all ${
+              selectedName === name
+                ? "bg-blue-500 text-white"
+                : "bg-black/20 hover:bg-black/30 text-white"
+            }`}
+          >
+            <div className="font-medium">{name}</div>
+            <div className="text-sm opacity-70">Click to select</div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
@@ -379,6 +397,7 @@ export function GenerationProgress({ businessInfo, onComplete }) {
   const [connectedAccountId, setConnectedAccountId] = useState();
   const [isStripeWindowOpen, setIsStripeWindowOpen] = useState(false);
   const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [selectedName, setSelectedName] = useState(null);
 
   // Define step progress state
   const [stepProgress, setStepProgress] = useState({
@@ -759,6 +778,32 @@ export function GenerationProgress({ businessInfo, onComplete }) {
     user?.id,
   ]);
 
+  // Add name selection handler
+  const handleNameSelect = async (name) => {
+    try {
+      const businessService = new BusinessService(user.id);
+      await businessService.saveSelectedName(businessId, name);
+      setSelectedName(name);
+
+      // Update the generation state to reflect the selection
+      setGenerationState((prev) => ({
+        ...prev,
+        results: {
+          ...prev.results,
+          names: {
+            ...prev.results.names,
+            selectedName: name,
+          },
+        },
+      }));
+
+      // Move to next step after selection
+      updateProgress("names", "completed", name);
+    } catch (error) {
+      console.error("Failed to save selected name:", error);
+    }
+  };
+
   if (generationState.error) {
     return <div>Error: {generationState.error}</div>;
   }
@@ -858,7 +903,11 @@ export function GenerationProgress({ businessInfo, onComplete }) {
                                           <LogoPreview logo={result.data} />
                                         )}
                                         {subKey === "names" && (
-                                          <NameDisplay name={result.data} />
+                                          <NameDisplay
+                                            names={result.data}
+                                            onNameSelect={handleNameSelect}
+                                            selectedName={selectedName}
+                                          />
                                         )}
                                         {subKey === "pricing_plan" && (
                                           <PricingPlanPreview

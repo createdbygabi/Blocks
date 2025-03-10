@@ -1,6 +1,7 @@
 import { getSaasData } from "./lib/db";
 import { headers } from "next/headers";
 import { LandingPage } from "./components/LandingPage";
+import { Metadata } from "next";
 
 // Fade up animation variant
 const fadeUp = {
@@ -8,6 +9,62 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.5 },
 };
+
+// Generate metadata for the page
+export async function generateMetadata() {
+  const headersList = headers();
+  const subdomain = headersList.get("x-subdomain");
+
+  try {
+    const data = await getSaasData(subdomain);
+
+    if (!data) {
+      return {
+        title: "Site Not Found",
+        description: `No site found for subdomain: ${subdomain}`,
+      };
+    }
+
+    const business = data.business;
+    const content = data.landing?.content;
+
+    return {
+      title: `${business.name} ｜ ${
+        data?.landingPage?.content?.hero?.title || "Welcome"
+      }`,
+      description:
+        data?.landingPage?.content?.hero?.subtitle ||
+        `Welcome to ${business.name}`,
+      icons: {
+        icon: business.logo_url || "/favicon.ico",
+        apple: business.logo_url || "/apple-icon.png",
+      },
+      openGraph: {
+        title: `${business.name} - ${
+          data?.landingPage?.content?.hero?.title || "Welcome"
+        }`,
+        description:
+          data?.landingPage?.content?.hero?.subtitle ||
+          `Welcome to ${business.name}`,
+        images: [business.logo_url || "/og-image.png"],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: business.name,
+        description:
+          data?.landingPage?.content?.hero?.subtitle ||
+          `Welcome to ${business.name}`,
+        images: [business.logo_url || "/twitter-image.png"],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+    return {
+      title: "Error",
+      description: "Something went wrong while loading the site.",
+    };
+  }
+}
 
 export default async function SaasPage({ params, searchParams }) {
   const headersList = headers();

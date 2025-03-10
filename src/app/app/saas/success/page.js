@@ -32,6 +32,7 @@ export default function SuccessPage() {
   const [error, setError] = useState(null);
   const [business, setBusiness] = useState(null);
   const [landingPage, setLandingPage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Get theme settings from landing page or use defaults
   const theme = landingPage?.theme_id
@@ -80,10 +81,12 @@ export default function SuccessPage() {
     }
 
     const checkSession = async () => {
+      // Prevent multiple calls
+      if (isProcessing || status !== "loading") return;
+      setIsProcessing(true);
+
       try {
-        if (!business) {
-          return;
-        }
+        if (!business) return;
 
         const response = await fetch("/api/check-session", {
           method: "POST",
@@ -116,11 +119,13 @@ export default function SuccessPage() {
         console.error("Error checking session:", err);
         setStatus("error");
         setError(err.message);
+      } finally {
+        setIsProcessing(false);
       }
     };
 
     checkSession();
-  }, [searchParams, business]);
+  }, [searchParams, business, status, isProcessing]);
 
   const renderContent = () => {
     if (status === "loading") {

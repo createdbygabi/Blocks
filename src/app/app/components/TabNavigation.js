@@ -131,14 +131,15 @@ export function TabNavigation() {
     if (error) {
       console.error("Error signing out:", error);
     } else {
-      router.push("/login");
+      router.push("/app/login");
     }
   };
 
   if (
     pathname === "/app/landing" ||
     pathname === "/app/onboarding" ||
-    pathname === "/app/format-test"
+    pathname === "/app/format-test" ||
+    pathname === "/app/login"
   ) {
     return null;
   }

@@ -1,56 +1,70 @@
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { supabase, sendMagicLink } from "@/lib/supabase";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
   try {
     const { sessionId, stripeAccountId } = await request.json();
 
-    if (!sessionId || !stripeAccountId) {
-      return NextResponse.json(
-        { error: "Session ID and Stripe Account ID are required" },
-        { status: 400 }
-      );
-    }
+    // Initialize Stripe with the connected account
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+    // Retrieve the session
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items", "customer"],
       stripeAccount: stripeAccountId,
     });
 
-    if (session.payment_status === "paid") {
-      // Store subscription in Supabase
+    if (!session || session.payment_status !== "paid") {
+      return NextResponse.json({ success: false });
+    }
+
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+
+    // Check if subscription already exists
+    const { data: existingSubscription } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("business_id", session.metadata.business_id)
+      .eq("customer_email", session.customer_email)
+      .eq("status", "active")
+      .single();
+
+    if (!existingSubscription) {
+      // Create new subscription only if it doesn't exist
       const { error: subscriptionError } = await supabase
         .from("subscriptions")
-        .insert({
-          customer_email: session.metadata.customer_email,
-          stripe_subscription_id: session.subscription,
-          stripe_customer_id: session.customer,
-          business_id: session.metadata?.business_id,
-          status: "active",
-          created_at: new Date().toISOString(),
-        });
+        .insert([
+          {
+            business_id: session.metadata.business_id,
+            customer_email: session.customer_email,
+            status: "active",
+            stripe_subscription_id: session.subscription,
+            stripe_customer_id: session.customer,
+          },
+        ])
+        .single();
 
       if (subscriptionError) {
-        console.error("Error storing subscription:", subscriptionError);
-        return NextResponse.json(
-          { error: "Failed to store subscription" },
-          { status: 500 }
-        );
+        console.error("Error creating subscription:", subscriptionError);
+        // If error is due to unique constraint, it's okay - subscription already exists
+        if (subscriptionError.code !== "23505") {
+          // PostgreSQL unique violation code
+          throw subscriptionError;
+        }
       }
     }
 
     return NextResponse.json({
-      success: session.payment_status === "paid",
-      email: session.metadata.customer_email,
+      success: true,
       session,
+      email: session.customer_email,
     });
   } catch (error) {
-    console.error("Error checking session:", error);
+    console.error("Check session error:", error);
     return NextResponse.json(
-      { error: "Failed to check session status" },
+      { error: "Failed to process session" },
       { status: 500 }
     );
   }

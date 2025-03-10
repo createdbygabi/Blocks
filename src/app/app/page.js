@@ -86,6 +86,20 @@ export default function AppPage() {
     }
   };
 
+  const openStripeDashboard = async () => {
+    try {
+      const response = await fetch(
+        `/api/stripe/dashboard?account_id=${business.stripe_account_id}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        window.open(data.url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error opening Stripe dashboard:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -131,13 +145,13 @@ export default function AppPage() {
 
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Stripe Integration Section */}
-        {!business.stripe_account_id && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/10">
                 <svg
                   className="w-6 h-6 text-purple-400"
@@ -154,51 +168,155 @@ export default function AppPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Set up Stripe</h2>
+                <h2 className="text-lg font-semibold">Stripe Integration</h2>
                 <p className="text-sm text-gray-400">
-                  Accept payments worldwide
+                  {business?.stripe_account_id
+                    ? "Access your Stripe Express Dashboard"
+                    : "Set up payments for your business"}
                 </p>
               </div>
             </div>
 
-            {stripeError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <p className="text-sm text-red-400">
-                  There was an error setting up Stripe. Please try again.
-                </p>
-              </div>
+            {business?.stripe_account_id ? (
+              <button
+                onClick={openStripeDashboard}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 
+                         text-white rounded-lg transition-colors text-sm"
+              >
+                <span>Open Dashboard</span>
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={handleStripeSetup}
+                disabled={accountCreatePending || isStripeWindowOpen}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 
+                         disabled:opacity-50 disabled:hover:bg-purple-500 text-white rounded-lg 
+                         transition-colors text-sm"
+              >
+                {accountCreatePending ? (
+                  <span>Setting up...</span>
+                ) : isStripeWindowOpen ? (
+                  <span>Waiting for completion...</span>
+                ) : (
+                  <>
+                    Connect Stripe Account
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </>
+                )}
+              </button>
             )}
-
-            <button
-              onClick={handleStripeSetup}
-              disabled={accountCreatePending || isStripeWindowOpen}
-              className="flex items-center justify-center gap-2 w-full bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:hover:bg-purple-500 text-white py-2 px-4 rounded-lg transition-colors text-sm"
-            >
-              {accountCreatePending ? (
-                <span>Setting up...</span>
-              ) : isStripeWindowOpen ? (
-                <span>Waiting for completion...</span>
-              ) : (
-                <>
-                  Connect Stripe Account
+          </div>
+          {!business?.stripe_account_id && (
+            <div className="mt-4">
+              <div className="p-4 bg-gradient-to-br from-purple-500/5 to-blue-500/5 rounded-xl border border-purple-500/10">
+                <h3 className="text-sm font-medium text-purple-300 mb-4 flex items-center gap-2">
                   <svg
                     className="w-4 h-4"
-                    viewBox="0 0 24 24"
                     fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                </>
-              )}
-            </button>
-          </motion.div>
-        )}
+                  Important Setup Instructions
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 rounded-lg border border-purple-500/10">
+                    <div className="flex-shrink-0 p-1.5 bg-purple-500/10 rounded-lg">
+                      <svg
+                        className="w-4 h-4 text-purple-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-300">Business Category</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Select{" "}
+                        <strong className="text-purple-300 font-medium">
+                          Software
+                        </strong>{" "}
+                        or{" "}
+                        <strong className="text-purple-300 font-medium">
+                          Logiciels
+                        </strong>{" "}
+                        (French)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 bg-black/20 rounded-lg border border-purple-500/10">
+                    <div className="flex-shrink-0 p-1.5 bg-purple-500/10 rounded-lg">
+                      <svg
+                        className="w-4 h-4 text-purple-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-300">Website URL</p>
+                      <p className="text-sm font-mono bg-black/30 px-2 py-1 rounded mt-1 text-purple-300">{`http://${business.subdomain}.localhost:3000`}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {stripeError && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-sm text-red-400">
+                There was an error setting up Stripe. Please try again.
+              </p>
+            </div>
+          )}
+        </motion.div>
 
         {/* Business Overview Section */}
         <div>
@@ -224,23 +342,39 @@ export default function AppPage() {
                 )}
                 <div>
                   <h2 className="text-xl font-semibold">{business.name}</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-sm text-gray-400">
-                      Created{" "}
-                      {new Date(business.created_at).toLocaleDateString()}
-                    </p>
-                    <span className="text-gray-600">•</span>
-                    <a
-                      href={`http://${business.subdomain}.localhost:3000`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-400 hover:underline"
-                    >
-                      View Site
-                    </a>
-                  </div>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Created {new Date(business.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
+              <a
+                href={`http://${business.subdomain}.localhost:3000`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 
+                         hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all duration-200 
+                         text-sm font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 
+                         hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <span className="relative z-10">View Site</span>
+                <svg
+                  className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <div
+                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400/20 to-transparent opacity-0 
+                              group-hover:opacity-100 transition-opacity duration-200"
+                ></div>
+              </a>
             </div>
 
             {/* Content Grid */}

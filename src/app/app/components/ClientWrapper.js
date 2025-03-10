@@ -7,7 +7,10 @@ import AppNotifications from "./AppNotifications";
 
 export function ClientWrapper({ children }) {
   const pathname = usePathname();
-  const isNoNavPage = pathname === "/landing" || pathname === "/onboarding";
+  const isNoNavPage =
+    pathname === "/app/onboarding" ||
+    pathname === "/app/login" ||
+    pathname === "/app/landing";
   const { user, loading } = useUser();
 
   if (pathname === "/login") {

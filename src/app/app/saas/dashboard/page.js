@@ -8,6 +8,7 @@ import { getStyles } from "@/lib/themes";
 import { getAuthCookiePrefix } from "@/lib/auth";
 import { getFeatureBySubdomain } from "../features";
 import { landingThemes, designPresets, fontPresets } from "@/lib/themes";
+import { motion } from "framer-motion";
 
 export default function SaasDashboard() {
   const [user, setUser] = useState(null);
@@ -86,51 +87,98 @@ export default function SaasDashboard() {
   );
 
   return (
-    <div
-      className={`min-h-screen flex flex-col ${
-        styles.layout?.background || "bg-gray-900"
-      }`}
-    >
-      <nav
-        className={`${styles.layout?.surface || "bg-gray-800"} ${
-          styles.border || "border-gray-700"
-        } border-b`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <nav className="sticky top-0 z-50">
+        <div
+          className="absolute inset-0 bg-white
+          backdrop-blur-md border-b border-gray-200 shadow-sm"
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              {logoUrl && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-4"
+            >
+              {logoUrl ? (
                 <img
                   src={logoUrl}
                   alt={businessName}
-                  className="h-8 w-auto mr-3"
+                  className="h-8 w-auto rounded-lg ring-1 ring-gray-200"
                 />
+              ) : (
+                <div
+                  className={`w-8 h-8 rounded-lg overflow-hidden
+                  ${styles.utils?.highlight || "bg-gray-100"}
+                  ring-1 ring-gray-200 flex items-center justify-center`}
+                >
+                  <span className={`text-lg font-bold ${styles.text?.accent}`}>
+                    {businessName.charAt(0)}
+                  </span>
+                </div>
               )}
-              <span
-                className={`text-lg font-bold ${
-                  styles.text?.primary || "text-white"
-                }`}
-              >
-                {businessName} Dashboard
-              </span>
-            </div>
+
+              <div className="flex items-center">
+                <span className="text-base font-medium text-gray-900">
+                  {businessName}
+                </span>
+                <div className="hidden sm:block h-4 w-px mx-3 bg-gray-200" />
+                <div
+                  className="hidden sm:flex px-2 py-1 text-xs font-medium rounded-md
+                  bg-gray-100 text-gray-700
+                  ring-1 ring-gray-200"
+                >
+                  Dashboard
+                </div>
+              </div>
+            </motion.div>
+
             <div className="flex items-center gap-4">
-              <span
-                className={`text-sm ${
-                  styles.text?.secondary || "text-gray-400"
-                }`}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg
+                  bg-gray-100
+                  ring-1 ring-gray-200"
               >
-                {user.email}
-              </span>
-              <button
+                <div
+                  className={`w-6 h-6 rounded-md 
+                  ${styles.utils?.highlight || "bg-gray-200"}
+                  flex items-center justify-center`}
+                >
+                  <span className="text-xs font-medium text-gray-700">
+                    {user.email.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-sm text-gray-700">{user.email}</span>
+              </motion.div>
+
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={handleSignOut}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  styles.button?.secondary ||
-                  "bg-gray-700 hover:bg-gray-600 text-white"
-                }`}
+                className="group px-3 py-1.5 rounded-lg text-sm
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-700
+                  transition-all duration-150 flex items-center gap-2
+                  ring-1 ring-gray-200"
               >
-                Sign Out
-              </button>
+                <svg
+                  className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Sign Out</span>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -144,7 +192,7 @@ export default function SaasDashboard() {
             business={saasData.business}
           />
         ) : (
-          <div className={`rounded-xl p-6 ${styles.card || "bg-gray-800"}`}>
+          <div className="rounded-xl p-6 bg-white shadow-sm border border-gray-200">
             No feature configured for this business
           </div>
         )}

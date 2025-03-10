@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FiCheck } from "react-icons/fi";
 
 export function PricingSection({ styles, pricing, business, onCtaClick }) {
-  const [billingPeriod, setBillingPeriod] = useState("monthly");
+  const [billingPeriod, setBillingPeriod] = useState("yearly");
   const emailInputRef = useRef(null);
 
   // Get the active plan (middle plan) from business pricing_plans
@@ -93,7 +93,7 @@ export function PricingSection({ styles, pricing, business, onCtaClick }) {
           </p>
         </motion.div>
 
-        {/* Pricing Toggle */}
+        {/* Updated Pricing Toggle */}
         <div className="flex justify-center items-center gap-4 mb-12">
           <motion.div
             className={`inline-flex items-center p-1 rounded-full border ${styles.utils.highlight}`}
@@ -103,28 +103,33 @@ export function PricingSection({ styles, pricing, business, onCtaClick }) {
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all
                 ${
                   billingPeriod === "monthly"
-                    ? `${styles.text.primary} ${styles.utils.highlight}`
+                    ? styles.button.primary
                     : `${styles.text.secondary} hover:${styles.text.accent}`
                 }`}
             >
               Monthly
             </button>
-            <button
-              onClick={() => setBillingPeriod("yearly")}
-              className={`px-6 py-2 rounded-full text-sm font-medium relative transition-all
-                ${
-                  billingPeriod === "yearly"
-                    ? `${styles.button.primary} ${styles.utils.highlight}`
-                    : `${styles.text.secondary} hover:${styles.text.accent}`
-                }`}
-            >
-              Yearly
-              <span
-                className={`absolute -top-3 -right-3 px-2 py-1 text-xs font-medium rounded-full ${styles.utils.highlight} ${styles.text.accent}`}
+            <div className="relative">
+              <button
+                onClick={() => setBillingPeriod("yearly")}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all
+                  ${
+                    billingPeriod === "yearly"
+                      ? styles.button.primary
+                      : `${styles.text.secondary} hover:${styles.text.accent}`
+                  }`}
+              >
+                Yearly
+              </button>
+              {/* 40% OFF Badge */}
+              <div
+                className={`absolute -top-4 -right-9 px-1.5 py-0.5 text-[11px] font-medium rounded-full
+                  ${styles.button.primary}
+                  border border-current border-opacity-80 shadow-sm`}
               >
                 40% OFF
-              </span>
-            </button>
+              </div>
+            </div>
           </motion.div>
         </div>
 
@@ -141,7 +146,7 @@ export function PricingSection({ styles, pricing, business, onCtaClick }) {
             <div
               className={`absolute -top-3 -right-3 px-3 py-1 text-xs font-medium rounded-full ${styles.utils.highlight} ${styles.text.accent}`}
             >
-              40% OFF
+              {billingPeriod === "yearly" && "40% OFF"}
             </div>
             <div
               className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${styles.utils.highlight} ${styles.text.accent} mb-4`}
@@ -212,7 +217,7 @@ export function PricingSection({ styles, pricing, business, onCtaClick }) {
             <div
               className={`absolute -top-3 -right-3 px-3 py-1 text-xs font-medium rounded-full ${styles.utils.highlight} ${styles.text.accent}`}
             >
-              40% OFF
+              {billingPeriod === "yearly" && "40% OFF"}
             </div>
             <h3 className={`text-xl font-bold mb-2 ${styles.text.primary}`}>
               {middlePlan.name}
@@ -297,7 +302,7 @@ export function PricingSection({ styles, pricing, business, onCtaClick }) {
             <div
               className={`absolute -top-3 -right-3 px-3 py-1 text-xs font-medium rounded-full ${styles.utils.highlight} ${styles.text.accent}`}
             >
-              40% OFF
+              {billingPeriod === "yearly" && "40% OFF"}
             </div>
             <h3 className={`text-xl font-bold mb-2 ${styles.text.primary}`}>
               {proPlan.name}

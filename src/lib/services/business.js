@@ -23,45 +23,71 @@ export class BusinessService {
 
   async generateName(businessInfo) {
     try {
-      console.log("🎭 Using mock data for name generation");
+      const response = await fetch("/api/business/generate-name", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ businessInfo }),
+      });
 
-      const mockNames = [
-        "IntelliFlow",
-        "SmartSynth",
-        "AiForge",
-        "NexusAI",
-        "BrainWave",
-      ];
-
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      try {
-        await saveBusiness(this.userId, {
-          name: mockNames[0],
-          subdomain: mockNames[0].toLowerCase().replace(/\s+/g, "_"),
-        });
-      } catch (error) {
-        console.error("Failed to save business name:", error);
+      if (!response.ok) {
+        throw new Error("Failed to generate business name");
       }
-      return mockNames[0];
+
+      const data = await response.json();
+
+      if (!data.names || data.names.length === 0) {
+        throw new Error("No names were generated");
+      }
+
+      // Return all names instead of just the first one
+      return data.names;
     } catch (error) {
       console.error("Failed to generate names:", error);
       throw error;
     }
   }
 
-  async generateLogo(businessInfo) {
+  async generateLogo(businessInfo, business) {
     try {
-      console.log("🎭 Using mock data for logo generation");
+      const response = await fetch("/api/logo/generate-logo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          businessInfo: {
+            niche: businessInfo.niche,
+            mainFeature: businessInfo.mainFeature,
+            targetAudience: businessInfo.targetAudience,
+          },
+        }),
+      });
 
-      const mockLogo = {
-        logo_url: "https://via.placeholder.com/150",
-        alt_text: "Generated Logo",
-        colors: ["#2563eb", "#1e40af"],
+      if (!response.ok) {
+        throw new Error("Failed to generate logo");
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const logo = {
+        logo_url: data.imageUrl,
+        alt_text: `${business.name || "Business"} Logo - ${data.symbol} symbol`,
       };
 
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      return mockLogo;
+      // Update the business with the new logo URL and symbol
+      if (business?.id) {
+        await this.updateBusiness(business.id, {
+          logo_url: logo.logo_url,
+        });
+      }
+
+      return logo;
     } catch (error) {
       console.error("Failed to generate logo:", error);
       throw error;
@@ -327,8 +353,10 @@ export class BusinessService {
       };
 
       // Add user_id when saving the landing page
+      const hero_icons = ["003", "014", "005", "015", "021"];
       await saveLandingPage(businessInfo.id, {
         content: completeData,
+        hero_icons: hero_icons,
         user_id: this.userId, // Add the user_id from BusinessService
         business_id: businessInfo.id,
         updated_at: new Date().toISOString(),
@@ -364,20 +392,20 @@ export class BusinessService {
       // Step 2: Generate Logo
       console.log("🎨 Generating logo...");
       updateProgress("logo", "loading");
-      const logo = await this.generateLogo(businessInfo);
+      const logo = await this.generateLogo(businessInfo, business);
       updateProgress("logo", "completed", logo);
       console.log("✅ Logo generated");
 
       // Step 3: Generate Names
       console.log("🎨 Generating names...");
       updateProgress("names", "loading");
-      const name = await this.generateName(businessInfo);
+      const names = await this.generateName(businessInfo);
       // Pass array of names directly to the progress update
-      updateProgress("names", "completed", name);
-      console.log("✅ Names generated:", name);
+      updateProgress("names", "completed", names);
+      console.log("✅ Names generated:", names);
 
-      business.name = name;
-      business.subdomain = name.toLowerCase().replace(/\s+/g, "_");
+      business.name = names[0];
+      business.subdomain = names[0].toLowerCase().replace(/\s+/g, "_");
       business.logo_url = logo.logo_url;
 
       // // Step 4: Setup Subdomain
@@ -527,7 +555,7 @@ export class BusinessService {
         .from("businesses")
         .insert({
           user_id: this.userId,
-          name: businessInfo.name || businessInfo.niche,
+          // name: businessInfo.name || businessInfo.niche,
           niche: businessInfo.niche,
           main_feature: businessInfo.mainFeature,
           product: businessInfo.product || null,
@@ -762,6 +790,20 @@ export class BusinessService {
       return mockInstagram;
     } catch (error) {
       console.error("Failed to generate Instagram setup:", error);
+      throw error;
+    }
+  }
+
+  // Add a new method to save the selected name
+  async saveSelectedName(businessId, name) {
+    try {
+      await this.updateBusiness(businessId, {
+        name: name,
+        subdomain: name.toLowerCase().replace(/\s+/g, "_"),
+      });
+      return name;
+    } catch (error) {
+      console.error("Failed to save selected name:", error);
       throw error;
     }
   }

@@ -1,17 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi";
 
 export function Navbar({ styles, business, onCtaClick }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  if (!business) {
-    console.log("⚠️ No business data provided to Navbar");
-    return null;
-  }
+  if (!business) return null;
 
   const navItems = [
     { name: "Features", href: "#features" },
@@ -22,27 +19,27 @@ export function Navbar({ styles, business, onCtaClick }) {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-md border-b border-gray-200/80" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="flex justify-between items-center h-20">
           {/* Logo and Brand */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center gap-3"
+            className="flex items-center"
           >
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link href="/" className="group flex items-center gap-3">
               {business.logo_url ? (
                 <img
                   src={business.logo_url}
                   alt={business.name}
-                  className="h-8 w-auto"
+                  className="h-9 w-auto"
                 />
               ) : (
                 <div
-                  className={`w-9 h-9 rounded-xl ${
-                    styles.utils?.highlight || "bg-blue-500"
-                  } flex items-center justify-center shadow-sm`}
+                  className={`w-10 h-10 rounded-2xl ${
+                    styles.utils?.highlight ||
+                    "bg-gradient-to-br from-blue-500 to-blue-600"
+                  } flex items-center justify-center shadow-lg shadow-blue-500/20 transition-transform duration-200 group-hover:scale-105`}
                 >
                   <span
                     className={`text-lg font-bold ${
@@ -56,7 +53,7 @@ export function Navbar({ styles, business, onCtaClick }) {
               <span
                 className={`text-lg font-semibold ${
                   styles.text?.primary || "text-gray-900"
-                }`}
+                } transition-colors group-hover:text-blue-600`}
               >
                 {business.name}
               </span>
@@ -64,31 +61,29 @@ export function Navbar({ styles, business, onCtaClick }) {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-10">
+            <div className="flex items-center gap-2">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    styles.text?.secondary || "text-gray-600"
-                  } hover:${
-                    styles.text?.primary || "text-gray-900"
-                  } hover:bg-gray-100/80 transition-all`}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium 
+                    ${styles.text?.secondary || "text-gray-600"}
+                    hover:${styles.text?.primary || "text-gray-900"}
+                    transition-all duration-200`}
                 >
                   {item.name}
                 </Link>
               ))}
             </div>
 
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+            <div className="flex items-center gap-4">
               <Link
                 href="/login"
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  styles.text?.secondary || "text-gray-600"
-                } hover:${
-                  styles.text?.primary || "text-gray-900"
-                } hover:bg-gray-100/80 transition-all`}
+                className={`px-4 py-2 rounded-xl text-sm font-medium 
+                  ${styles.text?.secondary || "text-gray-600"}
+                  hover:${styles.text?.primary || "text-gray-900"}
+                  transition-all duration-200`}
               >
                 Login
               </Link>
@@ -96,10 +91,12 @@ export function Navbar({ styles, business, onCtaClick }) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onCtaClick}
-                className={`px-4 py-2 rounded-lg text-sm font-medium
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium
                   ${styles.button?.primary || "bg-blue-600 text-white"} 
-                  transition-all duration-200 shadow-sm
-                  hover:opacity-90 hover:shadow-md active:opacity-100`}
+                  transition-all duration-200
+                  shadow-lg shadow-blue-500/20
+                  hover:shadow-xl hover:shadow-blue-500/30
+                  active:opacity-90`}
               >
                 Get started
               </motion.button>
@@ -110,69 +107,97 @@ export function Navbar({ styles, business, onCtaClick }) {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100/80"
+            className="md:hidden p-2.5 rounded-xl"
           >
-            {isMenuOpen ? (
-              <FiX
-                className={`w-6 h-6 ${styles.text?.primary || "text-gray-900"}`}
-              />
-            ) : (
-              <FiMenu
-                className={`w-6 h-6 ${styles.text?.primary || "text-gray-900"}`}
-              />
-            )}
+            <AnimatePresence mode="wait">
+              {isMenuOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FiX
+                    className={`w-6 h-6 ${
+                      styles.text?.primary || "text-gray-900"
+                    }`}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="menu"
+                  initial={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: -90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FiMenu
+                    className={`w-6 h-6 ${
+                      styles.text?.primary || "text-gray-900"
+                    }`}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
         </div>
 
         {/* Mobile Navigation */}
-        <motion.div
-          initial={false}
-          animate={{ height: isMenuOpen ? "auto" : 0 }}
-          className="md:hidden overflow-hidden"
-        >
-          <div className="space-y-1 pb-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setIsMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg text-base font-medium ${
-                  styles.text?.secondary || "text-gray-600"
-                } hover:${
-                  styles.text?.primary || "text-gray-900"
-                } hover:bg-gray-100/80`}
-              >
-                {item.name}
-              </Link>
-            ))}
-            <div className="pt-2 mt-2 border-t border-gray-200">
-              <Link
-                href="/login"
-                onClick={() => setIsMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg text-base font-medium ${
-                  styles.text?.secondary || "text-gray-600"
-                } hover:${
-                  styles.text?.primary || "text-gray-900"
-                } hover:bg-gray-100/80`}
-              >
-                Login
-              </Link>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onCtaClick();
-                }}
-                className={`w-full mt-2 px-4 py-2.5 rounded-lg text-base font-mediu^m
-                  ${styles.button?.primary || "bg-blue-600 text-white"}
-                  transition-all duration-200 shadow-sm
-                  hover:opacity-90 hover:shadow-md active:opacity-100`}
-              >
-                Get started
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="space-y-1.5 py-4">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block px-4 py-3 rounded-xl text-base font-medium 
+                      ${styles.text?.secondary || "text-gray-600"}
+                      hover:${styles.text?.primary || "text-gray-900"}
+                      transition-all duration-200`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                <div className="pt-3 mt-3 space-y-2">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block px-4 py-3 rounded-xl text-base font-medium 
+                      ${styles.text?.secondary || "text-gray-600"}
+                      hover:${styles.text?.primary || "text-gray-900"}
+                      transition-all duration-200`}
+                  >
+                    Login
+                  </Link>
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onCtaClick();
+                    }}
+                    className={`w-full px-4 py-3 rounded-xl text-base font-medium
+                      ${styles.button?.primary || "bg-blue-600 text-white"}
+                      transition-all duration-200
+                      shadow-lg shadow-blue-500/20
+                      hover:shadow-xl hover:shadow-blue-500/30
+                      active:opacity-90`}
+                  >
+                    Get started
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );
