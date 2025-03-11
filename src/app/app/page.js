@@ -16,6 +16,12 @@ export default function AppPage() {
   const [stripeError, setStripeError] = useState(false);
   const [isStripeWindowOpen, setIsStripeWindowOpen] = useState(false);
 
+  // Add Instagram states
+  const [igUsername, setIgUsername] = useState("");
+  const [igPassword, setIgPassword] = useState("");
+  const [igLoading, setIgLoading] = useState(false);
+  const [igError, setIgError] = useState(null);
+
   useEffect(() => {
     if (user) {
       fetchBusiness();
@@ -97,6 +103,54 @@ export default function AppPage() {
       }
     } catch (error) {
       console.error("Error opening Stripe dashboard:", error);
+    }
+  };
+
+  // Copy username to clipboard function
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text.replace("@", ""));
+  };
+
+  // Handle Instagram connection
+  const handleInstagramConnect = async () => {
+    if (!igUsername || !igPassword) {
+      setIgError("Please enter both username and password");
+      return;
+    }
+
+    setIgLoading(true);
+    setIgError(null);
+
+    try {
+      const response = await fetch("/api/instagram/connect", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: igUsername.replace("@", ""),
+          password: igPassword,
+          businessId: business.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to connect Instagram account");
+      }
+
+      // Refresh business data to show updated Instagram status
+      await fetchBusiness();
+
+      // Clear form
+      setIgUsername("");
+      setIgPassword("");
+    } catch (error) {
+      console.error("Instagram connection error:", error);
+      setIgError(error.message);
+    } finally {
+      setIgLoading(false);
     }
   };
 
@@ -318,7 +372,227 @@ export default function AppPage() {
           )}
         </motion.div>
 
-        {/* Business Oveection */}
+        {/* Instagram Integration Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-pink-500/10">
+                <svg
+                  className="w-6 h-6 text-pink-400"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 01-1.153 1.772c-.5.509-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 01-1.772-1.153 4.904 4.904 0 01-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 011.153-1.772A4.897 4.897 0 015.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 10-2.5 0 1.25 1.25 0 002.5 0zM12 9a3 3 0 110 6 3 3 0 010-6z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Instagram Integration</h2>
+                <p className="text-sm text-gray-400">
+                  {business?.ig_account_credentials
+                    ? "Your Instagram account is connected"
+                    : "Set up your organic marketing channel"}
+                </p>
+              </div>
+            </div>
+
+            {business?.ig_account_credentials ? (
+              <button
+                onClick={() =>
+                  window.open(
+                    `https://instagram.com/${business.ig_account_credentials.username}`,
+                    "_blank"
+                  )
+                }
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 
+                       hover:from-pink-600 hover:to-purple-600 text-white rounded-lg transition-colors text-sm"
+              >
+                <span>View Profile</span>
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={handleInstagramConnect}
+                disabled={igLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 
+                       hover:from-pink-600 hover:to-purple-600 text-white rounded-lg transition-colors text-sm
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {igLoading ? "Connecting..." : "Connect Instagram"}
+                {!igLoading && (
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
+
+          {!business?.ig_account_credentials && (
+            <div className="mt-4">
+              <div className="p-4 bg-gradient-to-br from-pink-500/5 to-purple-500/5 rounded-xl border border-pink-500/10">
+                <h3 className="text-sm font-medium text-pink-300 mb-4 flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Instagram Setup Guide
+                </h3>
+
+                <div className="mt-6 space-y-4">
+                  {/* Step 1: Create Instagram Account */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-pink-500/10">
+                    <h4 className="text-sm font-medium text-pink-300 mb-3">
+                      Step 1: Create Your Instagram Account
+                    </h4>
+                    <p className="text-sm text-gray-400 mb-4">
+                      First, create a new Instagram account using one of the
+                      suggested usernames below. This will be your SaaS's
+                      organic marketing channel.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {[
+                        `${business.name.toLowerCase()}.app`,
+                        `${business.name.toLowerCase()}_app`,
+                        `use${business.name.toLowerCase()}`,
+                        `get${business.name.toLowerCase()}`,
+                      ].map((username, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 bg-black/20 rounded-lg border border-pink-500/10"
+                        >
+                          <span className="text-sm font-mono text-pink-300">
+                            @{username}
+                          </span>
+                          <button
+                            onClick={() => copyToClipboard(username)}
+                            className="ml-auto text-xs text-gray-400 hover:text-white"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <a
+                      href="https://www.instagram.com/accounts/login/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-pink-400 hover:text-pink-300"
+                    >
+                      Create Instagram Account
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </a>
+                  </div>
+
+                  {/* Step 2: Enter Credentials */}
+                  <div className="p-4 bg-black/20 rounded-lg border border-pink-500/10">
+                    <h4 className="text-sm font-medium text-pink-300 mb-3">
+                      Step 2: Connect Your Instagram Account
+                    </h4>
+                    <p className="text-sm text-gray-400 mb-4">
+                      Once you've created your Instagram account, enter your
+                      credentials below to enable automated organic marketing.
+                    </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Instagram Username
+                        </label>
+                        <input
+                          type="text"
+                          value={igUsername}
+                          onChange={(e) => setIgUsername(e.target.value)}
+                          placeholder="@yourusername"
+                          className="w-full px-3 py-2 bg-black/30 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Instagram Password
+                        </label>
+                        <input
+                          type="password"
+                          value={igPassword}
+                          onChange={(e) => setIgPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          className="w-full px-3 py-2 bg-black/30 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50"
+                        />
+                      </div>
+
+                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <p className="text-sm text-blue-300">
+                          <strong>Why we need this:</strong> Your Instagram
+                          credentials will be securely stored and used only for
+                          posting content through the official Instagram API.
+                          This enables automated organic marketing for your
+                          SaaS.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {igError && (
+            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-sm text-red-400">{igError}</p>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Business Overview Section */}
         <div>
           <div className="flex items-center gap-3 mb-8">
             <div className="h-8 w-[3px] bg-blue-500" />
