@@ -181,11 +181,14 @@ export function LandingPage({ data }) {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to create checkout session");
+        console.error("Checkout error details:", data); // This will show the full error response
+        throw new Error(data.details || "Failed to create checkout session");
       }
 
-      const { sessionUrl } = await response.json();
+      const { sessionUrl } = data;
       window.location.href = sessionUrl;
     } catch (error) {
       console.error("Error creating checkout session:", error);
