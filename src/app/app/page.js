@@ -301,7 +301,7 @@ export default function AppPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-300">Website URL</p>
-                      <p className="text-sm font-mono bg-black/30 px-2 py-1 rounded mt-1 text-purple-300">{`http://${business.subdomain}.localhost:3000`}</p>
+                      <p className="text-sm font-mono bg-black/30 px-2 py-1 rounded mt-1 text-purple-300">{`http://${business.subdomain}.joinblocks.me`}</p>
                     </div>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ export default function AppPage() {
           )}
         </motion.div>
 
-        {/* Business Overview Section */}
+        {/* Business Oveection */}
         <div>
           <div className="flex items-center gap-3 mb-8">
             <div className="h-8 w-[3px] bg-blue-500" />
@@ -348,7 +348,7 @@ export default function AppPage() {
                 </div>
               </div>
               <a
-                href={`http://${business.subdomain}.localhost:3000`}
+                href={`http://${business.subdomain}.joinblocks.me`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 

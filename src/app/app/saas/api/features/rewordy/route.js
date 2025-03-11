@@ -21,9 +21,10 @@ export async function POST(request) {
 
 1. Identify and correct grammar, spelling, and punctuation errors
 2. Maintain the original meaning and style of the text
-3. Do not change correct phrases or rewrite content
-4. Focus only on making the text grammatically correct and natural
-5. Provide clear explanations for each correction
+3. Don't delete any sentences
+4. Do not change correct phrases or rewrite content
+5. Focus only on making the text grammatically correct and natural
+6. Provide clear explanations for each correction
 
 Return your response in this exact JSON format (very important):
 {

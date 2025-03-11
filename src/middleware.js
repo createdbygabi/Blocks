@@ -6,8 +6,13 @@ export async function middleware(request) {
   console.log("🌐 Middleware Start:", { hostname, pathname });
 
   // Only handle subdomains
-  if (hostname.endsWith("localhost:3000") && hostname !== "localhost:3000") {
-    const subdomain = hostname.split(".")[0];
+  const isLocalhost = hostname.includes("localhost:3000");
+  const isProduction = hostname.includes("joinblocks.me");
+
+  if ((isLocalhost || isProduction) && hostname.includes(".")) {
+    const subdomain = isLocalhost
+      ? hostname.split(".localhost:3000")[0]
+      : hostname.split(".joinblocks.me")[0];
     console.log("🔍 Subdomain Flow:", { subdomain, pathname });
 
     // Add subdomain to headers
