@@ -1,70 +1,55 @@
 import { NextResponse } from "next/server";
 
+const LOCAL_DOMAIN = "localhost:3000";
+const PRODUCTION_DOMAIN = "joinblocks.me";
+
 export async function middleware(request) {
   const hostname = request.headers.get("host");
   const pathname = request.nextUrl.pathname;
-  console.log("🌐 Middleware Start:", { hostname, pathname });
+  const currentHost =
+    process.env.NODE_ENV === "production" ? PRODUCTION_DOMAIN : LOCAL_DOMAIN;
 
-  // Only handle subdomains
-  if (hostname.endsWith("localhost:3000") && hostname !== "localhost:3000") {
-    const subdomain = hostname.split(".")[0];
+  // Check if this is a subdomain
+  const isSubdomain =
+    hostname !== currentHost &&
+    (hostname.endsWith(LOCAL_DOMAIN) || hostname.endsWith(PRODUCTION_DOMAIN));
+
+  if (isSubdomain) {
+    // Extract subdomain (handles both local and production)
+    const subdomain = hostname.replace(`.${currentHost}`, "");
     console.log("🔍 Subdomain Flow:", { subdomain, pathname });
 
-    // Add subdomain to headers
+    // Add subdomain to headers for use in API routes
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-subdomain", subdomain);
 
-    // Handle special paths for subdomains
-    if (pathname === "/login") {
-      console.log("🔐 Rewriting subdomain login to:", "/app/saas/login");
-      const loginUrl = new URL("/app/saas/login", request.url);
-      return NextResponse.rewrite(loginUrl, {
+    // Define routes that should be rewritten
+    const REWRITE_ROUTES = {
+      "/login": "/app/saas/login",
+      "/success": "/app/saas/success",
+      "/dashboard": "/app/saas/dashboard",
+    };
+
+    // Handle specific route rewrites
+    if (pathname in REWRITE_ROUTES) {
+      const rewritePath = REWRITE_ROUTES[pathname];
+      console.log(`🔄 Rewriting ${pathname} to:`, rewritePath);
+      return NextResponse.rewrite(new URL(rewritePath, request.url), {
         headers: requestHeaders,
       });
     }
 
-    if (pathname === "/success") {
-      console.log("🔐 Rewriting subdomain success to:", "/app/saas/success");
-      const successUrl = new URL("/app/saas/success", request.url);
-      return NextResponse.rewrite(successUrl, {
+    // Handle dynamic routes (API and auth)
+    if (pathname.startsWith("/api/") || pathname.startsWith("/auth/")) {
+      const rewritePath = `/app/saas${pathname}`;
+      console.log(`🔌 Rewriting to:`, rewritePath);
+      return NextResponse.rewrite(new URL(rewritePath, request.url), {
         headers: requestHeaders,
       });
     }
 
-    if (pathname === "/dashboard") {
-      console.log(
-        "📊 Rewriting subdomain dashboard to:",
-        "/app/saas/dashboard"
-      );
-      const dashboardUrl = new URL("/app/saas/dashboard", request.url);
-      return NextResponse.rewrite(dashboardUrl, {
-        headers: requestHeaders,
-      });
-    }
-
-    // Handle API routes
-    if (pathname.startsWith("/api/")) {
-      console.log("🔌 Rewriting API route to:", `/app/saas${pathname}`);
-      const apiUrl = new URL(`/app/saas${pathname}`, request.url);
-      return NextResponse.rewrite(apiUrl, {
-        headers: requestHeaders,
-      });
-    }
-
-    // Handle auth callback
-    if (pathname.startsWith("/auth/")) {
-      console.log("🔑 Rewriting auth route to:", `/app/saas${pathname}`);
-      const authUrl = new URL(`/app/saas${pathname}`, request.url);
-      return NextResponse.rewrite(authUrl, {
-        headers: requestHeaders,
-      });
-    }
-
-    // Rewrite to /saas for all other subdomain paths
-    const saasUrl = new URL("/app/saas", request.url);
-    console.log("🔄 Rewriting to:", saasUrl.toString());
-
-    return NextResponse.rewrite(saasUrl, {
+    // Default rewrite for subdomain
+    return NextResponse.rewrite(new URL("/app/saas", request.url), {
       headers: requestHeaders,
     });
   }
@@ -75,7 +60,7 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    // Match all paths including API routes, but exclude static files
+    // Match all paths except Next.js static files
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
