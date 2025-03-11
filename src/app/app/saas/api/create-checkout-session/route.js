@@ -91,6 +91,7 @@ export async function POST(request) {
       {
         error: "Failed to create checkout session",
         details: error.message,
+        debug: error,
       },
       { status: 500 }
     );
