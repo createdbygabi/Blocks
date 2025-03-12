@@ -17,7 +17,7 @@ export default function LoginPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        router.push("/");
+        router.push("/app");
       }
     };
     checkUser();

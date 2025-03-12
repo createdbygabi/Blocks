@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 import Features from "../components/Features";
 
 const supabase = createClient(
@@ -11,9 +12,14 @@ const supabase = createClient(
 );
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle");
   const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    router.push("/app/login");
+  }, [router]);
 
   useEffect(() => {
     // Fetch count once on mount
