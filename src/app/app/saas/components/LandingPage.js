@@ -455,7 +455,7 @@ export function LandingPage({ data }) {
                     {landingPage?.hero_icons?.map((imgNumber) => (
                       <img
                         key={imgNumber}
-                        src={`http://localhost:3000/images/hero/face_${imgNumber}.jpg`}
+                        src={`${process.env.NEXT_PUBLIC_APP_URL}/images/hero/face_${imgNumber}.jpg`}
                         alt=""
                         className="w-11 h-11 rounded-full border-4 border-white dark:border-white"
                       />
