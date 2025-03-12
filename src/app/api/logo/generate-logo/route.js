@@ -1,8 +1,17 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 async function generateSymbol(businessInfo) {
@@ -37,6 +46,32 @@ async function generateSymbol(businessInfo) {
   });
 
   return completion.choices[0].message.content.trim().toLowerCase();
+}
+
+async function uploadToS3(imageUrl, businessId) {
+  try {
+    // Fetch the image from Replicate
+    const response = await fetch(imageUrl);
+    const buffer = await response.arrayBuffer();
+
+    const key = `logos/${businessId}-${Date.now()}.png`;
+
+    // Upload to S3
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: key,
+        Body: Buffer.from(buffer),
+        ContentType: "image/png",
+      })
+    );
+
+    // Return the S3 URL
+    return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  } catch (error) {
+    console.error("Error uploading to S3:", error);
+    throw error;
+  }
 }
 
 export async function POST(req) {
@@ -82,13 +117,14 @@ export async function POST(req) {
       throw new Error(result.error);
     }
 
-    const imageUrl = result.output;
-    console.log("🖼️ API Logo - Final image URL:", imageUrl);
+    // Upload the image to S3
+    const s3Url = await uploadToS3(result.output, businessInfo.id);
+    console.log("📦 API Logo - Uploaded to S3:", s3Url);
 
     return Response.json({
-      imageUrl,
-      symbol, // Return the symbol for reference
-      prompt: logoPrompt, // Return the final prompt used
+      imageUrl: s3Url,
+      symbol,
+      prompt: logoPrompt,
     });
   } catch (error) {
     console.error("❌ API Logo - Error details:", {

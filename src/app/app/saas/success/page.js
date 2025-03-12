@@ -127,69 +127,14 @@ export default function SuccessPage() {
     checkSession();
   }, [searchParams, business, status, isProcessing]);
 
-  const renderContent = () => {
-    if (status === "loading") {
-      return (
-        <div className="text-center">
-          <h2 className={`text-2xl font-bold mb-4 ${styles.text.primary}`}>
-            Processing your payment...
-          </h2>
-          <p className={styles.text.secondary}>
-            Please wait while we confirm your subscription.
-          </p>
-        </div>
-      );
-    }
-
-    if (status === "error") {
-      return (
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 text-red-600">
-            Something went wrong
-          </h2>
-          <p className={styles.text.secondary}>
-            {error || "Please try again or contact support."}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="text-center">
-        <div
-          className={`w-16 h-16 mx-auto mb-6 rounded-full ${styles.utils.highlight} flex items-center justify-center`}
-        >
-          <FiCheck className={`w-8 h-8 ${styles.text.accent}`} />
-        </div>
-        <h2
-          className={`text-2xl md:text-3xl font-bold mb-4 ${styles.text.accent}`}
-        >
-          Thank you for your subscription!
-        </h2>
-        <p className={`${styles.text.secondary} mb-4`}>
-          You can now log in with your email:
-        </p>
-        <p className={`font-medium mb-8 ${styles.text.primary}`}>
-          {searchParams.get("email")}
-        </p>
-        <motion.a
-          href="/login"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`${styles.button.primary} inline-block px-8 py-3 rounded-xl text-lg font-bold`}
-        >
-          Go to Login
-          <span className="ml-2">→</span>
-        </motion.a>
-      </div>
-    );
-  };
-
   return (
-    <div className={`w-full min-h-screen ${fontVariables}`}>
-      <main className={`w-full ${styles.layout.background}`}>
+    <div
+      className={`w-full min-h-screen ${fontVariables} ${styles.layout.background}`}
+    >
+      <main className="w-full min-h-screen flex flex-col">
+        {/* Navbar can be added here if needed */}
         <div
-          className={`relative min-h-[90vh] flex items-center ${styles.layout.surface}`}
+          className={`flex-1 flex items-center justify-center relative ${styles.layout.surface}`}
         >
           {/* Background effects */}
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
@@ -198,8 +143,137 @@ export default function SuccessPage() {
           />
 
           {/* Content */}
-          <div className="relative w-full max-w-6xl mx-auto px-4">
-            {renderContent()}
+          <div className="relative w-full max-w-lg mx-auto px-4 py-12 md:py-0">
+            {status === "loading" ? (
+              <div className="text-center space-y-6">
+                <div className="animate-pulse space-y-4">
+                  <div
+                    className={`w-16 h-16 mx-auto rounded-full ${styles.utils.highlight}`}
+                  />
+                  <div
+                    className={`h-8 w-3/4 mx-auto rounded-lg ${styles.utils.highlight}`}
+                  />
+                  <div
+                    className={`h-4 w-1/2 mx-auto rounded-lg ${styles.utils.highlight}`}
+                  />
+                </div>
+                <div className="mt-8">
+                  <h2
+                    className={`text-2xl font-bold mb-4 ${styles.text.primary}`}
+                  >
+                    Processing your payment...
+                  </h2>
+                  <p className={styles.text.secondary}>
+                    Please wait while we confirm your subscription.
+                  </p>
+                </div>
+              </div>
+            ) : status === "error" ? (
+              <div className="text-center space-y-6">
+                <div
+                  className={`w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center`}
+                >
+                  <svg
+                    className="w-8 h-8 text-red-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2
+                    className={`text-2xl font-bold mb-4 ${styles.text.primary}`}
+                  >
+                    Something went wrong
+                  </h2>
+                  <p className={styles.text.secondary}>
+                    {error || "Please try again or contact support."}
+                  </p>
+                </div>
+                <motion.a
+                  href="/"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`${styles.button.secondary} inline-block px-8 py-3 rounded-xl text-lg font-bold mt-4`}
+                >
+                  Return Home
+                </motion.a>
+              </div>
+            ) : (
+              <div className="text-center space-y-8">
+                <div
+                  className={`w-20 h-20 mx-auto rounded-full ${styles.utils.highlight} flex items-center justify-center`}
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 260,
+                      damping: 20,
+                    }}
+                  >
+                    <FiCheck className={`w-10 h-10 ${styles.text.accent}`} />
+                  </motion.div>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-6"
+                >
+                  <h2
+                    className={`text-3xl md:text-4xl font-bold ${styles.text.primary}`}
+                  >
+                    Welcome aboard! 🎉
+                  </h2>
+                  <p className={`text-lg ${styles.text.secondary}`}>
+                    Thank you for your subscription. You're all set to get
+                    started!
+                  </p>
+                  <div
+                    className={`p-4 rounded-xl ${styles.utils.highlight} max-w-sm mx-auto`}
+                  >
+                    <p className={`text-sm ${styles.text.secondary} mb-2`}>
+                      You can now log in with your email:
+                    </p>
+                    <p className={`font-medium ${styles.text.primary}`}>
+                      {searchParams.get("email")}
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <motion.a
+                      href="/login"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`${styles.button.primary} inline-flex items-center gap-2 px-8 py-4 rounded-xl text-lg font-bold`}
+                    >
+                      Continue to Login
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </motion.a>
+                  </div>
+                </motion.div>
+              </div>
+            )}
           </div>
         </div>
       </main>

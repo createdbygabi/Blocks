@@ -32,7 +32,7 @@ export function Navbar({ styles, business, onCtaClick }) {
                 <img
                   src={business.logo_url}
                   alt={business.name}
-                  className="h-9 w-auto"
+                  className="h-12 w-12"
                 />
               ) : (
                 <div

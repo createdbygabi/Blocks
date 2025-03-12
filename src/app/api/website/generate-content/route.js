@@ -11,9 +11,7 @@ const SECTION_TEMPLATES = {
     subtitle: "",
     cta: "",
     hero_image: null, // Optional, if provided will use two-column layout
-    socialProof: {
-      userType: "small businesses",
-    },
+    userType: "",
   },
   features: [
     {
@@ -207,6 +205,11 @@ const FIELD_INSTRUCTIONS = {
       instructions:
         "Create a strong call-to-action (2 words) that drives action related to the main feature (should not contain any mention of free or similar phrases).",
       examples: ["Get Started", "Generate content", "Start Generating"],
+    },
+    userType: {
+      instructions:
+        "Write the user type based on the business niche/product that will be integrated at the end of the sentence 'Loved by 99+ [word]'",
+      examples: ["small businesses", "freelancers", "entrepreneurs"],
     },
   },
   painPoints: {
@@ -594,12 +597,12 @@ export async function POST(req) {
 
     // Initialize only the sections we're generating
     const sections = [
-      "hero",
-      "painPoints",
-      "benefits",
-      "howItWorks",
-      "pricing",
-      "faq",
+      // "hero",
+      // "painPoints",
+      // "benefits",
+      // "howItWorks",
+      // "pricing",
+      // "faq",
       "final",
     ];
     const generatedContent = {};

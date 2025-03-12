@@ -1,16 +1,13 @@
 export const mockData = {
   onboarding: {
     business: {
-      niche: "AI wrapper for English translation and text optimization",
-      services: [
-        "App to rewrite correctly English text, correcting grammar and punctuation",
-      ],
-      uniqueValue: "Take your text and correct any mistakes",
-      goals: [
-        "Time saving",
-        "Make your text sound like a native English speaker",
-      ],
-      targetAudience: "Non-native English speakers",
+      niche: "AI-Powered Prompt Optimization for Generative Art",
+      services: ["AI wrapper for Midjourney to craft perfect prompts"],
+      uniqueValue:
+        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Midjourney.",
+      painPoint: "Wasting too many prompts credits on bad Midjourney prompts.",
+      goals: ["Save money"],
+      targetAudience: "People that use Midjourney to generate images",
     },
   },
 

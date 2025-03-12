@@ -217,7 +217,7 @@ export function LandingPage({ data }) {
           />
 
           <div className="relative w-full max-w-6xl mx-auto px-4 mb-12">
-            {landingPage.hero_image ? (
+            {landingPage?.hero_image ? (
               // Two-column layout with image
               <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-6 md:gap-8 items-center pt-165 md:pt-32 mx-2">
                 {/* Left column - Content */}
@@ -346,8 +346,8 @@ export function LandingPage({ data }) {
                         ))}
                       </div>
                       <p className={`text-sm ${styles.text.secondary}`}>
-                        Loved by <span className="font-bold">2,500</span> small
-                        businesses
+                        Loved by <span className="font-bold">2,500+ </span>
+                        {hero?.userType || "small businesses"}
                       </p>
                     </div>
                   </motion.div>
@@ -475,8 +475,8 @@ export function LandingPage({ data }) {
                       ))}
                     </div>
                     <p className={`text-sm ${styles.text.secondary}`}>
-                      Loved by <span className="font-bold">2,500+</span> small
-                      businesses
+                      Loved by <span className="font-bold">2,500+ </span>
+                      {hero?.userType || "small businesses"}
                     </p>
                   </div>
                 </motion.div>
@@ -1043,7 +1043,7 @@ export function LandingPage({ data }) {
                 </span>
               </div>
               <p className={`text-sm ${styles.text.secondary}`}>
-                {business?.description ||
+                {hero?.subtitle ||
                   "The easiest way to plan meals, generate shopping lists, and cook delicious food. Perfect for busy families."}
               </p>
               <p className={`text-sm ${styles.text.muted}`}>

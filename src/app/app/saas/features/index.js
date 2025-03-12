@@ -5,8 +5,9 @@ export const businessFeatures = {
   linkletter: dynamic(() => import("./linkletter")),
   resumix: dynamic(() => import("./resumix")),
   rewordy: dynamic(() => import("./rewordy")),
-  // jobmuse: dynamic(() => import("./jobmuse")),
-  // Add more features as needed
+  zapplay: dynamic(() => import("./zapplay")),
+  renewly: dynamic(() => import("./renewly")),
+  mijurn: dynamic(() => import("./mijurn")),
 };
 
 // Helper to get feature by subdomain
