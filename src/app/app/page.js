@@ -21,12 +21,52 @@ export default function AppPage() {
   const [igPassword, setIgPassword] = useState("");
   const [igLoading, setIgLoading] = useState(false);
   const [igError, setIgError] = useState(null);
+  const [generatedPassword, setGeneratedPassword] = useState("");
+
+  // Generate secure password function
+  const generateSecurePassword = () => {
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const specialChars = "!@#$%^&*";
+
+    // Get 4 lowercase, 2 uppercase, 2 numbers, and 2 special chars
+    const getLowercase = () =>
+      lowercase[Math.floor(Math.random() * lowercase.length)];
+    const getUppercase = () =>
+      uppercase[Math.floor(Math.random() * uppercase.length)];
+    const getNumber = () => numbers[Math.floor(Math.random() * numbers.length)];
+    const getSpecial = () =>
+      specialChars[Math.floor(Math.random() * specialChars.length)];
+
+    // Generate base password with required characters
+    const basePassword = [
+      ...Array(4).fill(0).map(getLowercase),
+      ...Array(2).fill(0).map(getUppercase),
+      ...Array(2).fill(0).map(getNumber),
+      ...Array(2).fill(0).map(getSpecial),
+    ];
+
+    // Shuffle the password array
+    const shuffledPassword = basePassword
+      .sort(() => Math.random() - 0.5)
+      .join("");
+
+    return shuffledPassword;
+  };
 
   useEffect(() => {
     if (user) {
       fetchBusiness();
     }
   }, [user]);
+
+  // Generate password once when component mounts
+  useEffect(() => {
+    if (!generatedPassword) {
+      setGeneratedPassword(generateSecurePassword());
+    }
+  }, []); // Only run once on mount
 
   // Listen for Stripe completion
   useEffect(() => {
@@ -430,30 +470,7 @@ export default function AppPage() {
                 </svg>
               </button>
             ) : (
-              <button
-                onClick={handleInstagramConnect}
-                disabled={igLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 
-                       hover:from-pink-600 hover:to-purple-600 text-white rounded-lg transition-colors text-sm
-                       disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {igLoading ? "Connecting..." : "Connect Instagram"}
-                {!igLoading && (
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                  >
-                    <path
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
+              ""
             )}
           </div>
 
@@ -491,19 +508,19 @@ export default function AppPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {[
                         {
-                          username: `${business.name.toLowerCase()}.saas`,
+                          username: `get${business.name.toLowerCase()}`,
                           description: "Professional & Clean",
                         },
                         {
-                          username: `${business.name.toLowerCase()}.official`,
+                          username: `use${business.name.toLowerCase()}`,
                           description: "Authority & Trust",
                         },
                         {
-                          username: `${business.name.toLowerCase()}.hq`,
+                          username: `try${business.name.toLowerCase()}`,
                           description: "Business Focus",
                         },
                         {
-                          username: `try${business.name.toLowerCase()}`,
+                          username: `${business.name.toLowerCase()}.app`,
                           description: "Action-Oriented",
                         },
                       ].map((item, index) => (
@@ -514,7 +531,7 @@ export default function AppPage() {
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-mono text-pink-300 group-hover:text-white transition-colors">
-                              @{item.username}
+                              {item.username}
                             </span>
                             <span className="text-xs text-gray-500 group-hover:text-pink-300 transition-colors">
                               Click to copy
@@ -539,18 +556,10 @@ export default function AppPage() {
                     <div className="bg-black/30 p-4 rounded-xl border border-pink-500/20">
                       <div className="flex items-center justify-between mb-2">
                         <code className="text-pink-300 font-mono">
-                          {`${business.name.substring(0, 3)}${Math.random()
-                            .toString(36)
-                            .substring(2, 8)}#2024`}
+                          {generatedPassword}
                         </code>
                         <button
-                          onClick={() =>
-                            copyToClipboard(
-                              `${business.name.substring(0, 3)}${Math.random()
-                                .toString(36)
-                                .substring(2, 8)}#2024`
-                            )
-                          }
+                          onClick={() => copyToClipboard(generatedPassword)}
                           className="text-xs text-gray-400 hover:text-pink-300 transition-colors"
                         >
                           Copy Password
@@ -565,7 +574,7 @@ export default function AppPage() {
 
                   {/* Create Account Button */}
                   <a
-                    href="https://www.instagram.com/accounts/emailsignup/"
+                    href="https://www.instagram.com/accounts/login/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group relative flex items-center justify-center gap-2 w-full p-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg shadow-pink-500/20 hover:shadow-pink-500/30"
@@ -588,40 +597,6 @@ export default function AppPage() {
                     </svg>
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                   </a>
-
-                  {/* Tips */}
-                  <div className="mt-4 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                    <h6 className="text-sm font-medium text-blue-300 mb-2 flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Pro Tips
-                    </h6>
-                    <ul className="space-y-2 text-sm text-gray-300">
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        Use a business email for better account security
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        Add a professional profile photo and bio after creation
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        Switch to a Professional account in settings
-                      </li>
-                    </ul>
-                  </div>
 
                   {/* Connect Account Section */}
                   <div className="mt-8 pt-8 border-t border-gray-800">
