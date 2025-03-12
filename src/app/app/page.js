@@ -187,28 +187,28 @@ export default function AppPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
       {/* Beta tester message */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center">
-          <p className="text-blue-400">
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 sm:p-4 text-center">
+          <p className="text-blue-400 text-sm sm:text-base">
             👋 Hello and thank you for being a beta tester!
           </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
         {/* Stripe Integration Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+          className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
+              <div className="p-2 rounded-lg bg-purple-500/10 flex-shrink-0">
                 <svg
-                  className="w-6 h-6 text-purple-400"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -222,8 +222,10 @@ export default function AppPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Stripe Integration</h2>
-                <p className="text-sm text-gray-400">
+                <h2 className="text-base sm:text-lg font-semibold">
+                  Stripe Integration
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400">
                   {business?.stripe_account_id
                     ? "Access your Stripe Express Dashboard"
                     : "Set up payments for your business"}
@@ -376,13 +378,13 @@ export default function AppPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+          className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-pink-500/10">
+              <div className="p-2 rounded-lg bg-pink-500/10 flex-shrink-0">
                 <svg
-                  className="w-6 h-6 text-pink-400"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
@@ -390,8 +392,10 @@ export default function AppPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-semibold">Instagram Integration</h2>
-                <p className="text-sm text-gray-400">
+                <h2 className="text-base sm:text-lg font-semibold">
+                  Instagram Integration
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400">
                   {business?.ig_account_credentials
                     ? "Your Instagram account is connected"
                     : "Set up your organic marketing channel"}
@@ -485,7 +489,7 @@ export default function AppPage() {
                       organic marketing channel.
                     </p>
 
-                    <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                       {[
                         `${business.name.toLowerCase()}.app`,
                         `${business.name.toLowerCase()}_app`,
@@ -594,29 +598,31 @@ export default function AppPage() {
 
         {/* Business Overview Section */}
         <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="h-8 w-[3px] bg-blue-500" />
-            <h1 className="text-2xl font-bold">Business Overview</h1>
+          <div className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
+            <div className="h-6 sm:h-8 w-[3px] bg-blue-500" />
+            <h1 className="text-xl sm:text-2xl font-bold">Business Overview</h1>
           </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+            className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
           >
             {/* Header Section */}
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 mb-6">
               <div className="flex items-center gap-4">
                 {business.logo_url && (
                   <img
                     src={business.logo_url}
                     alt={business.name}
-                    className="h-12 w-12 rounded-lg object-contain bg-black"
+                    className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-contain bg-black flex-shrink-0"
                   />
                 )}
                 <div>
-                  <h2 className="text-xl font-semibold">{business.name}</h2>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <h2 className="text-lg sm:text-xl font-semibold">
+                    {business.name}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
                     Created {new Date(business.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -625,10 +631,10 @@ export default function AppPage() {
                 href={`http://${business.subdomain}.joinblocks.me`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 
+                className="group relative flex items-center justify-center sm:justify-start gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 
                          hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all duration-200 
-                         text-sm font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 
-                         hover:scale-[1.02] active:scale-[0.98]"
+                         text-xs sm:text-sm font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 
+                         hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
               >
                 <span className="relative z-10">View Site</span>
                 <svg
@@ -652,13 +658,13 @@ export default function AppPage() {
             </div>
 
             {/* Content Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Business Info Column */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-400 uppercase tracking-wider">
                   Business Info
                 </h3>
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   <InfoItem label="Niche" value={business.niche} />
                   <InfoItem label="Product" value={business.product} />
                   <InfoItem
@@ -674,20 +680,22 @@ export default function AppPage() {
               </div>
 
               {/* Branding & Pricing Column */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-400 uppercase tracking-wider">
                   Branding & Pricing
                 </h3>
 
                 {/* Theme */}
                 {business.theme && (
-                  <div className="bg-black/30 rounded-lg p-4">
-                    <p className="text-gray-400 mb-2">Theme Colors</p>
-                    <div className="flex gap-2">
+                  <div className="bg-black/30 rounded-lg p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-gray-400 mb-2">
+                      Theme Colors
+                    </p>
+                    <div className="flex flex-wrap gap-2">
                       {Object.entries(business.theme).map(([key, color]) => (
-                        <div key={key} className="text-sm">
+                        <div key={key} className="text-xs sm:text-sm">
                           <div
-                            className="w-8 h-8 rounded-lg mb-1"
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg mb-1"
                             style={{ backgroundColor: color }}
                           />
                           <p className="text-xs text-gray-500">{key}</p>
@@ -699,23 +707,25 @@ export default function AppPage() {
 
                 {/* Pricing Plan */}
                 {business.pricing_plans && (
-                  <div className="bg-black/30 rounded-lg p-4">
-                    <p className="text-gray-400 mb-2">Pricing Plan</p>
+                  <div className="bg-black/30 rounded-lg p-3 sm:p-4">
+                    <p className="text-xs sm:text-sm text-gray-400 mb-2">
+                      Pricing Plan
+                    </p>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium">
+                        <span className="text-sm sm:text-base font-medium">
                           {business.pricing_plans.name}
                         </span>
-                        <span className="text-blue-400">
+                        <span className="text-xs sm:text-sm text-blue-400">
                           ${business.pricing_plans.price}/
                           {business.pricing_plans.billingPeriod}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-xs sm:text-sm text-gray-400">
                         {business.pricing_plans.description}
                       </p>
                       {business.pricing_plans.features && (
-                        <ul className="text-sm text-gray-300 list-disc list-inside">
+                        <ul className="text-xs sm:text-sm text-gray-300 list-disc list-inside">
                           {business.pricing_plans.features.map(
                             (feature, index) => (
                               <li key={index}>{feature}</li>
@@ -727,9 +737,11 @@ export default function AppPage() {
                   </div>
                 )}
 
-                {/* Integration Status - Stripe Only */}
-                <div className="bg-black/30 rounded-lg p-4">
-                  <p className="text-gray-400 mb-2">Integration Status</p>
+                {/* Integration Status */}
+                <div className="bg-black/30 rounded-lg p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-gray-400 mb-2">
+                    Integration Status
+                  </p>
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
@@ -738,7 +750,7 @@ export default function AppPage() {
                           : "bg-red-500"
                       }`}
                     />
-                    <span className="text-sm">Stripe</span>
+                    <span className="text-xs sm:text-sm">Stripe</span>
                   </div>
                 </div>
               </div>
@@ -755,8 +767,8 @@ function InfoItem({ label, value }) {
 
   return (
     <div className="bg-black/30 rounded-lg p-3">
-      <p className="text-gray-400 mb-1">{label}</p>
-      <p className="text-white">{value}</p>
+      <p className="text-xs sm:text-sm text-gray-400 mb-1">{label}</p>
+      <p className="text-sm sm:text-base text-white">{value}</p>
     </div>
   );
 }
