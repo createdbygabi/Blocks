@@ -351,7 +351,7 @@ export default function AppPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth="2"
-                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
                     </div>
@@ -459,128 +459,312 @@ export default function AppPage() {
 
           {!business?.ig_account_credentials && (
             <div className="mt-4">
-              <div className="p-4 bg-gradient-to-br from-pink-500/5 to-purple-500/5 rounded-xl border border-pink-500/10">
-                <h3 className="text-sm font-medium text-pink-300 mb-4 flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Instagram Setup Guide
-                </h3>
+              <div className="p-6 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-xl border border-pink-500/20 backdrop-blur-sm shadow-xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 01-1.153 1.772c-.5.509-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 01-1.772-1.153 4.904 4.904 0 01-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 011.153-1.772A4.897 4.897 0 015.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 10-2.5 0 1.25 1.25 0 002.5 0zM12 9a3 3 0 110 6 3 3 0 010-6z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold bg-gradient-to-r from-pink-200 to-purple-200 bg-clip-text text-transparent">
+                    Step 1: Create Your Instagram Account
+                  </h4>
+                </div>
 
-                <div className="mt-6 space-y-4">
-                  {/* Step 1: Create Instagram Account */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-pink-500/10">
-                    <h4 className="text-sm font-medium text-pink-300 mb-3">
-                      Step 1: Create Your Instagram Account
-                    </h4>
-                    <p className="text-sm text-gray-400 mb-4">
-                      First, create a new Instagram account using one of the
-                      suggested usernames below. This will be your SaaS's
-                      organic marketing channel.
+                <div className="space-y-6">
+                  {/* Account Name Section */}
+                  <div>
+                    <h5 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-500 text-xs">
+                        1
+                      </span>
+                      Choose Your Account Name
+                    </h5>
+                    <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+                      We've crafted these professional usernames for your SaaS.
+                      Click to copy and use when creating your account.
                     </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {[
-                        `${business.name.toLowerCase()}.app`,
-                        `${business.name.toLowerCase()}_app`,
-                        `use${business.name.toLowerCase()}`,
-                        `get${business.name.toLowerCase()}`,
-                      ].map((username, index) => (
+                        {
+                          username: `${business.name.toLowerCase()}.saas`,
+                          description: "Professional & Clean",
+                        },
+                        {
+                          username: `${business.name.toLowerCase()}.official`,
+                          description: "Authority & Trust",
+                        },
+                        {
+                          username: `${business.name.toLowerCase()}.hq`,
+                          description: "Business Focus",
+                        },
+                        {
+                          username: `try${business.name.toLowerCase()}`,
+                          description: "Action-Oriented",
+                        },
+                      ].map((item, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-2 p-2 bg-black/20 rounded-lg border border-pink-500/10"
+                          onClick={() => copyToClipboard(item.username)}
+                          className="group cursor-pointer transform hover:scale-[1.02] transition-all duration-200 bg-gradient-to-br from-white/5 to-white/10 hover:from-pink-500/20 hover:to-purple-500/20 rounded-xl p-3 border border-white/10 hover:border-pink-500/30"
                         >
-                          <span className="text-sm font-mono text-pink-300">
-                            @{username}
-                          </span>
-                          <button
-                            onClick={() => copyToClipboard(username)}
-                            className="ml-auto text-xs text-gray-400 hover:text-white"
-                          >
-                            Copy
-                          </button>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-mono text-pink-300 group-hover:text-white transition-colors">
+                              @{item.username}
+                            </span>
+                            <span className="text-xs text-gray-500 group-hover:text-pink-300 transition-colors">
+                              Click to copy
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400 group-hover:text-gray-300">
+                            {item.description}
+                          </p>
                         </div>
                       ))}
                     </div>
+                  </div>
 
-                    <a
-                      href="https://www.instagram.com/accounts/login/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-pink-400 hover:text-pink-300"
-                    >
+                  {/* Password Section */}
+                  <div>
+                    <h5 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-500 text-xs">
+                        2
+                      </span>
+                      Use This Secure Password
+                    </h5>
+                    <div className="bg-black/30 p-4 rounded-xl border border-pink-500/20">
+                      <div className="flex items-center justify-between mb-2">
+                        <code className="text-pink-300 font-mono">
+                          {`${business.name.substring(0, 3)}${Math.random()
+                            .toString(36)
+                            .substring(2, 8)}#2024`}
+                        </code>
+                        <button
+                          onClick={() =>
+                            copyToClipboard(
+                              `${business.name.substring(0, 3)}${Math.random()
+                                .toString(36)
+                                .substring(2, 8)}#2024`
+                            )
+                          }
+                          className="text-xs text-gray-400 hover:text-pink-300 transition-colors"
+                        >
+                          Copy Password
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        We've generated a secure password that meets Instagram's
+                        requirements. Make sure to save it somewhere safe!
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Create Account Button */}
+                  <a
+                    href="https://www.instagram.com/accounts/emailsignup/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative flex items-center justify-center gap-2 w-full p-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg shadow-pink-500/20 hover:shadow-pink-500/30"
+                  >
+                    <span className="text-white font-medium">
                       Create Instagram Account
+                    </span>
+                    <svg
+                      className="w-4 h-4 text-white transition-transform duration-200 group-hover:translate-x-0.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  </a>
+
+                  {/* Tips */}
+                  <div className="mt-4 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                    <h6 className="text-sm font-medium text-blue-300 mb-2 flex items-center gap-2">
                       <svg
                         className="w-4 h-4"
-                        viewBox="0 0 24 24"
                         fill="none"
+                        viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
                         <path
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                    </a>
+                      Pro Tips
+                    </h6>
+                    <ul className="space-y-2 text-sm text-gray-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400">•</span>
+                        Use a business email for better account security
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400">•</span>
+                        Add a professional profile photo and bio after creation
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400">•</span>
+                        Switch to a Professional account in settings
+                      </li>
+                    </ul>
                   </div>
 
-                  {/* Step 2: Enter Credentials */}
-                  <div className="p-4 bg-black/20 rounded-lg border border-pink-500/10">
-                    <h4 className="text-sm font-medium text-pink-300 mb-3">
-                      Step 2: Connect Your Instagram Account
-                    </h4>
-                    <p className="text-sm text-gray-400 mb-4">
-                      Once you've created your Instagram account, enter your
-                      credentials below to enable automated organic marketing.
-                    </p>
+                  {/* Connect Account Section */}
+                  <div className="mt-8 pt-8 border-t border-gray-800">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500">
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                          />
+                        </svg>
+                      </div>
+                      <h4 className="text-lg font-semibold bg-gradient-to-r from-pink-200 to-purple-200 bg-clip-text text-transparent">
+                        Step 2: Connect Your Account
+                      </h4>
+                    </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Instagram Username
-                        </label>
-                        <input
-                          type="text"
-                          value={igUsername}
-                          onChange={(e) => setIgUsername(e.target.value)}
-                          placeholder="@yourusername"
-                          className="w-full px-3 py-2 bg-black/30 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50"
-                        />
+                    <div className="space-y-6">
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        Once you've created your Instagram account, connect it
+                        here to enable automated organic marketing features.
+                      </p>
+
+                      <div className="grid gap-4">
+                        <div className="group">
+                          <label className="block text-sm font-medium text-gray-200 mb-2">
+                            Instagram Username
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                              @
+                            </span>
+                            <input
+                              type="text"
+                              value={igUsername}
+                              onChange={(e) => setIgUsername(e.target.value)}
+                              placeholder="your.username"
+                              className="w-full pl-8 pr-4 py-3 bg-black/30 border border-gray-800 group-hover:border-pink-500/50 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="group">
+                          <label className="block text-sm font-medium text-gray-200 mb-2">
+                            Instagram Password
+                          </label>
+                          <input
+                            type="password"
+                            value={igPassword}
+                            onChange={(e) => setIgPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            className="w-full px-4 py-3 bg-black/30 border border-gray-800 group-hover:border-pink-500/50 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50 transition-colors"
+                          />
+                        </div>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Instagram Password
-                        </label>
-                        <input
-                          type="password"
-                          value={igPassword}
-                          onChange={(e) => setIgPassword(e.target.value)}
-                          placeholder="Enter your password"
-                          className="w-full px-3 py-2 bg-black/30 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50"
-                        />
-                      </div>
+                      <button
+                        onClick={handleInstagramConnect}
+                        disabled={igLoading || !igUsername || !igPassword}
+                        className="relative w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:hover:scale-100 shadow-lg shadow-pink-500/20 hover:shadow-pink-500/30 disabled:shadow-none"
+                      >
+                        {igLoading ? (
+                          <>
+                            <svg
+                              className="animate-spin h-5 w-5 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            <span className="text-white font-medium">
+                              Connecting...
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-white font-medium">
+                              Connect Instagram
+                            </span>
+                            <svg
+                              className="w-5 h-5 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                              />
+                            </svg>
+                          </>
+                        )}
+                      </button>
 
-                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                        <p className="text-sm text-blue-300">
-                          <strong>Why we need this:</strong> Your Instagram
-                          credentials will be securely stored and used only for
-                          posting content through the official Instagram API.
-                          This enables automated organic marketing for your
-                          SaaS.
-                        </p>
+                      <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                        <div className="flex items-start gap-3">
+                          <svg
+                            className="w-5 h-5 text-blue-400 mt-0.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <div>
+                            <h6 className="text-sm font-medium text-blue-300 mb-1">
+                              Security Note
+                            </h6>
+                            <p className="text-sm text-gray-400">
+                              Your Instagram credentials are securely encrypted
+                              and used only for automated content posting
+                              through the official Instagram API. We never store
+                              passwords in plain text.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
