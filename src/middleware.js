@@ -54,12 +54,9 @@ export async function middleware(request) {
       });
     }
 
-    if (pathname === "/dashboard") {
-      console.log(
-        "📊 Rewriting subdomain dashboard to:",
-        "/app/saas/dashboard"
-      );
-      const dashboardUrl = new URL("/app/saas/dashboard", baseUrl);
+    if (pathname.startsWith("/dashboard")) {
+      console.log("📊 Rewriting dashboard path to:", `/app/saas${pathname}`);
+      const dashboardUrl = new URL(`/app/saas${pathname}`, baseUrl);
       return NextResponse.rewrite(dashboardUrl, {
         headers: requestHeaders,
       });
