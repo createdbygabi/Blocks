@@ -166,7 +166,7 @@ export default function LinkletterFeature({ styles, user, business }) {
         className="max-w-7xl mx-auto"
       >
         {/* Progress Steps */}
-        <div className="mb-12">
+        {/* <div className="mb-12">
           <div className="max-w-3xl mx-auto">
             <div className="space-y-6">
               <Step
@@ -195,7 +195,7 @@ export default function LinkletterFeature({ styles, user, business }) {
               />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -213,17 +213,18 @@ export default function LinkletterFeature({ styles, user, business }) {
                     LinkedIn Posts
                   </h2>
                   <p className="text-sm text-gray-500">
-                    Add one or more LinkedIn post URLs
+                    Add one or more LinkedIn post URLs (one is recommended for
+                    best results)
                   </p>
                 </div>
-                {showTips && (
+                {/* {showTips && (
                   <button
                     onClick={() => setShowTips(false)}
                     className="text-sm text-gray-500 hover:text-gray-700"
                   >
                     Hide tips
                   </button>
-                )}
+                )} */}
               </div>
 
               <div className="relative">
@@ -267,9 +268,6 @@ export default function LinkletterFeature({ styles, user, business }) {
                   <ul className="list-disc list-inside space-y-1 text-blue-600">
                     <li>Use public LinkedIn post URLs</li>
                     <li>Add multiple posts to combine content</li>
-                    <li>
-                      Order matters - arrange from most to least important
-                    </li>
                   </ul>
                 </div>
               )}
@@ -282,7 +280,7 @@ export default function LinkletterFeature({ styles, user, business }) {
                   Newsletter Template
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Add a Substack newsletter to match its style
+                  Add a Substack newsletter to match its structure
                 </p>
               </div>
 

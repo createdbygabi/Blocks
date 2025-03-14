@@ -8,6 +8,7 @@ export const businessFeatures = {
   zapplay: dynamic(() => import("./zapplay")),
   renewly: dynamic(() => import("./renewly")),
   mijurn: dynamic(() => import("./mijurn")),
+  mijurn: dynamic(() => import("./mijurn")),
 };
 
 // Helper to get feature by subdomain

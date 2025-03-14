@@ -29,16 +29,6 @@ export const landingThemes = [
         },
       },
 
-      input: {
-        base: "bg-white text-[#111827] border border-[#E5E7EB]",
-        hover: "hover:border-[#BFDBFE]",
-        focus: "focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]",
-        placeholder: "placeholder-[#9CA3AF]",
-        text: "text-[#111827]",
-        disabled:
-          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
-      },
-
       // Component styles
       card: {
         base: "bg-[#FFFFFF] border border-[#E5E7EB]",
@@ -55,6 +45,17 @@ export const landingThemes = [
       highlight: "bg-[#EFF6FF]",
       overlay: "bg-[#000000]/50",
       divider: "border-[#E5E7EB]",
+
+      // Input styles
+      input: {
+        base: "bg-white text-[#111827] border border-[#E5E7EB]",
+        hover: "hover:border-[#BFDBFE]",
+        focus: "focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]",
+        placeholder: "placeholder-[#9CA3AF]",
+        text: "text-[#111827]",
+        disabled:
+          "disabled:bg-[#F3F4F6] disabled:text-[#6B7280] disabled:border-[#E5E7EB]",
+      },
     },
   },
   {
@@ -931,6 +932,68 @@ export const landingThemes = [
       },
     },
   },
+  {
+    id: "cursor-dark",
+    name: "Cursor Dark",
+    audience: "World-Class Developer",
+    colors: {
+      // Base colors - Premium black with enhanced depth
+      background: "bg-[#0A0A0A]",
+      surface: "bg-[#111111]",
+      border: "border-[#232323]",
+
+      // Text colors - Enhanced contrast hierarchy
+      text: {
+        primary: "text-[#FFFFFF]",
+        secondary: "text-[#ADADAD]",
+        muted: "text-[#787878]",
+        accent: "text-white",
+      },
+
+      // Interactive elements - Refined interactions
+      button: {
+        primary: {
+          base: "bg-white text-black ring-1 ring-white/20",
+          hover:
+            "hover:bg-[#F2F2F2] hover:shadow-xl hover:shadow-white/10 hover:scale-[1.02] hover:ring-white/30",
+        },
+        secondary: {
+          base: "bg-[#1A1A1A] text-white border border-[#333333] ring-1 ring-white/5",
+          hover:
+            "hover:bg-[#222222] hover:border-white/30 hover:ring-white/10 hover:scale-[1.02]",
+        },
+      },
+
+      // Component styles - Enhanced depth
+      card: {
+        base: "bg-[#141414] border border-[#232323] ring-1 ring-white/5",
+        hover:
+          "hover:border-white/20 hover:ring-white/10 hover:shadow-xl hover:shadow-white/5 hover:scale-[1.01] hover:bg-[#161616]",
+      },
+
+      // Section styles - Sophisticated gradients
+      section: {
+        primary: "bg-gradient-to-b from-[#1A1A1A] via-[#111111] to-black",
+        secondary: "bg-[#111111] backdrop-blur-xl",
+      },
+
+      // Special elements - Premium accents
+      highlight: "bg-gradient-to-br from-white/10 to-white/5",
+      overlay: "bg-black/95 backdrop-blur-sm",
+      divider: "border-[#232323]",
+
+      input: {
+        base: "bg-[#141414] text-white border border-[#232323] ring-1 ring-white/5",
+        hover: "hover:border-white/30 hover:ring-white/10",
+        focus:
+          "focus:border-white/40 focus:ring-2 focus:ring-white/10 focus:shadow-lg focus:shadow-white/5",
+        placeholder: "placeholder-[#787878]",
+        text: "text-white",
+        disabled:
+          "disabled:bg-[#0A0A0A] disabled:text-[#666666] disabled:border-[#1A1A1A]",
+      },
+    },
+  },
 ];
 
 export const fontPresets = [
@@ -1131,7 +1194,9 @@ export const getThemeClasses = (theme) => ({
     overlay: theme.colors.overlay,
     divider: theme.colors.divider,
   },
-  input: `${theme.colors.input.base} ${theme.colors.input.hover} ${theme.colors.input.focus} ${theme.colors.input.placeholder} ${theme.colors.input.text} ${theme.colors.input.disabled}`,
+  input: theme.colors.input
+    ? `${theme.colors.input.base} ${theme.colors.input.hover} ${theme.colors.input.focus} ${theme.colors.input.placeholder} ${theme.colors.input.text} ${theme.colors.input.disabled}`
+    : "",
 });
 
 // Helper to combine theme and design classes

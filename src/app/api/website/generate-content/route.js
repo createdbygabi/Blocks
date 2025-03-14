@@ -597,12 +597,12 @@ export async function POST(req) {
 
     // Initialize only the sections we're generating
     const sections = [
-      // "hero",
-      // "painPoints",
-      // "benefits",
-      // "howItWorks",
-      // "pricing",
-      // "faq",
+      "hero",
+      "painPoints",
+      "benefits",
+      "howItWorks",
+      "pricing",
+      "faq",
       "final",
     ];
     const generatedContent = {};

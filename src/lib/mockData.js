@@ -1,13 +1,14 @@
 export const mockData = {
   onboarding: {
     business: {
-      niche: "AI-Powered Prompt Optimization for Generative Art",
-      services: ["AI wrapper for Midjourney to craft perfect prompts"],
+      niche: "AI-Powered Coding Assistance & Prompt Optimization",
+      services: ["AI wrapper for Cursor to enhance the prompts"],
       uniqueValue:
-        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Midjourney.",
-      painPoint: "Wasting too many prompts credits on bad Midjourney prompts.",
-      goals: ["Save money"],
-      targetAudience: "People that use Midjourney to generate images",
+        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor.",
+      painPoint:
+        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor (developer prompts)",
+      goals: ["Save money, save time"],
+      targetAudience: "Developers that use Cursor to generate code",
     },
   },
 
