@@ -47,9 +47,29 @@ export default function SaasLoginPage() {
         }
 
         setBusiness(businessData);
+
+        // Check for auth errors in URL
+        const searchParams = new URLSearchParams(window.location.search);
+        const authError = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
+
+        if (authError) {
+          let errorMessage = "Authentication failed. ";
+          if (
+            authError === "access_denied" &&
+            errorDescription?.includes("expired")
+          ) {
+            errorMessage +=
+              "The magic link has expired. Please request a new one.";
+          } else {
+            errorMessage +=
+              errorDescription?.replace(/\+/g, " ") || "Please try again.";
+          }
+          setError({ message: errorMessage });
+        }
       } catch (error) {
         console.error("Error fetching SaaS data:", error);
-        setError("Failed to load business data");
+        setError({ message: "Failed to load business data" });
       }
     };
 
@@ -115,6 +135,7 @@ export default function SaasLoginPage() {
       }
 
       const currentOrigin = window.location.origin;
+      // Use /auth/callback to match the email link structure
       const redirectTo = `${currentOrigin}/auth/callback`;
 
       console.log("🔐 Login redirect URL:", redirectTo);

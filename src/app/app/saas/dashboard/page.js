@@ -38,9 +38,6 @@ export default function SaasDashboard() {
   // Debug cookie settings
   console.log("Cookie Settings:", {
     name: getAuthCookiePrefix(window.location.host),
-    domain: ".joinblocks.me",
-    path: "/",
-    secure: true,
   });
 
   useEffect(() => {
