@@ -3,7 +3,15 @@ import { NextResponse } from "next/server";
 export async function middleware(request) {
   const hostname = request.headers.get("host");
   const pathname = request.nextUrl.pathname;
-  console.log("🌐 Middleware Start:", { hostname, pathname });
+  const searchParams = request.nextUrl.searchParams;
+
+  console.log("🌐 Middleware Start:", {
+    hostname,
+    pathname,
+    fullUrl: request.url,
+    searchParams: Object.fromEntries(searchParams),
+    protocol: request.nextUrl.protocol,
+  });
 
   // Only handle subdomains
   const isLocalhost =
@@ -13,16 +21,26 @@ export async function middleware(request) {
 
   if (isLocalhost || isProduction) {
     const subdomain = hostname.split(".")[0];
-    console.log("🔍 Subdomain Flow:", { subdomain, pathname });
+    console.log("🔍 Subdomain Flow:", {
+      subdomain,
+      pathname,
+      isLocalhost,
+      isProduction,
+    });
 
     // Add subdomain to headers
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-subdomain", subdomain);
 
+    // Construct base URL for rewrites
+    const baseUrl = isLocalhost
+      ? `http://localhost:3000`
+      : `https://${hostname}`;
+
     // Handle special paths for subdomains
     if (pathname === "/login") {
       console.log("🔐 Rewriting subdomain login to:", "/app/saas/login");
-      const loginUrl = new URL("/app/saas/login", request.url);
+      const loginUrl = new URL("/app/saas/login", baseUrl);
       return NextResponse.rewrite(loginUrl, {
         headers: requestHeaders,
       });
@@ -30,7 +48,7 @@ export async function middleware(request) {
 
     if (pathname === "/success") {
       console.log("🔐 Rewriting subdomain success to:", "/app/saas/success");
-      const successUrl = new URL("/app/saas/success", request.url);
+      const successUrl = new URL("/app/saas/success", baseUrl);
       return NextResponse.rewrite(successUrl, {
         headers: requestHeaders,
       });
@@ -41,7 +59,7 @@ export async function middleware(request) {
         "📊 Rewriting subdomain dashboard to:",
         "/app/saas/dashboard"
       );
-      const dashboardUrl = new URL("/app/saas/dashboard", request.url);
+      const dashboardUrl = new URL("/app/saas/dashboard", baseUrl);
       return NextResponse.rewrite(dashboardUrl, {
         headers: requestHeaders,
       });
@@ -50,7 +68,7 @@ export async function middleware(request) {
     // Handle API routes
     if (pathname.startsWith("/api/")) {
       console.log("🔌 Rewriting API route to:", `/app/saas${pathname}`);
-      const apiUrl = new URL(`/app/saas${pathname}`, request.url);
+      const apiUrl = new URL(`/app/saas${pathname}`, baseUrl);
       return NextResponse.rewrite(apiUrl, {
         headers: requestHeaders,
       });
@@ -58,15 +76,30 @@ export async function middleware(request) {
 
     // Handle auth callback
     if (pathname.startsWith("/auth/")) {
-      console.log("🔑 Rewriting auth route to:", `/app/saas${pathname}`);
-      const authUrl = new URL(`/app/saas${pathname}`, request.url);
+      const authUrl = new URL(`/app/saas${pathname}`, baseUrl);
+
+      // Preserve all query parameters
+      searchParams.forEach((value, key) => {
+        authUrl.searchParams.set(key, value);
+      });
+
+      console.log("🔑 Auth Callback Debug:", {
+        originalUrl: request.url,
+        newUrl: authUrl.toString(),
+        searchParams: Object.fromEntries(searchParams),
+        authUrlSearchParams: Object.fromEntries(authUrl.searchParams),
+        hostname,
+        subdomain,
+        baseUrl,
+      });
+
       return NextResponse.rewrite(authUrl, {
         headers: requestHeaders,
       });
     }
 
     // Rewrite to /saas for all other subdomain paths
-    const saasUrl = new URL("/app/saas", request.url);
+    const saasUrl = new URL("/app/saas", baseUrl);
     console.log("🔄 Rewriting to:", saasUrl.toString());
 
     return NextResponse.rewrite(saasUrl, {
