@@ -18,7 +18,7 @@ export default function Home() {
   const [count, setCount] = useState(null);
 
   useEffect(() => {
-    // router.push("/app/login");
+    router.push("/app/login");
   }, [router]);
 
   useEffect(() => {
