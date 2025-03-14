@@ -204,7 +204,7 @@ export default function AppPage() {
 
   if (!business) {
     return (
-      <div className="min-h-screen bg-black text-white p-8">
+      <div className="min-h-screen bg-black text-white p-4 sm:p-6 lg:p-8">
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Welcome Message */}
           <div className="text-center space-y-4">
@@ -227,9 +227,9 @@ export default function AppPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-black text-white">
       {/* Beta tester message */}
-      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8">
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 lg:mb-8">
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 sm:p-4 text-center">
           <p className="text-blue-400 text-sm sm:text-base">
             👋 Hello and thank you for being a beta tester!
@@ -237,14 +237,14 @@ export default function AppPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Stripe Integration Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/10 flex-shrink-0">
                 <svg
@@ -757,7 +757,7 @@ export default function AppPage() {
 
         {/* Business Overview Section */}
         <div>
-          <div className="flex items-center gap-3 mb-4 sm:mb-6 md:mb-8">
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
             <div className="h-6 sm:h-8 w-[3px] bg-blue-500" />
             <h1 className="text-xl sm:text-2xl font-bold">Business Overview</h1>
           </div>
@@ -768,7 +768,7 @@ export default function AppPage() {
             className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
           >
             {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
                 {business.logo_url && (
                   <img
@@ -809,15 +809,11 @@ export default function AppPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <div
-                  className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-400/20 to-transparent opacity-0 
-                              group-hover:opacity-100 transition-opacity duration-200"
-                ></div>
               </a>
             </div>
 
             {/* Content Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Business Info Column */}
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="text-xs sm:text-sm font-medium text-gray-400 uppercase tracking-wider">
@@ -927,7 +923,7 @@ function InfoItem({ label, value }) {
   return (
     <div className="bg-black/30 rounded-lg p-3">
       <p className="text-xs sm:text-sm text-gray-400 mb-1">{label}</p>
-      <p className="text-sm sm:text-base text-white">{value}</p>
+      <p className="text-sm sm:text-base text-white break-words">{value}</p>
     </div>
   );
 }

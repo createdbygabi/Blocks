@@ -208,7 +208,7 @@ export function LandingPage({ data }) {
       <main className={`w-full ${styles.layout.background}`}>
         {/* Hero Section */}
         <motion.section
-          className={`relative min-h-[90vh] flex items-center ${styles.layout.surface}`}
+          className={`relative min-h-[calc(100vh-80px)] flex items-center justify-center ${styles.layout.surface}`}
         >
           {/* Background effects */}
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
@@ -216,7 +216,7 @@ export function LandingPage({ data }) {
             className={`absolute inset-0 ${styles.section.primary} opacity-5`}
           />
 
-          <div className="relative w-full max-w-6xl mx-auto px-4 mb-12">
+          <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-0">
             {landingPage?.hero_image ? (
               // Two-column layout with image
               <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-6 md:gap-8 items-center pt-165 md:pt-32 mx-2">

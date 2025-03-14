@@ -29,7 +29,9 @@ export function ClientWrapper({ children }) {
     <>
       <main
         className={`w-full min-h-screen ${
-          isNoNavPage ? "" : "pl-[300px] pt-12"
+          isNoNavPage
+            ? ""
+            : "lg:pl-[70px] pt-[60px] lg:pt-12 px-4 sm:px-6 lg:px-8"
         }`}
       >
         <AnimatedWrapper>{children}</AnimatedWrapper>

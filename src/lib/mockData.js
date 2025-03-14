@@ -11,16 +11,19 @@ export const mockData = {
     //   targetAudience: "Developers that use Cursor to generate code",
     // },
     business: {
-      niche: "AI-Powered Coding Assistance & Prompt Optimization",
+      niche: "Content Repurposing & Audience Growth",
       services: [
-        "Tool that transforms previous LinkedIn posts into newsletters",
+        "Tool that creates newsletters with the help of AI based on previous Linkedin posts of the user",
       ],
+      product: "Tool that transforms previous LinkedIn posts into newsletters",
       uniqueValue:
-        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor",
+        "Save time by automatically transforming your LinkedIn content into engaging newsletters",
       painPoint:
-        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor (developer prompts)",
-      goals: ["Save money, save time"],
-      targetAudience: "Developers that use Cursor to generate code",
+        "Time saving - Content creators spend too much time repurposing content",
+      goals: ["Grow audience", "Save time", "Increase content reach"],
+      targetAudience: "LinkedIn influencers and content creators",
+      mainFeature:
+        "Tool that creates newsletters with the help of AI based on previous Linkedin posts of the user",
     },
   },
 
