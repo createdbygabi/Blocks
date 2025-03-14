@@ -1,10 +1,20 @@
 export const mockData = {
   onboarding: {
+    // business: {
+    //   niche: "AI-Powered Coding Assistance & Prompt Optimization",
+    //   services: ["AI wrapper for Cursor to enhance the prompts"],
+    //   uniqueValue:
+    //     "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor",
+    //   painPoint:
+    //     "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor (developer prompts)",
+    //   goals: ["Save money, save time"],
+    //   targetAudience: "Developers that use Cursor to generate code",
+    // },
     business: {
       niche: "AI-Powered Coding Assistance & Prompt Optimization",
       services: ["AI wrapper for Cursor to enhance the prompts"],
       uniqueValue:
-        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor.",
+        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor",
       painPoint:
         "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor (developer prompts)",
       goals: ["Save money, save time"],
