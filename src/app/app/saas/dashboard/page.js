@@ -15,6 +15,15 @@ export default function SaasDashboard() {
   const [saasData, setSaasData] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Debug current environment and host
+  console.log("Environment:", process.env.NODE_ENV);
+  console.log("Window Location:", {
+    host: window.location.host,
+    hostname: window.location.hostname,
+    pathname: window.location.pathname,
+  });
+
   const supabase = createClientComponentClient({
     options: {
       cookieOptions: {
@@ -26,24 +35,48 @@ export default function SaasDashboard() {
     },
   });
 
+  // Debug cookie settings
+  console.log("Cookie Settings:", {
+    name: getAuthCookiePrefix(window.location.host),
+    domain: ".joinblocks.me",
+    path: "/",
+    secure: true,
+  });
+
   useEffect(() => {
     const fetchData = async () => {
+      console.log("Starting fetchData...");
       try {
+        // Debug auth state before getUser
+        console.log("Checking session before getUser...");
+        const session = await supabase.auth.getSession();
+        console.log("Current Session:", session);
+
         const user = await supabase.auth.getUser();
+        console.log("Auth getUser Response:", user);
+
         if (!user.data.user) {
+          console.log("No user found, redirecting to login...");
           router.push("/login");
           return;
         }
+
         setUser(user.data.user);
         console.log("🚀 User:", user.data.user);
 
         // Get subdomain from current URL
         const subdomain = window.location.host.split(".")[0];
+        console.log("Current Subdomain:", subdomain);
+
         const data = await getSaasData(subdomain);
-        console.log("🚀 Data:", data);
+        console.log("🚀 SaaS Data:", data);
         setSaasData(data);
       } catch (error) {
-        console.error("Dashboard data fetch error:", error);
+        console.error("Dashboard data fetch error:", {
+          error,
+          message: error.message,
+          stack: error.stack,
+        });
       } finally {
         setLoading(false);
       }
