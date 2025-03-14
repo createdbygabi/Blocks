@@ -12,7 +12,9 @@ export const mockData = {
     // },
     business: {
       niche: "AI-Powered Coding Assistance & Prompt Optimization",
-      services: ["AI wrapper for Cursor to enhance the prompts"],
+      services: [
+        "Tool that transforms previous LinkedIn posts into newsletters",
+      ],
       uniqueValue:
         "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor",
       painPoint:

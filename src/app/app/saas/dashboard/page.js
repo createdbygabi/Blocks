@@ -19,6 +19,9 @@ export default function SaasDashboard() {
     options: {
       cookieOptions: {
         name: getAuthCookiePrefix(window.location.host),
+        domain: ".joinblocks.me",
+        path: "/",
+        secure: true,
       },
     },
   });
