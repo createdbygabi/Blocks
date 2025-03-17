@@ -346,7 +346,7 @@ export function LandingPage({ data }) {
                         ))}
                       </div>
                       <p className={`text-sm ${styles.text.secondary}`}>
-                        Loved by <span className="font-bold">2,500+ </span>
+                        Loved by <span className="font-bold">248+ </span>
                         {hero?.userType || "small businesses"}
                       </p>
                     </div>
@@ -475,7 +475,7 @@ export function LandingPage({ data }) {
                       ))}
                     </div>
                     <p className={`text-sm ${styles.text.secondary}`}>
-                      Loved by <span className="font-bold">2,500+ </span>
+                      Loved by <span className="font-bold">248+ </span>
                       {hero?.userType || "small businesses"}
                     </p>
                   </div>
