@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -106,14 +107,15 @@ async function fetchSubstackPost(url) {
 export async function POST(request) {
   console.log("\n🚀 Starting Newsletter Generation");
   try {
-    const headersList = headers();
-    const authHeader = headersList.get("authorization");
+    const { linkedinUrls, substackUrls, businessName, businessId, userId } =
+      await request.json();
 
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
     }
-
-    const { linkedinUrls, substackUrls, businessName } = await request.json();
 
     // First fetch the Substack newsletters to use as templates
     const substackContent = await Promise.all(
@@ -135,7 +137,7 @@ export async function POST(request) {
 
     const systemPrompt =
       detectedLanguage === "fr"
-        ? `Tu es un expert en rédaction de newsletters. Ta tâche est de créer une newsletter en utilisant :
+        ? `Tu es un expert en rédaction de newsletters engaging. Ta tâche est de créer une newsletter en utilisant :
 
       1. STRUCTURE (à imiter) :
       Voici des exemples de newsletters dont tu dois t'inspirer pour la structure de la newsletter :
@@ -152,8 +154,9 @@ export async function POST(request) {
         • La longueur des phrases
         • L'organisation en sections
       - Utilise le CONTENU des posts LinkedIn pour le contenu réel et le style de la newsletter
-      - Garde les informations et le message des posts LinkedIn intacts`
-        : `You are a newsletter writing expert. Your task is to create a newsletter using:
+      - Garde les informations et le message des posts LinkedIn intacts
+      - Ajoute beaucoup d'informations supplémentaires qui sont pertinentes et enrichissent la newsletter et la rendent plus captivante (tels que des exemples, des analogies et des anecdotes)`
+        : `You are an expert in writing engaging newsletters. Your task is to create a newsletter using:
 
       1. STRUCTURE (to imitate):
       Here are newsletter examples to inspire the structure:
@@ -170,10 +173,11 @@ export async function POST(request) {
         • Sentence length
         • Section organization
       - Use the CONTENT from LinkedIn posts for the actual newsletter content and style
-      - Keep the information and message from LinkedIn posts intact`;
+      - Keep the information and message from LinkedIn posts intact
+      - Add a lot of additional informations that are relevant and enrich the newsletter and makes it more engaging (such as examples, analogies, anecdotes)`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -185,13 +189,49 @@ export async function POST(request) {
             "Please generate the newsletter following the instructions above.",
         },
       ],
-      // temperature: 0.7,
+      temperature: 0.7,
     });
 
     const generatedNewsletter = completion.choices[0].message.content;
 
+    // Save the newsletter to the database
+    const { data: savedNewsletter, error: saveError } = await supabaseAdmin
+      .from("linkletter_newsletters")
+      .insert({
+        user_id: userId,
+        business_id: businessId,
+        content: generatedNewsletter,
+        linkedin_urls: linkedinUrls,
+        substack_urls: substackUrls,
+        title: `Newsletter #${Date.now()}`,
+        status: "draft",
+      })
+      .select()
+      .single();
+
+    if (saveError) {
+      console.error("Error saving newsletter:", saveError);
+      return NextResponse.json(
+        { error: "Failed to save newsletter" },
+        { status: 500 }
+      );
+    }
+
+    // Fetch updated list of newsletters
+    const { data: newsletters, error: fetchError } = await supabaseAdmin
+      .from("linkletter_newsletters")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (fetchError) {
+      console.error("Error fetching newsletters:", fetchError);
+    }
+
     return NextResponse.json({
       newsletter: generatedNewsletter,
+      savedNewsletter,
+      newsletters: newsletters || [],
       status: "success",
       debug: {
         linkedinContent,

@@ -205,13 +205,33 @@ function ReelIdsManager({ businessId, onSave }) {
         .map((id) => parseInt(id.trim()))
         .filter((id) => !isNaN(id));
 
-      const { error } = await supabase.from("reel_queue").upsert({
-        business_id: businessId,
-        reel_ids: idsArray,
-        last_updated_at: new Date().toISOString(),
-      });
+      // Get the existing entry's ID from the initial fetch
+      const { data: existingEntry } = await supabase
+        .from("reel_queue")
+        .select("id")
+        .eq("business_id", businessId)
+        .single();
 
-      if (error) throw error;
+      let result;
+      if (existingEntry) {
+        // Update existing entry
+        result = await supabase
+          .from("reel_queue")
+          .update({
+            reel_ids: idsArray,
+            last_updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingEntry.id);
+      } else {
+        // Create new entry
+        result = await supabase.from("reel_queue").insert({
+          business_id: businessId,
+          reel_ids: idsArray,
+          last_updated_at: new Date().toISOString(),
+        });
+      }
+
+      if (result.error) throw result.error;
       setCurrentQueue(idsArray);
       onSave?.();
     } catch (err) {
@@ -299,16 +319,53 @@ function ReelIdsManager({ businessId, onSave }) {
   );
 }
 
-function GenerateContentSection({ businesses, onGenerate, isLoading }) {
+function GenerateContentSection({
+  businesses,
+  onGenerate,
+  isLoading,
+  pendingContent,
+  needsApprovalContent,
+  publishedContent,
+  formatDate,
+}) {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedBusiness, setSelectedBusiness] = useState("");
   const today = new Date().toISOString().split("T")[0];
 
-  const handleGenerateForToday = () => {
+  const handleGenerateForToday = async () => {
     if (selectedBusiness) {
-      onGenerate(selectedBusiness, today);
+      // Check if content already exists for today for this business
+      const existingContent = [
+        ...pendingContent,
+        ...needsApprovalContent,
+        ...publishedContent,
+      ].find(
+        (c) =>
+          c.business_id === selectedBusiness &&
+          formatDate(new Date(c.scheduled_for)) === today
+      );
+
+      if (!existingContent) {
+        await onGenerate(selectedBusiness, today);
+      }
     } else {
-      businesses.forEach((business) => onGenerate(business.id, today));
+      // Handle all businesses sequentially
+      for (const business of businesses) {
+        // Check if content already exists for today for this business
+        const existingContent = [
+          ...pendingContent,
+          ...needsApprovalContent,
+          ...publishedContent,
+        ].find(
+          (c) =>
+            c.business_id === business.id &&
+            formatDate(new Date(c.scheduled_for)) === today
+        );
+
+        if (!existingContent) {
+          await onGenerate(business.id, today);
+        }
+      }
     }
   };
 
@@ -593,7 +650,8 @@ function PendingApprovalsSection({
                   onClick={() =>
                     onRegenerate(
                       currentContent.business_id,
-                      formatDate(new Date(currentContent.scheduled_for))
+                      formatDate(new Date(currentContent.scheduled_for)),
+                      currentContent.id
                     )
                   }
                   disabled={isLoading}
@@ -675,51 +733,107 @@ export default function SocialMarketingPage() {
   const handleGenerateContent = async (
     businessId,
     date,
-    generateMissing = false
+    existingContentId = null
   ) => {
     try {
       setIsGenerating(true);
-      const socialService = new SocialMarketingService();
 
-      // Check if this is a regeneration request by looking for existing content
-      const existingContent = [...pendingContent, ...needsApprovalContent].find(
-        (c) =>
-          c.business_id === businessId &&
-          formatDate(new Date(c.scheduled_for)) === formatDate(new Date(date))
-      );
+      // Get business data
+      const { data: businessData, error: businessError } = await supabase
+        .from("businesses")
+        .select("target_audience, name")
+        .eq("id", businessId)
+        .single();
 
-      // If regenerating, delete the existing content first
-      if (existingContent) {
-        const { error: deleteError } = await supabase
-          .from("social_content")
-          .delete()
-          .eq("id", existingContent.id);
+      if (businessError) throw businessError;
 
-        if (deleteError) {
-          throw new Error("Failed to delete existing content");
+      // Get queue data (but won't update it)
+      const { data: queueData, error: queueError } = await supabase
+        .from("reel_queue")
+        .select("reel_ids")
+        .eq("business_id", businessId)
+        .single();
+
+      if (queueError) throw queueError;
+
+      if (!queueData?.reel_ids?.length) {
+        throw new Error("No reel IDs in queue for this business");
+      }
+
+      // Get the first reel ID from the queue
+      const formatId = queueData.reel_ids[0];
+
+      const requestBody = {
+        format_id: formatId.toString(),
+        niche: businessData.target_audience || "Software engineers",
+        product: businessData.name || "test",
+        test_mode: true,
+      };
+
+      // Call the reel generation API
+      const response = await fetch("http://127.0.0.1:8000/api/reel/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          `API call failed: ${response.status} ${response.statusText}${
+            errorData ? ` - ${JSON.stringify(errorData)}` : ""
+          }`
+        );
+      }
+
+      const data = await response.json();
+
+      // If successful, update or create entry in social_content table
+      if (data.url) {
+        const contentData = {
+          business_id: businessId,
+          scheduled_for: new Date(date + "T12:00:00Z").toISOString(),
+          status: "needs_approval",
+          content_type: "reel",
+          content: {
+            video: {
+              url: data.url,
+              thumbnail: null,
+            },
+          },
+        };
+
+        let error;
+
+        if (existingContentId) {
+          // Update existing entry
+          const { error: updateError } = await supabase
+            .from("social_content")
+            .update(contentData)
+            .eq("id", existingContentId);
+          error = updateError;
+        } else {
+          // Create new entry
+          const { error: insertError } = await supabase
+            .from("social_content")
+            .insert(contentData);
+          error = insertError;
         }
-      }
 
-      // Handle single content generation
-      if (!date) {
-        throw new Error("Date is required for content generation");
+        if (error) throw error;
       }
-
-      // Create date at noon UTC to avoid timezone issues
-      const scheduledDate = new Date(date + "T12:00:00Z");
-      if (isNaN(scheduledDate.getTime())) {
-        throw new Error("Invalid date provided");
-      }
-
-      await socialService.generateVideoContent(
-        businessId,
-        scheduledDate.toISOString()
-      );
 
       await fetchData(); // Refresh the data
     } catch (error) {
       console.error("Failed to generate content:", error);
-      setError(error.message); // Show error to user
+      setError(
+        typeof error === "string"
+          ? error
+          : error.message || "Failed to generate content"
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -966,6 +1080,10 @@ export default function SocialMarketingPage() {
           businesses={businesses}
           onGenerate={handleGenerateContent}
           isLoading={isGenerating}
+          pendingContent={pendingContent}
+          needsApprovalContent={needsApprovalContent}
+          publishedContent={publishedContent}
+          formatDate={formatDate}
         />
 
         {/* Table */}
