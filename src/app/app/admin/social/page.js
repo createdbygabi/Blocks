@@ -403,7 +403,7 @@ function GenerateContentSection({
       <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
         Generate Content
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Quick Generate */}
         <div className="space-y-4 p-4 bg-gradient-to-br from-blue-900/30 to-blue-800/20 rounded-lg border border-blue-700/30 backdrop-blur-sm">
           <h3 className="font-medium text-blue-300">Quick Generate</h3>
@@ -433,26 +433,6 @@ function GenerateContentSection({
               className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 text-purple-400 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-purple-500/20"
             >
               Generate for Selected Date
-            </button>
-          </div>
-        </div>
-
-        {/* Download MP4s */}
-        <div className="space-y-4 p-4 bg-gradient-to-br from-emerald-900/30 to-green-800/20 rounded-lg border border-emerald-700/30 backdrop-blur-sm">
-          <h3 className="font-medium text-emerald-300">Download MP4s</h3>
-          <div className="space-y-3">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-2 bg-emerald-900/30 border border-emerald-700/50 rounded-lg text-white focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
-            />
-            <button
-              onClick={() => handleDownloadAllMP4s(selectedDate)}
-              disabled={!selectedDate}
-              className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 text-emerald-400 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-emerald-500/20"
-            >
-              Download All MP4s
             </button>
           </div>
         </div>

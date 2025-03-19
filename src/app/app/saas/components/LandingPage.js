@@ -75,19 +75,6 @@ export function LandingPage({ data }) {
   const styles = getStyles(theme, design, font);
   const fontVariables = `${inter.variable} ${plusJakarta.variable} ${dmSans.variable} ${spaceGrotesk.variable} ${crimsonPro.variable} ${workSans.variable}`;
 
-  // Helper function to render icons
-  const renderIcon = (iconName) => {
-    const icons = {
-      layers: <FiLayers className="w-6 h-6" />,
-      activity: <FiActivity className="w-6 h-6" />,
-      clock: <FiClock className="w-6 h-6" />,
-      box: <FiBox className="w-6 h-6" />,
-      "trending-up": <FiTrendingUp className="w-6 h-6" />,
-      zap: <FiZap className="w-6 h-6" />,
-    };
-    return icons[iconName] || null;
-  };
-
   const [openFaq, setOpenFaq] = useState(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -158,11 +145,6 @@ export function LandingPage({ data }) {
     }
 
     try {
-      if (!business?.stripe_account_id) {
-        console.error("No Stripe Connect account ID found");
-        return;
-      }
-
       setLoading(true);
 
       const response = await fetch("/api/create-checkout-session", {
@@ -172,7 +154,7 @@ export function LandingPage({ data }) {
         },
         body: JSON.stringify({
           plan: business.pricing_plans, // Use the business's active plan
-          stripeConnectId: business.stripe_account_id,
+          stripeConnectId: business?.stripe_account_id,
           successUrl: `${window.location.origin}/success`,
           cancelUrl: `${window.location.origin}/cancel`,
           customerEmail: email, // Pass the email to pre-fill checkout
@@ -475,7 +457,7 @@ export function LandingPage({ data }) {
                       ))}
                     </div>
                     <p className={`text-sm ${styles.text.secondary}`}>
-                      Loved by <span className="font-bold">248+ </span>
+                      Loved by <span className="font-bold">250+ </span>
                       {hero?.userType || "small businesses"}
                     </p>
                   </div>

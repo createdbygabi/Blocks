@@ -415,7 +415,7 @@ export default function AppPage() {
         </motion.div>
 
         {/* Instagram Integration Section */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
@@ -493,7 +493,6 @@ export default function AppPage() {
                 </div>
 
                 <div className="space-y-6">
-                  {/* Account Name Section */}
                   <div>
                     <h5 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-500 text-xs">
@@ -545,7 +544,6 @@ export default function AppPage() {
                     </div>
                   </div>
 
-                  {/* Password Section */}
                   <div>
                     <h5 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-500 text-xs">
@@ -572,7 +570,6 @@ export default function AppPage() {
                     </div>
                   </div>
 
-                  {/* Create Account Button */}
                   <a
                     href="https://www.instagram.com/accounts/login/"
                     target="_blank"
@@ -598,7 +595,6 @@ export default function AppPage() {
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                   </a>
 
-                  {/* Connect Account Section */}
                   <div className="mt-8 pt-8 border-t border-gray-800">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="p-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500">
@@ -753,7 +749,7 @@ export default function AppPage() {
               <p className="text-sm text-red-400">{igError}</p>
             </div>
           )}
-        </motion.div>
+        </motion.div> */}
 
         {/* Business Overview Section */}
         <div>

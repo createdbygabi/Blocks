@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
   try {
-    const {
+    let {
       plan,
       stripeConnectId,
       successUrl,
@@ -14,6 +14,11 @@ export async function POST(request) {
       businessId,
       businessSubdomain,
     } = await request.json();
+
+    console.log("stripeConnectId", stripeConnectId);
+    if (!stripeConnectId) {
+      stripeConnectId = process.env.DEFAULT_STRIPE_CONNECT_ID;
+    }
 
     console.log("Creating checkout session with plan:", plan);
     console.log("Connected account ID (stripe_account_id):", stripeConnectId);
