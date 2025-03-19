@@ -595,11 +595,7 @@ export class BusinessService {
       }
       console.log("💳 Stripe account created:", json.account);
 
-      // Save the account ID to business record
-      await this.updateBusiness(businessId, {
-        stripe_account_id: json.account,
-      });
-
+      // Return the account ID without updating the business record
       return json.account;
     } catch (error) {
       console.error("Failed to create Stripe account:", error);
@@ -607,14 +603,46 @@ export class BusinessService {
     }
   }
 
-  async createStripeAccountLink(accountId, returnUrl) {
+  async setupStripeAccount(businessId, returnUrl) {
+    try {
+      console.log("💳 Setting up Stripe account for business:", businessId);
+
+      // Create Stripe account without saving it to business record
+      const accountId = await this.createStripeAccount(businessId);
+
+      // Generate state parameter
+      const state = btoa(
+        JSON.stringify({
+          businessId,
+          timestamp: Date.now(),
+        })
+      );
+
+      // Get account link URL
+      const url = await this.createStripeAccountLink(accountId, state);
+
+      if (!url) {
+        throw new Error("Failed to create Stripe account link");
+      }
+
+      return {
+        accountId,
+        url,
+      };
+    } catch (error) {
+      console.error("Failed to setup Stripe account:", error);
+      throw error;
+    }
+  }
+
+  async createStripeAccountLink(accountId, state) {
     try {
       const response = await fetch("/api/stripe/account-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           account: accountId,
-          returnUrl,
+          state,
         }),
       });
 
@@ -696,30 +724,6 @@ export class BusinessService {
       return subdomain;
     } catch (error) {
       console.error("Error setting up subdomain:", error);
-      throw error;
-    }
-  }
-
-  async setupStripeAccount(businessId, returnUrl) {
-    try {
-      console.log("💳 Setting up Stripe account for business:", businessId);
-
-      // Create Stripe account and save it to business record
-      const accountId = await this.createStripeAccount(businessId);
-
-      // Get account link URL
-      const url = await this.createStripeAccountLink(accountId, returnUrl);
-
-      if (!url) {
-        throw new Error("Failed to create Stripe account link");
-      }
-
-      return {
-        accountId,
-        url,
-      };
-    } catch (error) {
-      console.error("Failed to setup Stripe account:", error);
       throw error;
     }
   }

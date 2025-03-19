@@ -1,5 +1,4 @@
 import { supabase } from "./supabase";
-import { DEFAULT_LANDING_PAGE } from "./types";
 
 // Get landing page for a user
 export async function getUserLandingPage(user_id) {
@@ -267,67 +266,6 @@ export async function saveBusiness(user_id, updates) {
   }
 }
 
-export async function createStripeAccount(businessId, stripeData) {
-  if (!businessId) {
-    throw new Error("Business ID is required");
-  }
-
-  const { data, error } = await supabase
-    .from("stripe_accounts")
-    .insert({
-      business_id: businessId,
-      account_id: stripeData.id,
-      account_type: stripeData.type || "custom",
-      country: stripeData.country || "FR",
-      capabilities: stripeData.capabilities || {},
-      payouts_enabled: stripeData.payouts_enabled || false,
-      charges_enabled: stripeData.charges_enabled || false,
-      details_submitted: stripeData.details_submitted || false,
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-export async function getStripeAccount(businessId) {
-  if (!businessId) {
-    throw new Error("Business ID is required");
-  }
-
-  const { data, error } = await supabase
-    .from("stripe_accounts")
-    .select("*")
-    .eq("business_id", businessId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
-}
-
-export async function updateStripeAccount(id, stripeData) {
-  if (!id) {
-    throw new Error("Stripe account ID is required");
-  }
-
-  const { data, error } = await supabase
-    .from("stripe_accounts")
-    .update({
-      payouts_enabled: stripeData.payouts_enabled,
-      charges_enabled: stripeData.charges_enabled,
-      details_submitted: stripeData.details_submitted,
-      capabilities: stripeData.capabilities,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
 export async function getBusinessAccountStatus(userId) {
   if (!userId) {
     throw new Error("User ID is required");
@@ -350,11 +288,43 @@ export async function getBusinessAccountStatus(userId) {
 
     return {
       hasStripe: !!business?.stripe_account_id,
-      hasInstagram: !!business?.instagram_account_id,
+      hasInstagram: !!business?.ig_account_id,
       businessId: business?.id,
     };
   } catch (error) {
     console.error("Error checking account status:", error);
+    throw error;
+  }
+}
+
+export async function updateBusinessStripeAccount(businessId, stripeAccountId) {
+  console.log("Updating business Stripe account:", {
+    businessId,
+    stripeAccountId,
+  });
+
+  if (!businessId) {
+    throw new Error("Business ID is required");
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("businesses")
+      .update({
+        stripe_account_id: stripeAccountId,
+      })
+      .eq("id", businessId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating business Stripe account:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error updating business Stripe account:", error);
     throw error;
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserBusiness, createStripeAccount } from "@/lib/db";
+import { getUserBusiness } from "@/lib/db";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { createStripeConnectAccount } from "@/lib/stripe";
@@ -26,10 +26,7 @@ export async function GET(request) {
       );
     }
 
-    return NextResponse.json({
-      business,
-      stripeAccount: business.stripe_accounts?.[0] || null,
-    });
+    return NextResponse.json({ business });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
@@ -52,7 +49,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Get business and check for existing stripe account
+    // 2. Get business
     const business = await getUserBusiness(user.id);
     if (!business) {
       return NextResponse.json(
@@ -61,12 +58,11 @@ export async function POST(request) {
       );
     }
 
-    // 3. If stripe account exists, return it
-    if (business.stripe_accounts?.[0]) {
+    // 3. If business already has a Stripe account, return it
+    if (business.stripe_account_id) {
       return NextResponse.json({
         status: "existing",
         business,
-        stripeAccount: business.stripe_accounts[0],
       });
     }
 
@@ -80,17 +76,12 @@ export async function POST(request) {
       country,
     });
 
-    // 5. Save stripe account details to database
-    const savedStripeAccount = await createStripeAccount(
-      business.id,
-      stripeAccount
-    );
-
-    // 6. Return new stripe account info
+    // 5. Return the Stripe account info - we'll save it to the business later when setup is complete
     return NextResponse.json({
       status: "created",
       business,
-      stripeAccount: savedStripeAccount,
+      accountId: stripeAccount.id,
+      url: stripeAccount.url,
     });
   } catch (error) {
     console.error("API error:", error);

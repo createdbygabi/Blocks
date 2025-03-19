@@ -3,7 +3,14 @@ import { stripe } from "@/lib/utils";
 
 export async function POST(request) {
   try {
-    const { account } = await request.json();
+    const { account, state } = await request.json();
+
+    if (!account || !state) {
+      return NextResponse.json(
+        { error: "Account and state parameters are required" },
+        { status: 400 }
+      );
+    }
 
     // Get base URL - use HTTPS for production, allow HTTP for development
     const baseUrl =
@@ -14,8 +21,8 @@ export async function POST(request) {
     const accountLink = await stripe.accountLinks.create({
       account,
       refresh_url: `${baseUrl}/stripe/refresh`,
-      // When setup is complete, this URL will close the window and notify the parent
-      return_url: `${baseUrl}/stripe/complete?account_id=${account}`,
+      // Pass both account_id and state to the completion route
+      return_url: `${baseUrl}/api/stripe/complete?account_id=${account}&state=${state}`,
       type: "account_onboarding",
     });
 

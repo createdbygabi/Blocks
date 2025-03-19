@@ -15,45 +15,12 @@ export default function AppPage() {
   const [accountCreatePending, setAccountCreatePending] = useState(false);
   const [stripeError, setStripeError] = useState(false);
   const [isStripeWindowOpen, setIsStripeWindowOpen] = useState(false);
+  const [isStripeSetupComplete, setIsStripeSetupComplete] = useState(false);
 
   // Add Instagram states
   const [igUsername, setIgUsername] = useState("");
   const [igPassword, setIgPassword] = useState("");
   const [igLoading, setIgLoading] = useState(false);
-  const [igError, setIgError] = useState(null);
-  const [generatedPassword, setGeneratedPassword] = useState("");
-
-  // Generate secure password function
-  const generateSecurePassword = () => {
-    const lowercase = "abcdefghijklmnopqrstuvwxyz";
-    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const numbers = "0123456789";
-    const specialChars = "!@#$%^&*";
-
-    // Get 4 lowercase, 2 uppercase, 2 numbers, and 2 special chars
-    const getLowercase = () =>
-      lowercase[Math.floor(Math.random() * lowercase.length)];
-    const getUppercase = () =>
-      uppercase[Math.floor(Math.random() * uppercase.length)];
-    const getNumber = () => numbers[Math.floor(Math.random() * numbers.length)];
-    const getSpecial = () =>
-      specialChars[Math.floor(Math.random() * specialChars.length)];
-
-    // Generate base password with required characters
-    const basePassword = [
-      ...Array(4).fill(0).map(getLowercase),
-      ...Array(2).fill(0).map(getUppercase),
-      ...Array(2).fill(0).map(getNumber),
-      ...Array(2).fill(0).map(getSpecial),
-    ];
-
-    // Shuffle the password array
-    const shuffledPassword = basePassword
-      .sort(() => Math.random() - 0.5)
-      .join("");
-
-    return shuffledPassword;
-  };
 
   useEffect(() => {
     if (user) {
@@ -61,19 +28,16 @@ export default function AppPage() {
     }
   }, [user]);
 
-  // Generate password once when component mounts
-  useEffect(() => {
-    if (!generatedPassword) {
-      setGeneratedPassword(generateSecurePassword());
-    }
-  }, []); // Only run once on mount
-
-  // Listen for Stripe completion
+  // Listen for Stripe completion message from popup window
   useEffect(() => {
     const handleMessage = (event) => {
+      // Only handle messages from our own domain
+      if (event.origin !== window.location.origin) return;
+
       if (event.data === "stripe_complete") {
         setIsStripeWindowOpen(false);
-        fetchBusiness(); // Refresh business data
+        setIsStripeSetupComplete(true);
+        fetchBusiness(); // Refresh business data to get updated stripe_account_id
       }
     };
 
@@ -81,13 +45,14 @@ export default function AppPage() {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  // Check URL params for Stripe success
+  // Update the URL params check to look for our new completion route
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("stripe") === "success") {
+    if (params.get("stripe_setup") === "success") {
       window.history.replaceState({}, "", window.location.pathname);
       setIsStripeWindowOpen(false);
-      fetchBusiness(); // Refresh business data
+      setIsStripeSetupComplete(true);
+      fetchBusiness(); // Refresh business data to get updated stripe_account_id
     }
   }, []);
 
@@ -110,12 +75,23 @@ export default function AppPage() {
 
     setAccountCreatePending(true);
     setStripeError(false);
+    setIsStripeSetupComplete(false);
 
     try {
       const businessService = new BusinessService(user.id);
+
+      // Generate a secure state parameter
+      const state = btoa(
+        JSON.stringify({
+          businessId: business.id,
+          timestamp: Date.now(),
+        })
+      );
+
       const { accountId, url } = await businessService.setupStripeAccount(
         business.id,
-        `${window.location.origin}/app?stripe=success`
+        // Use proper API route and include state parameter
+        `${window.location.origin}/api/stripe/complete?state=${state}`
       );
 
       if (url) {
@@ -273,7 +249,7 @@ export default function AppPage() {
               </div>
             </div>
 
-            {business?.stripe_account_id ? (
+            {business?.stripe_account_id && isStripeSetupComplete ? (
               <button
                 onClick={openStripeDashboard}
                 className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 
@@ -327,7 +303,7 @@ export default function AppPage() {
               </button>
             )}
           </div>
-          {!business?.stripe_account_id && (
+          {(!business?.stripe_account_id || !isStripeSetupComplete) && (
             <div className="mt-4">
               <div className="p-4 bg-gradient-to-br from-purple-500/5 to-blue-500/5 rounded-xl border border-purple-500/10">
                 <h3 className="text-sm font-medium text-purple-300 mb-4 flex items-center gap-2">
