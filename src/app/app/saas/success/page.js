@@ -88,6 +88,12 @@ export default function SuccessPage() {
       try {
         if (!business) return;
 
+        console.log("stripe_account_id", business.stripe_account_id);
+        console.log(
+          "default_stripe_connect_id",
+          process.env.DEFAULT_STRIPE_CONNECT_ID
+        );
+
         const response = await fetch("/api/check-session", {
           method: "POST",
           headers: {
@@ -95,7 +101,10 @@ export default function SuccessPage() {
           },
           body: JSON.stringify({
             sessionId,
-            stripeAccountId: business.stripe_account_id,
+            stripeAccountId:
+              business?.stripe_account_id ||
+              process.env.NEXT_PUBLIC_DEFAULT_STRIPE_CONNECT_ID ||
+              null,
           }),
         });
 

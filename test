@@ -1,0 +1,229 @@
+{
+  "faq": {
+    "items": [
+      {
+        "answer": "AI analyzes and enhances prompts, ensuring clarity and precision before submission to Cursor.",
+        "question": "How does AI refine coding prompts?"
+      },
+      {
+        "answer": "Reduce wasted credits by optimizing coding prompts with AI before sending them to Cursor.",
+        "question": "How can I save money using this?"
+      },
+      {
+        "answer": "Yes, rapid AI refinement accelerates prompt preparation, cutting down on pre-coding time.",
+        "question": "Can this tool save me time?"
+      },
+      {
+        "answer": "Absolutely, user-friendly interface makes prompt refinement quick and simple.",
+        "question": "Is the tool easy to use?"
+      }
+    ],
+    "title": "Common questions"
+  },
+  "font": {
+    "id": "modernSans",
+    "name": "Modern Sans",
+    "styles": {
+      "body": "font-normal",
+      "button": "font-medium",
+      "heading": "font-bold tracking-tight",
+      "subheading": "font-semibold"
+    },
+    "description": "Clean and contemporary typography using DM Sans + Plus Jakarta Sans"
+  },
+  "hero": {
+    "cta": "Refine Now",
+    "badge": "🔥 Refine Prompts, Save Cash →",
+    "title": "Optimize your Cursor prompts, save on costs",
+    "subtitle": "Enhance prompt quality with AI to cut spending and streamline your creative workflow seamlessly.",
+    "userType": "creators",
+    "hero_image": null
+  },
+  "final": {
+    "cta": "Optimize Prompts",
+    "title": "Perfect Your Coding Prompts Now",
+    "subtitle": "Refine prompts with AI, escape costly errors now."
+  },
+  "theme": {
+    "id": "modern-clean",
+    "name": "Modern Clean",
+    "colors": {
+      "card": {
+        "base": "bg-[#FFFFFF] border border-[#E5E7EB]",
+        "hover": "hover:shadow-lg hover:border-[#BFDBFE]"
+      },
+      "text": {
+        "muted": "text-[#6B7280]",
+        "accent": "text-[#2563EB]",
+        "primary": "text-[#111827]",
+        "secondary": "text-[#4B5563]"
+      },
+      "border": "border-[#E5E7EB]",
+      "button": {
+        "primary": {
+          "base": "bg-[#2563EB] text-[#FFFFFF]",
+          "hover": "hover:bg-[#1D4ED8]"
+        },
+        "secondary": {
+          "base": "bg-[#FFFFFF] text-[#111827] border border-[#E5E7EB]",
+          "hover": "hover:bg-[#F9FAFB]"
+        }
+      },
+      "divider": "border-[#E5E7EB]",
+      "overlay": "bg-[#000000]/50",
+      "section": {
+        "primary": "bg-[#2563EB]",
+        "secondary": "bg-[#F3F4F6]"
+      },
+      "surface": "bg-[#FFFFFF]",
+      "highlight": "bg-[#EFF6FF]",
+      "background": "bg-[#F9FAFB]"
+    },
+    "audience": "SaaS & Enterprise"
+  },
+  "design": {
+    "id": "modern-default",
+    "name": "Modern Default",
+    "styles": {
+      "ui": {
+        "shadows": "shadow-md",
+        "buttonSize": "px-4 py-2",
+        "roundedness": "rounded-lg",
+        "transitions": "transition duration-200"
+      },
+      "spacing": {
+        "stack": "space-y-6",
+        "section": "py-20",
+        "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      },
+      "typography": {
+        "body": "text-base leading-relaxed",
+        "button": "text-sm",
+        "heading": "text-4xl tracking-tight",
+        "subheading": "text-2xl"
+      }
+    },
+    "description": "Clean and professional with balanced proportions"
+  },
+  "pricing": {
+    "plans": [
+      {
+        "cta": "Get Started",
+        "name": "Starter Growth",
+        "price": "14.99",
+        "period": "/month",
+        "feature1": "AI-Prompt Optimization",
+        "feature2": "200 optimized prompts monthly",
+        "feature3": "Priority Email Support",
+        "feature4": "Access to Prompt Library",
+        "setupFee": "0",
+        "highlight": false,
+        "description": "Perfect for evolving teams wanting enhanced AI-driven prompts.",
+        "limitations": "Up to 200 optimized prompts per month",
+        "mainFeature": "Advanced AI-Prompt Efficiency",
+        "billingPeriod": "monthly"
+      },
+      null,
+      {
+        "cta": "Contact Sales",
+        "name": "Pro Power",
+        "price": "24.99",
+        "period": "/month",
+        "feature1": "AI-Prompt Optimization",
+        "feature2": "Unlimited optimized prompts",
+        "feature3": "API Access",
+        "feature4": "24/7 Priority Support",
+        "feature5": "Advanced Customization Options",
+        "feature6": "Dedicated Account Manager",
+        "feature7": "Comprehensive Analytics Dashboard",
+        "setupFee": "0",
+        "highlight": false,
+        "description": "Engineered for large-scale operations seeking ultimate scalability.",
+        "limitations": "Minimal restrictions for maximum performance",
+        "mainFeature": "Full-Scale AI-Prompt Integration",
+        "billingPeriod": "monthly"
+      }
+    ],
+    "title": "Optimize Coding Efficiency with Seamless AI",
+    "subtitle": "Discover the plan tailored for you"
+  },
+  "benefits": {
+    "stats": {
+      "cta": "Optimize Now",
+      "label": "Time saved",
+      "title": "Boost Efficiency",
+      "value": "80%"
+    },
+    "title": "Save Credits, Optimize Prompts Effectively",
+    "features": [
+      {
+        "title": "Credit Saver",
+        "iconName": "zap",
+        "description": "Maximize prompt value by eliminating ineffective coding requests quickly."
+      },
+      {
+        "title": "Enhanced Accuracy",
+        "iconName": "clock",
+        "description": "Improve code quality with precise AI-driven prompt adjustments."
+      },
+      {
+        "title": "Time Efficiency",
+        "iconName": "layers",
+        "description": "Speed up development by refining prompts before execution."
+      },
+      {
+        "title": "Intelligent Feedback",
+        "iconName": "box",
+        "description": "Receive instant AI suggestions to perfect your coding queries."
+      }
+    ],
+    "subtitle": "AI-Powered Prompt Refinement Tools"
+  },
+  "howItWorks": {
+    "steps": [
+      {
+        "title": "Input Prompt",
+        "iconName": "zap",
+        "description": "Enter your coding prompt for AI refinement."
+      },
+      {
+        "title": "Refine Prompt",
+        "iconName": "upload",
+        "description": "Let AI enhance and polish your coding prompt."
+      },
+      {
+        "title": "Send to Cursor",
+        "iconName": "trending-up",
+        "description": "Use the refined prompt to maximize your credits."
+      }
+    ],
+    "title": "Optimize Prompts, Save Your Credits",
+    "subtitle": "Refine with AI Effortlessly"
+  },
+  "painPoints": {
+    "items": [
+      {
+        "title": "Costly Errors",
+        "iconName": "clock",
+        "description": "Erroneous coding prompts drain your budget and disrupt project timelines consistently."
+      },
+      {
+        "title": "Time Drain",
+        "iconName": "box",
+        "description": "Wasted hours rewriting prompts could be spent building innovative solutions."
+      },
+      {
+        "title": "Limited Resources",
+        "iconName": "layers",
+        "description": "Your resources are finite, don't squander them with ineffective prompt strategies."
+      },
+      {
+        "title": "Frustrating Revisions",
+        "iconName": "activity",
+        "description": "Endless revisions due to unclear prompts hinder progress and stall productivity."
+      }
+    ],
+    "title": "Stop Wasting Money on Inefficient Coding Prompts",
+    "subtitle": "Losing money and time on faulty coding? Optimize prompts with AI to enhance efficiency."
+  }
+}

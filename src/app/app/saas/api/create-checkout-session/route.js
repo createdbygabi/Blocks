@@ -18,6 +18,16 @@ export async function POST(request) {
     console.log("stripeConnectId", stripeConnectId);
     if (!stripeConnectId) {
       stripeConnectId = process.env.DEFAULT_STRIPE_CONNECT_ID;
+      if (!stripeConnectId) {
+        return NextResponse.json(
+          {
+            error: "Failed to create checkout session",
+            details: "No Stripe Connect account ID available",
+          },
+          { status: 400 }
+        );
+      }
+      console.log("Using default Stripe Connect account:", stripeConnectId);
     }
 
     console.log("Creating checkout session with plan:", plan);
