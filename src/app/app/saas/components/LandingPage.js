@@ -33,7 +33,8 @@ import {
 import { Navbar } from "./Navbar";
 import { PricingSection } from "./PricingSection";
 import { Testimonials } from "./Testimonials";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { initAnalytics } from "@/lib/analytics";
 
 // Fade up animation variant
 const fadeUp = {
@@ -44,6 +45,101 @@ const fadeUp = {
 
 export function LandingPage({ data }) {
   const { business, landingPage } = data;
+  const analytics = initAnalytics(business.id);
+  const pricingSectionRef = useRef(null);
+  const featuresSectionRef = useRef(null);
+  const faqSectionRef = useRef(null);
+
+  // Track session start time and setup tracking
+  useEffect(() => {
+    if (!analytics) return;
+
+    const sessionStartTime = Date.now();
+    const sessionId = Math.random().toString(36).substring(2);
+
+    // Track session start
+    analytics.track("session_start", {
+      session_id: sessionId,
+      business_name: business.name,
+      url: window.location.href,
+    });
+
+    // Track scroll depth - only track 50% for engagement
+    const handleScroll = () => {
+      const scrollPercent =
+        (window.scrollY /
+          (document.documentElement.scrollHeight - window.innerHeight)) *
+        100;
+
+      // Only track 50% scroll depth once
+      if (!window.scrollDepthTracked && scrollPercent >= 50) {
+        window.scrollDepthTracked = true;
+        analytics.track("scroll_depth", {
+          depth: 50,
+          session_id: sessionId,
+        });
+      }
+    };
+
+    // Track when user leaves the page
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        analytics.track("session_end", {
+          session_id: sessionId,
+          session_duration: Date.now() - sessionStartTime,
+          exit_url: window.location.href,
+        });
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      analytics.track("session_end", {
+        session_id: sessionId,
+        session_duration: Date.now() - sessionStartTime,
+        exit_url: window.location.href,
+      });
+    };
+
+    // Add event listeners
+    document.addEventListener("scroll", handleScroll);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [analytics, business.name]);
+
+  // Track feature clicks
+  const trackFeatureClick = (featureName) => {
+    if (analytics) {
+      analytics.track("feature_click", {
+        feature: featureName,
+      });
+    }
+  };
+
+  // Track FAQ interactions
+  const handleFaqClick = (question) => {
+    if (analytics) {
+      analytics.track("faq_interaction", {
+        question: question,
+      });
+    }
+    setOpenFaq(openFaq === index ? null : index);
+  };
+
+  // Track navigation clicks
+  const handleNavClick = (section) => {
+    if (analytics) {
+      analytics.track("navigation_click", {
+        section: section,
+      });
+    }
+  };
 
   // Use landing page data or fallback to defaults
   const {
@@ -137,11 +233,18 @@ export function LandingPage({ data }) {
   ];
 
   const handleSubscribe = async (e) => {
-    e.preventDefault(); // Prevent form submission
+    e.preventDefault();
 
     if (!email) {
       alert("Please enter your email first");
       return;
+    }
+
+    if (analytics) {
+      analytics.track("form_submit", {
+        form: "hero_email",
+        email_domain: email.split("@")[1],
+      });
     }
 
     try {
@@ -185,7 +288,10 @@ export function LandingPage({ data }) {
       <Navbar
         styles={styles}
         business={business}
-        onCtaClick={scrollToHeroAndFocus}
+        onCtaClick={(section) => {
+          handleNavClick(section);
+          scrollToHeroAndFocus();
+        }}
       />
       <main className={`w-full ${styles.layout.background}`}>
         {/* Hero Section */}
@@ -604,6 +710,7 @@ export function LandingPage({ data }) {
 
         {/* Benefits & Features Section */}
         <motion.section
+          ref={featuresSectionRef}
           className={`relative py-24 ${styles.layout.surface}`}
           id="features"
         >
@@ -907,15 +1014,28 @@ export function LandingPage({ data }) {
           </div>
         </motion.section>
 
-        <PricingSection
-          styles={styles}
-          pricing={pricing}
-          business={business}
-          onCtaClick={scrollToHeroAndFocus}
-        />
+        <section
+          ref={pricingSectionRef}
+          className={`py-24 ${styles.layout.surface}`}
+          id="pricing"
+        >
+          <PricingSection
+            styles={styles}
+            pricing={pricing}
+            business={business}
+            onCtaClick={() => {
+              handleNavClick("pricing_cta");
+              scrollToHeroAndFocus();
+            }}
+          />
+        </section>
 
         {/* FAQ Section */}
-        <section className={`py-24 ${styles.layout.surface}`} id="faq">
+        <section
+          ref={faqSectionRef}
+          className={`py-24 ${styles.layout.surface}`}
+          id="faq"
+        >
           <div className="max-w-4xl mx-auto px-4">
             {/* Section Header */}
             <div className="text-center mb-16">
@@ -937,7 +1057,7 @@ export function LandingPage({ data }) {
                   className={`${styles.card} rounded-xl overflow-hidden`}
                 >
                   <button
-                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                    onClick={() => handleFaqClick(item.question)}
                     className="w-full flex items-center justify-between p-6 text-left"
                   >
                     <h3

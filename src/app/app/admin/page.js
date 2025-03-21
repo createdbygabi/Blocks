@@ -5,6 +5,29 @@ import { useUser } from "@/hooks/useUser";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js";
+import { Line, Doughnut } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const ADMIN_USER_ID = "911d26f9-2fe3-4165-9659-2cd038471795";
 
@@ -12,6 +35,7 @@ export default function AdminPage() {
   const { user } = useUser();
   const router = useRouter();
   const [businesses, setBusinesses] = useState([]);
+  const [analyticsEvents, setAnalyticsEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openBusinessId, setOpenBusinessId] = useState(null);
 
@@ -22,24 +46,128 @@ export default function AdminPage() {
     }
 
     if (user?.id === ADMIN_USER_ID) {
-      fetchBusinesses();
+      fetchData();
     }
   }, [user]);
 
-  const fetchBusinesses = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
-        .from("businesses")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const [businessesResponse, analyticsResponse] = await Promise.all([
+        supabase
+          .from("businesses")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("analytics_events")
+          .select("*")
+          .order("created_at", { ascending: true }),
+      ]);
 
-      if (error) throw error;
-      setBusinesses(data);
+      if (businessesResponse.error) throw businessesResponse.error;
+      if (analyticsResponse.error) throw analyticsResponse.error;
+
+      setBusinesses(businessesResponse.data);
+      setAnalyticsEvents(analyticsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getBusinessAnalytics = (businessId) => {
+    const businessEvents = analyticsEvents.filter(
+      (event) => event.business_id === businessId
+    );
+
+    // Get unique sessions
+    const uniqueSessions = new Set(
+      businessEvents.map((event) => event.session_id)
+    ).size;
+
+    // Calculate form submissions
+    const formSubmissions = businessEvents.filter(
+      (event) => event.event_name === "form_submit"
+    ).length;
+
+    // Calculate conversion rate
+    const conversionRate =
+      uniqueSessions > 0 ? (formSubmissions / uniqueSessions) * 100 : 0;
+
+    // Calculate bounce rate (sessions with no meaningful interactions)
+    const engagementEvents = ["form_submit", "scroll_depth"];
+
+    const sessionsMap = new Map();
+    businessEvents.forEach((event) => {
+      if (engagementEvents.includes(event.event_name)) {
+        if (!sessionsMap.has(event.session_id)) {
+          sessionsMap.set(event.session_id, 1);
+        } else {
+          sessionsMap.set(
+            event.session_id,
+            sessionsMap.get(event.session_id) + 1
+          );
+        }
+      }
+    });
+
+    const engagedSessions = sessionsMap.size;
+    const bounceRate =
+      uniqueSessions > 0
+        ? ((uniqueSessions - engagedSessions) / uniqueSessions) * 100
+        : 0;
+
+    // Calculate average session time
+    const sessionDurations = businessEvents
+      .filter((event) => event.event_name === "session_end")
+      .map((event) => event.properties?.session_duration || 0);
+    const avgSessionTime =
+      sessionDurations.length > 0
+        ? sessionDurations.reduce((a, b) => a + b, 0) /
+          sessionDurations.length /
+          1000
+        : 0;
+
+    // Get daily sessions data for chart
+    const dailySessions = {};
+    businessEvents
+      .filter((event) => event.event_name === "session_start")
+      .forEach((event) => {
+        const date = new Date(event.created_at).toLocaleDateString();
+        dailySessions[date] = (dailySessions[date] || 0) + 1;
+      });
+
+    return {
+      uniqueVisitors: uniqueSessions,
+      conversionRate: conversionRate.toFixed(1),
+      bounceRate: bounceRate.toFixed(1),
+      avgSessionTime: avgSessionTime.toFixed(1),
+      dailyVisitorsData: {
+        labels: Object.keys(dailySessions),
+        datasets: [
+          {
+            label: "Sessions",
+            data: Object.values(dailySessions),
+            borderColor: "#3b82f6",
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            tension: 0.4,
+          },
+        ],
+      },
+      metricsData: {
+        labels: ["Converted", "Bounced", "Engaged"],
+        datasets: [
+          {
+            data: [
+              conversionRate,
+              bounceRate,
+              100 - bounceRate - conversionRate,
+            ],
+            backgroundColor: ["#22c55e", "#ef4444", "#3b82f6"],
+          },
+        ],
+      },
+    };
   };
 
   const toggleBusiness = (businessId) => {
@@ -156,118 +284,235 @@ export default function AdminPage() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden border-t border-gray-800"
                   >
-                    <div className="p-6 grid md:grid-cols-2 gap-6">
-                      {/* Business Info Column */}
+                    <div className="p-6 space-y-6">
+                      {/* Analytics Dashboard */}
                       <div className="space-y-4">
                         <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                          Business Info
-                        </h3>
-                        <div className="grid gap-4">
-                          <InfoItem label="Niche" value={business.niche} />
-                          <InfoItem label="Product" value={business.product} />
-                          <InfoItem
-                            label="Main Feature"
-                            value={business.main_feature}
-                          />
-                          <InfoItem
-                            label="Target Audience"
-                            value={business.target_audience}
-                          />
-                          <InfoItem
-                            label="Pain Point"
-                            value={business.pain_point}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Branding & Pricing Column */}
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                          Branding & Pricing
+                          Analytics Dashboard
                         </h3>
 
-                        {/* Theme */}
-                        {business.theme && (
-                          <div className="bg-black/30 rounded-lg p-4">
-                            <p className="text-gray-400 mb-2">Theme Colors</p>
-                            <div className="flex gap-2">
-                              {Object.entries(business.theme).map(
-                                ([key, color]) => (
-                                  <div key={key} className="text-sm">
-                                    <div
-                                      className="w-8 h-8 rounded-lg mb-1"
-                                      style={{ backgroundColor: color }}
-                                    />
-                                    <p className="text-xs text-gray-500">
-                                      {key}
+                        {/* Metrics Grid */}
+                        {analyticsEvents.length > 0 &&
+                          (() => {
+                            const analytics = getBusinessAnalytics(business.id);
+                            return (
+                              <>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                  <div className="bg-black/30 rounded-lg p-4">
+                                    <p className="text-gray-400 text-sm">
+                                      Unique Visitors
+                                    </p>
+                                    <p className="text-2xl font-bold text-white mt-1">
+                                      {analytics.uniqueVisitors}
                                     </p>
                                   </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
+                                  <div className="bg-black/30 rounded-lg p-4">
+                                    <p className="text-gray-400 text-sm">
+                                      Conversion Rate
+                                    </p>
+                                    <p className="text-2xl font-bold text-green-500 mt-1">
+                                      {analytics.conversionRate}%
+                                    </p>
+                                  </div>
+                                  <div className="bg-black/30 rounded-lg p-4">
+                                    <p className="text-gray-400 text-sm">
+                                      Bounce Rate
+                                    </p>
+                                    <p className="text-2xl font-bold text-red-500 mt-1">
+                                      {analytics.bounceRate}%
+                                    </p>
+                                  </div>
+                                  <div className="bg-black/30 rounded-lg p-4">
+                                    <p className="text-gray-400 text-sm">
+                                      Avg. Session Time
+                                    </p>
+                                    <p className="text-2xl font-bold text-blue-500 mt-1">
+                                      {analytics.avgSessionTime}s
+                                    </p>
+                                  </div>
+                                </div>
 
-                        {/* Pricing Plan */}
-                        {business.pricing_plans && (
-                          <div className="bg-black/30 rounded-lg p-4">
-                            <p className="text-gray-400 mb-2">Pricing Plan</p>
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium">
-                                  {business.pricing_plans.name}
-                                </span>
-                                <span className="text-blue-400">
-                                  ${business.pricing_plans.price}/
-                                  {business.pricing_plans.billingPeriod}
-                                </span>
+                                {/* Charts */}
+                                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                                  <div className="bg-black/30 rounded-lg p-4">
+                                    <h4 className="text-sm font-medium text-gray-400 mb-4">
+                                      Visitors Over Time
+                                    </h4>
+                                    <div className="h-64">
+                                      <Line
+                                        data={analytics.dailyVisitorsData}
+                                        options={{
+                                          responsive: true,
+                                          maintainAspectRatio: false,
+                                          scales: {
+                                            y: {
+                                              beginAtZero: true,
+                                              grid: {
+                                                color:
+                                                  "rgba(255, 255, 255, 0.1)",
+                                              },
+                                              ticks: { color: "#9ca3af" },
+                                            },
+                                            x: {
+                                              grid: {
+                                                color:
+                                                  "rgba(255, 255, 255, 0.1)",
+                                              },
+                                              ticks: { color: "#9ca3af" },
+                                            },
+                                          },
+                                          plugins: {
+                                            legend: {
+                                              labels: { color: "#9ca3af" },
+                                            },
+                                          },
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="bg-black/30 rounded-lg p-4">
+                                    <h4 className="text-sm font-medium text-gray-400 mb-4">
+                                      User Behavior
+                                    </h4>
+                                    <div className="h-64">
+                                      <Doughnut
+                                        data={analytics.metricsData}
+                                        options={{
+                                          responsive: true,
+                                          maintainAspectRatio: false,
+                                          plugins: {
+                                            legend: {
+                                              position: "bottom",
+                                              labels: { color: "#9ca3af" },
+                                            },
+                                          },
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
+                      </div>
+
+                      {/* Existing Business Info and Branding Sections */}
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {/* Business Info Column */}
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                            Business Info
+                          </h3>
+                          <div className="grid gap-4">
+                            <InfoItem label="Niche" value={business.niche} />
+                            <InfoItem
+                              label="Product"
+                              value={business.product}
+                            />
+                            <InfoItem
+                              label="Main Feature"
+                              value={business.main_feature}
+                            />
+                            <InfoItem
+                              label="Target Audience"
+                              value={business.target_audience}
+                            />
+                            <InfoItem
+                              label="Pain Point"
+                              value={business.pain_point}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Branding & Pricing Column */}
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                            Branding & Pricing
+                          </h3>
+
+                          {/* Theme */}
+                          {business.theme && (
+                            <div className="bg-black/30 rounded-lg p-4">
+                              <p className="text-gray-400 mb-2">Theme Colors</p>
+                              <div className="flex gap-2">
+                                {Object.entries(business.theme).map(
+                                  ([key, color]) => (
+                                    <div key={key} className="text-sm">
+                                      <div
+                                        className="w-8 h-8 rounded-lg mb-1"
+                                        style={{ backgroundColor: color }}
+                                      />
+                                      <p className="text-xs text-gray-500">
+                                        {key}
+                                      </p>
+                                    </div>
+                                  )
+                                )}
                               </div>
-                              <p className="text-sm text-gray-400">
-                                {business.pricing_plans.description}
-                              </p>
-                              {business.pricing_plans.features && (
-                                <ul className="text-sm text-gray-300 list-disc list-inside">
-                                  {business.pricing_plans.features.map(
-                                    (feature, index) => (
-                                      <li key={index}>{feature}</li>
-                                    )
-                                  )}
-                                </ul>
-                              )}
-                              {business.pricing_plans.limitations && (
-                                <p className="text-sm text-yellow-500 mt-2">
-                                  Limit: {business.pricing_plans.limitations}
-                                </p>
-                              )}
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        {/* Integration Status */}
-                        <div className="bg-black/30 rounded-lg p-4">
-                          <p className="text-gray-400 mb-2">
-                            Integration Status
-                          </p>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-2 h-2 rounded-full ${
-                                  business.stripe_account_id
-                                    ? "bg-green-500"
-                                    : "bg-red-500"
-                                }`}
-                              />
-                              <span className="text-sm">Stripe</span>
+                          {/* Pricing Plan */}
+                          {business.pricing_plans && (
+                            <div className="bg-black/30 rounded-lg p-4">
+                              <p className="text-gray-400 mb-2">Pricing Plan</p>
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium">
+                                    {business.pricing_plans.name}
+                                  </span>
+                                  <span className="text-blue-400">
+                                    ${business.pricing_plans.price}/
+                                    {business.pricing_plans.billingPeriod}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-400">
+                                  {business.pricing_plans.description}
+                                </p>
+                                {business.pricing_plans.features && (
+                                  <ul className="text-sm text-gray-300 list-disc list-inside">
+                                    {business.pricing_plans.features.map(
+                                      (feature, index) => (
+                                        <li key={index}>{feature}</li>
+                                      )
+                                    )}
+                                  </ul>
+                                )}
+                                {business.pricing_plans.limitations && (
+                                  <p className="text-sm text-yellow-500 mt-2">
+                                    Limit: {business.pricing_plans.limitations}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-2 h-2 rounded-full ${
-                                  business.ig_account_id
-                                    ? "bg-green-500"
-                                    : "bg-red-500"
-                                }`}
-                              />
-                              <span className="text-sm">Instagram</span>
+                          )}
+
+                          {/* Integration Status */}
+                          <div className="bg-black/30 rounded-lg p-4">
+                            <p className="text-gray-400 mb-2">
+                              Integration Status
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    business.stripe_account_id
+                                      ? "bg-green-500"
+                                      : "bg-red-500"
+                                  }`}
+                                />
+                                <span className="text-sm">Stripe</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    business.ig_account_id
+                                      ? "bg-green-500"
+                                      : "bg-red-500"
+                                  }`}
+                                />
+                                <span className="text-sm">Instagram</span>
+                              </div>
                             </div>
                           </div>
                         </div>

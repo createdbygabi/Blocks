@@ -773,6 +773,10 @@ export default function SocialMarketingPage() {
 
       // If successful, update or create entry in social_content table
       if (data.url) {
+        // Add timestamp to video URL to prevent caching
+        const videoUrl = new URL(data.url);
+        videoUrl.searchParams.set("t", Date.now());
+
         const contentData = {
           business_id: businessId,
           scheduled_for: new Date(date + "T12:00:00Z").toISOString(),
@@ -780,7 +784,7 @@ export default function SocialMarketingPage() {
           content_type: "reel",
           content: {
             video: {
-              url: data.url,
+              url: videoUrl.toString(),
               thumbnail: null,
             },
           },
