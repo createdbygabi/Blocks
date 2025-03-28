@@ -300,7 +300,7 @@ export default function AdminPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                   <div className="bg-black/30 rounded-lg p-4">
                                     <p className="text-gray-400 text-sm">
-                                      Unique Visitors
+                                      Videoisitors
                                     </p>
                                     <p className="text-2xl font-bold text-white mt-1">
                                       {analytics.uniqueVisitors}
@@ -308,7 +308,7 @@ export default function AdminPage() {
                                   </div>
                                   <div className="bg-black/30 rounded-lg p-4">
                                     <p className="text-gray-400 text-sm">
-                                      Conversion Rate
+                                      Conversion Rate (form submissions)
                                     </p>
                                     <p className="text-2xl font-bold text-green-500 mt-1">
                                       {analytics.conversionRate}%

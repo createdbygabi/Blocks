@@ -491,6 +491,20 @@ function PendingApprovalsSection({
     );
   };
 
+  // Add keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === "ArrowLeft") {
+        handlePrevious();
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [currentIndex, pendingApprovals.length]);
+
   return (
     <div className="bg-gradient-to-br from-gray-900/50 via-gray-800/30 to-gray-900/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50 shadow-2xl">
       <div className="flex items-center justify-between mb-4">
@@ -504,10 +518,10 @@ function PendingApprovalsSection({
       </div>
 
       <div className="relative">
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Moved closer to video */}
         <button
           onClick={handlePrevious}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 p-2 bg-gray-900/80 rounded-full text-white hover:bg-gray-800/80 transition-colors"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-900/80 rounded-full text-white hover:bg-gray-800/80 transition-colors border border-gray-700/50"
           disabled={pendingApprovals.length <= 1}
         >
           <svg
@@ -527,7 +541,7 @@ function PendingApprovalsSection({
 
         <button
           onClick={handleNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 p-2 bg-gray-900/80 rounded-full text-white hover:bg-gray-800/80 transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-gray-900/80 rounded-full text-white hover:bg-gray-800/80 transition-colors border border-gray-700/50"
           disabled={pendingApprovals.length <= 1}
         >
           <svg

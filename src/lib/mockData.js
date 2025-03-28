@@ -1,15 +1,26 @@
 export const mockData = {
   onboarding: {
     business: {
-      niche: "AI-Powered Coding Assistance & Prompt Optimization",
-      services: ["AI wrapper for Cursor to enhance the prompts"],
+      niche: "AI-Generated Website Copywriting & Content Optimization",
+      services: ["AI-generated website copywriting", "Content optimization"],
       uniqueValue:
-        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor",
+        "Write landing page copywriting that converts and engages your audience",
       painPoint:
-        "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor (developer prompts)",
-      goals: ["Save money, save time"],
-      targetAudience: "Developers that use Cursor to generate code",
+        "Writing engaging and SEO-optimized landing page copywriting can be time-consuming and challenging",
+      goals: ["Increase conversions", "Improve SEO"],
+      targetAudience:
+        "Entrepreneurs and marketers who need high-converting landing pages without coding",
     },
+    // business: {
+    //   niche: "AI-Powered Coding Assistance & Prompt Optimization",
+    //   services: ["AI wrapper for Cursor to enhance the prompts"],
+    //   uniqueValue:
+    //     "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor",
+    //   painPoint:
+    //     "Don't waste prompts credits on bad prompts. Refine your prompts with AI before sending them to Cursor (developer prompts)",
+    //   goals: ["Save money, save time"],
+    //   targetAudience: "Developers that use Cursor to generate code",
+    // },
     // business: {
     //   niche: "Content Repurposing & Audience Growth",
     //   services: [
