@@ -1,15 +1,14 @@
 export const mockData = {
   onboarding: {
     business: {
-      niche: "AI-Generated Website Copywriting & Content Optimization",
-      services: ["AI-generated website copywriting", "Content optimization"],
-      uniqueValue:
-        "Write landing page copywriting that converts and engages your audience",
+      niche: "Smart Domain Name Generation & Branding",
+      services: ["AI-generate domain names that fits the audience"],
+      uniqueValue: "Generate domain names that fits the audience",
       painPoint:
-        "Writing engaging and SEO-optimized landing page copywriting can be time-consuming and challenging",
-      goals: ["Increase conversions", "Improve SEO"],
+        "Finding a right domain name that is available and fits the audience can be time-consuming and challenging",
+      goals: ["Save time", "Increase conversion rates"],
       targetAudience:
-        "Entrepreneurs and marketers who need high-converting landing pages without coding",
+        "Entrepreneurs and marketers who need a domain name that fits their audience",
     },
     // business: {
     //   niche: "AI-Powered Coding Assistance & Prompt Optimization",

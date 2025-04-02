@@ -123,10 +123,10 @@ export function LandingPage({ data }) {
   };
 
   // Track FAQ interactions
-  const handleFaqClick = (question) => {
+  const handleFaqClick = (index) => {
     if (analytics) {
       analytics.track("faq_interaction", {
-        question: question,
+        question: faqItems[index].question,
       });
     }
     setOpenFaq(openFaq === index ? null : index);
@@ -563,7 +563,7 @@ export function LandingPage({ data }) {
                       ))}
                     </div>
                     <p className={`text-sm ${styles.text.secondary}`}>
-                      Loved by <span className="font-bold">250+ </span>
+                      Loved by <span className="font-bold">150+ </span>
                       {hero?.userType || "small businesses"}
                     </p>
                   </div>
@@ -1057,7 +1057,7 @@ export function LandingPage({ data }) {
                   className={`${styles.card} rounded-xl overflow-hidden`}
                 >
                   <button
-                    onClick={() => handleFaqClick(item.question)}
+                    onClick={() => handleFaqClick(index)}
                     className="w-full flex items-center justify-between p-6 text-left"
                   >
                     <h3

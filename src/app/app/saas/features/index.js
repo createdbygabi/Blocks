@@ -10,6 +10,7 @@ export const businessFeatures = {
   mijurn: dynamic(() => import("./mijurn")),
   cursage: dynamic(() => import("./cursage")),
   copyzen: dynamic(() => import("./copyzen")),
+  namejet: dynamic(() => import("./namejet")),
 };
 
 // Helper to get feature by subdomain
