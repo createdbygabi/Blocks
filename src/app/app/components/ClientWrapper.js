@@ -17,6 +17,10 @@ export function ClientWrapper({ children }) {
     return <AnimatedWrapper>{children}</AnimatedWrapper>;
   }
 
+  if (pathname === "/") {
+    return <AnimatedWrapper>{children}</AnimatedWrapper>;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -25,9 +29,13 @@ export function ClientWrapper({ children }) {
     );
   }
 
+  if (isNoNavPage) {
+    return <AnimatedWrapper>{children}</AnimatedWrapper>;
+  }
+
   return (
     <>
-      <main
+      <div
         className={`w-full min-h-screen ${
           isNoNavPage
             ? ""
@@ -35,7 +43,7 @@ export function ClientWrapper({ children }) {
         }`}
       >
         <AnimatedWrapper>{children}</AnimatedWrapper>
-      </main>
+      </div>
       {/* <AppNotifications /> */}
     </>
   );
