@@ -11,6 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Image from "next/image";
+import JSZip from "jszip";
 
 const ADMIN_USER_ID = "911d26f9-2fe3-4165-9659-2cd038471795";
 
@@ -378,24 +379,49 @@ function GenerateContentSection({
     }
   };
 
-  const handleDownloadAllMP4s = (date) => {
-    const contentForDate = [...pendingContent, ...needsApprovalContent].filter(
-      (content) => formatDate(new Date(content.scheduled_for)) === date
-    );
+  const handleDownloadAllMP4s = async (date) => {
+    // Get all content for the selected date
+    const contentForDate = [
+      ...pendingContent,
+      ...needsApprovalContent,
+      ...publishedContent,
+    ].filter((content) => formatDate(new Date(content.scheduled_for)) === date);
 
-    contentForDate.forEach((content) => {
+    if (contentForDate.length === 0) {
+      alert("No videos found for this date!");
+      return;
+    }
+
+    // Download videos one by one
+    for (const content of contentForDate) {
       if (content.content?.video?.url) {
-        const link = document.createElement("a");
-        link.href = content.content.video.url;
-        const fileName = `${content.businesses.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")}-${date}.mp4`;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+          // Create filename
+          const fileName = `${content.businesses.name
+            .toLowerCase()
+            .replace(/\s+/g, "-")}-${date}-${Date.now()}.mp4`;
+
+          // Create and trigger download directly from URL
+          const link = document.createElement("a");
+          link.href = content.content.video.url;
+          link.download = fileName;
+          link.target = "_blank"; // Open in new tab if direct download fails
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Small delay between downloads
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(
+            `Failed to download video for ${content.businesses.name}:`,
+            error
+          );
+          // If download fails, open in new tab as fallback
+          window.open(content.content.video.url, "_blank");
+        }
       }
-    });
+    }
   };
 
   return (
@@ -413,6 +439,25 @@ function GenerateContentSection({
             className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-blue-400 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-blue-500/20"
           >
             Generate Today's Reels
+          </button>
+          <button
+            onClick={() => handleDownloadAllMP4s(today)}
+            className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 text-emerald-400 rounded-lg transition-all duration-300 transform hover:scale-[1.02] border border-emerald-500/20 flex items-center justify-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Download Today's Reels
           </button>
         </div>
 

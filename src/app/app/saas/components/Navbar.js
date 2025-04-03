@@ -11,10 +11,10 @@ export function Navbar({ styles, business, onCtaClick }) {
   if (!business) return null;
 
   const navItems = [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "Reviews", href: "#reviews" },
-    { name: "FAQ", href: "#faq" },
+    { name: "Features", href: "/" },
+    { name: "Pricing", href: "/" },
+    { name: "Reviews", href: "/" },
+    { name: "FAQ", href: "/" },
   ];
 
   return (
@@ -87,10 +87,8 @@ export function Navbar({ styles, business, onCtaClick }) {
               >
                 Login
               </Link>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={onCtaClick}
+              <Link
+                href="/"
                 className={`px-5 py-2.5 rounded-xl text-sm font-medium
                   ${styles.button?.primary || "bg-blue-600 text-white"} 
                   transition-all duration-200
@@ -99,7 +97,7 @@ export function Navbar({ styles, business, onCtaClick }) {
                   active:opacity-90`}
               >
                 Get started
-              </motion.button>
+              </Link>
             </div>
           </div>
 
@@ -178,12 +176,9 @@ export function Navbar({ styles, business, onCtaClick }) {
                   >
                     Login
                   </Link>
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onCtaClick();
-                    }}
+                  <Link
+                    href="/"
+                    onClick={() => setIsMenuOpen(false)}
                     className={`w-full px-4 py-3 rounded-xl text-base font-medium
                       ${styles.button?.primary || "bg-blue-600 text-white"}
                       transition-all duration-200
@@ -192,7 +187,7 @@ export function Navbar({ styles, business, onCtaClick }) {
                       active:opacity-90`}
                   >
                     Get started
-                  </motion.button>
+                  </Link>
                 </div>
               </div>
             </motion.div>

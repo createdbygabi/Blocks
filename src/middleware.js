@@ -71,6 +71,30 @@ export async function middleware(request) {
       });
     }
 
+    // Handle tool API routes
+    if (pathname.startsWith("/app/saas/tools/api/")) {
+      console.log("🛠️ Rewriting tool API route to:", pathname);
+      return NextResponse.rewrite(new URL(pathname, baseUrl), {
+        headers: requestHeaders,
+      });
+    }
+
+    // Handle tool routes
+    if (pathname.startsWith("/tools/")) {
+      const toolPath = pathname.replace("/tools/", "");
+      console.log(
+        "🛠️ Rewriting tool route to:",
+        `/app/saas/tools/${subdomain}/${toolPath}`
+      );
+      const toolUrl = new URL(
+        `/app/saas/tools/${subdomain}/${toolPath}`,
+        baseUrl
+      );
+      return NextResponse.rewrite(toolUrl, {
+        headers: requestHeaders,
+      });
+    }
+
     // Handle auth callback
     if (pathname.startsWith("/auth/")) {
       const authUrl = new URL(`/app/saas${pathname}`, baseUrl);
