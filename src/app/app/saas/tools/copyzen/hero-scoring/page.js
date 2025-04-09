@@ -544,13 +544,13 @@ export default function HeroScoringPage() {
                 Get AI-powered copywriting that converts visitors into customers
               </p>
 
-              <Link
-                href="https://www.copyzen.joinblocks.me/"
+              <a
+                href="https://copyzen.joinblocks.me"
                 className={`${styles.button.primary} py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg font-medium flex items-center justify-center gap-2 group mx-auto w-fit`}
               >
                 Start Your Website Rewrite
                 <FiArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </a>
             </div>
           </div>
         </motion.div>
