@@ -50,6 +50,14 @@ export function LandingPage({ data }) {
   const featuresSectionRef = useRef(null);
   const faqSectionRef = useRef(null);
 
+  // Add a flag to track if component is mounted
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
   // Track session start time and setup tracking
   useEffect(() => {
     if (!analytics) return;
@@ -296,6 +304,10 @@ export function LandingPage({ data }) {
       <main className={`w-full ${styles.layout.background}`}>
         {/* Hero Section */}
         <motion.section
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
           className={`relative min-h-[calc(100vh-80px)] flex items-center justify-center ${styles.layout.surface}`}
         >
           {/* Background effects */}
@@ -577,7 +589,13 @@ export function LandingPage({ data }) {
         {/* <Testimonials styles={styles} testimonial={data.testimonials} /> */}
 
         {/* Pain Points Section */}
-        <motion.section className={`relative py-20 ${styles.layout.surface}`}>
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`relative py-20 ${styles.layout.surface}`}
+        >
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
           <div className="relative max-w-6xl mx-auto px-4">
             {/* Section Header */}
@@ -711,6 +729,10 @@ export function LandingPage({ data }) {
         {/* Benefits & Features Section */}
         <motion.section
           ref={featuresSectionRef}
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
           className={`relative py-24 ${styles.layout.surface}`}
           id="features"
         >
@@ -860,7 +882,13 @@ export function LandingPage({ data }) {
         </motion.section>
 
         {/* How It Works Section */}
-        <motion.section className={`relative py-24 ${styles.layout.surface}`}>
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`relative py-24 ${styles.layout.surface}`}
+        >
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
           <div className="relative max-w-6xl mx-auto px-4">
             {/* Section Header */}
@@ -1016,6 +1044,10 @@ export function LandingPage({ data }) {
 
         <section
           ref={pricingSectionRef}
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
           className={`py-24 ${styles.layout.surface}`}
           id="pricing"
         >
@@ -1033,6 +1065,10 @@ export function LandingPage({ data }) {
         {/* FAQ Section */}
         <section
           ref={faqSectionRef}
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
           className={`py-24 ${styles.layout.surface}`}
           id="faq"
         >
@@ -1087,7 +1123,13 @@ export function LandingPage({ data }) {
         </section>
 
         {/* Call to Action Section */}
-        <motion.section className={`py-32 md:py-40 ${styles.layout.surface}`}>
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={isMounted ? { opacity: 1 } : { opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`py-32 md:py-40 ${styles.layout.surface}`}
+        >
           <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

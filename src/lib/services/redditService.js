@@ -208,4 +208,223 @@ export class RedditService {
       throw error;
     }
   }
+
+  async getRelatedSubreddits(subredditName, limit = 10) {
+    try {
+      const authToken = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/related-subreddits`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ subredditName, limit }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch related subreddits: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+      return data.relatedSubreddits || [];
+    } catch (error) {
+      console.error("Error getting related subreddits:", error);
+      return [];
+    }
+  }
+
+  async getUserRecentActivity(username) {
+    try {
+      const authToken = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/user-activity`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.subreddits || [];
+    } catch (error) {
+      console.error("Error getting user activity:", error);
+      return [];
+    }
+  }
+
+  async generateSubredditGraphData(subredditName, depth = 2) {
+    try {
+      const nodes = new Set();
+      const links = new Set();
+
+      const processSubreddit = async (name, currentDepth = 0) => {
+        if (currentDepth >= depth || nodes.has(name)) return;
+
+        nodes.add(name);
+        const related = await this.getRelatedSubreddits(name);
+
+        for (const relatedSub of related) {
+          nodes.add(relatedSub.name);
+          links.add(
+            JSON.stringify({
+              source: name,
+              target: relatedSub.name,
+              value: relatedSub.strength,
+            })
+          );
+
+          if (currentDepth < depth - 1) {
+            await processSubreddit(relatedSub.name, currentDepth + 1);
+          }
+        }
+      };
+
+      await processSubreddit(subredditName);
+
+      return {
+        nodes: Array.from(nodes).map((name) => ({
+          id: name,
+          name: name,
+          group: 1,
+        })),
+        links: Array.from(links).map((link) => JSON.parse(link)),
+      };
+    } catch (error) {
+      console.error("Error generating graph data:", error);
+      throw error;
+    }
+  }
+
+  async findMostRelevantSubreddits(businessInfo, limit = 6) {
+    try {
+      // Extract keywords from business info
+      const keywords = [
+        businessInfo.name,
+        businessInfo.industry,
+        ...(businessInfo.target_audience?.split(",").map((k) => k.trim()) ||
+          []),
+        ...(businessInfo.keywords?.split(",").map((k) => k.trim()) || []),
+      ].filter(Boolean);
+
+      // Search for subreddits using keywords
+      const subredditPromises = keywords.map((keyword) =>
+        this.searchSubreddits(keyword, 10)
+      );
+      const subredditResults = await Promise.all(subredditPromises);
+
+      // Flatten and deduplicate results
+      const uniqueSubreddits = new Map();
+      subredditResults.flat().forEach((subreddit) => {
+        if (!uniqueSubreddits.has(subreddit.name)) {
+          uniqueSubreddits.set(subreddit.name, {
+            ...subreddit,
+            relevanceScore: 0,
+          });
+        }
+      });
+
+      // Calculate relevance scores
+      for (const subreddit of uniqueSubreddits.values()) {
+        // Get related subreddits to analyze user overlap
+        const related = await this.getRelatedSubreddits(subreddit.name, 5);
+
+        // Calculate relevance score based on:
+        // 1. Subscriber count (weight: 0.3)
+        // 2. Recent activity (weight: 0.3)
+        // 3. User overlap with other relevant subreddits (weight: 0.4)
+        const subscriberScore =
+          Math.min(subreddit.subscribers / 1000000, 1) * 0.3;
+        const activityScore = Math.min(subreddit.recentPosts / 100, 1) * 0.3;
+        const overlapScore =
+          related.reduce((acc, rel) => acc + rel.strength, 0) * 0.4;
+
+        subreddit.relevanceScore =
+          subscriberScore + activityScore + overlapScore;
+      }
+
+      // Sort by relevance score and return top results
+      return Array.from(uniqueSubreddits.values())
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, limit);
+    } catch (error) {
+      console.error("Error finding relevant subreddits:", error);
+      throw error;
+    }
+  }
+
+  async getSubredditInfo(subredditName) {
+    try {
+      const authToken = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/subreddit-info`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ subredditName }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch subreddit info: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        name: subredditName,
+        title: data.title || subredditName,
+        description: data.description || "No description available",
+        subscribers: data.subscribers || 0,
+        recentPosts: data.recentPosts || 0,
+        isNsfw: data.over18 || false,
+        created: data.created || null,
+        icon: data.icon_img || data.community_icon || null,
+        url: data.url || `https://reddit.com/r/${subredditName}`,
+      };
+    } catch (error) {
+      console.error("Error fetching subreddit info:", error);
+      return {
+        name: subredditName,
+        title: subredditName,
+        description: "Unable to load details",
+        subscribers: 0,
+        recentPosts: 0,
+        isNsfw: false,
+        created: null,
+        icon: null,
+        url: `https://reddit.com/r/${subredditName}`,
+      };
+    }
+  }
+
+  async getPosts(subredditName, options = {}) {
+    const { limit = 30, sort = "hot", time = "day", after = null } = options;
+
+    const response = await fetch(`/api/reddit/posts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({
+        subredditName,
+        limit,
+        sort,
+        time,
+        after,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch posts");
+    }
+
+    return response.json();
+  }
 }

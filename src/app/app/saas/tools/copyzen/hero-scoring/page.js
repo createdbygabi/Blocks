@@ -369,8 +369,11 @@ export default function HeroScoringPage() {
 
                 {/* Headlines First - Made More Prominent */}
                 <motion.div
+                  key="headlines"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
                   className={`${styles.card} p-6 sm:p-8 rounded-2xl`}
                 >
                   <div className="flex items-center gap-3 mb-4 sm:mb-6">
@@ -408,8 +411,11 @@ export default function HeroScoringPage() {
 
                 {/* Subtitle Suggestions */}
                 <motion.div
+                  key="subtitles"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
                   className={`${styles.card} p-6 sm:p-8 rounded-2xl`}
                 >
                   <div className="flex items-center gap-3 mb-4 sm:mb-6">
@@ -447,8 +453,11 @@ export default function HeroScoringPage() {
 
                 {/* Quick Analysis - Improved Layout */}
                 <motion.div
+                  key="quick-analysis"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
                   className={`${styles.card} p-6 sm:p-8 rounded-2xl`}
                 >
                   <h3
@@ -485,8 +494,11 @@ export default function HeroScoringPage() {
               </>
             ) : (
               <motion.div
+                key="ready-state"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 className={`${styles.card} p-6 sm:p-8 rounded-2xl text-center`}
               >
                 <FiTarget
@@ -533,7 +545,7 @@ export default function HeroScoringPage() {
               </p>
 
               <Link
-                href="/"
+                href="https://copyzen.joinblocks.me/"
                 className={`${styles.button.primary} py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg font-medium flex items-center justify-center gap-2 group mx-auto w-fit`}
               >
                 Start Your Website Rewrite

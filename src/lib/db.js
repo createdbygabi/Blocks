@@ -187,6 +187,12 @@ export async function getUserBusiness(userId) {
     .single();
 
   if (error) throw error;
+
+  // Transform snake_case to camelCase for specific fields
+  if (data) {
+    data.mainFeature = data.main_feature;
+  }
+
   return data;
 }
 
@@ -200,47 +206,38 @@ export async function saveBusiness(user_id, updates) {
   );
 
   if (!user_id) {
-    console.error("No user_id provided to saveBusiness");
     throw new Error("User ID is required");
+  }
+
+  // Transform camelCase to snake_case for database
+  const dbUpdates = { ...updates };
+  if (updates.mainFeature) {
+    dbUpdates.main_feature = updates.mainFeature;
+    delete dbUpdates.mainFeature;
   }
 
   try {
     // First try to update existing business
-    const { data: existingBusiness, error: getError } = await supabase
+    const { data, error: updateError } = await supabase
       .from("businesses")
-      .select("*")
+      .update({
+        ...dbUpdates,
+        updated_at: new Date().toISOString(),
+      })
       .eq("user_id", user_id)
-      .maybeSingle();
+      .select()
+      .single();
 
-    console.log("Existing business check:", { existingBusiness, getError });
-
-    if (existingBusiness) {
-      // Update existing business
-      const { data, error: updateError } = await supabase
-        .from("businesses")
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user_id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error("Failed to update business:", updateError);
-        throw updateError;
-      }
-
-      console.log("Successfully updated business:", data);
-      return data;
-    } else {
-      // Create new business
+    // If no business exists, create a new one
+    if (updateError && updateError.code === "PGRST116") {
+      console.log("No existing business found, creating new one");
       const { data: newBusiness, error: createError } = await supabase
         .from("businesses")
         .insert([
           {
             user_id,
-            ...updates,
+            ...dbUpdates,
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
         ])
@@ -252,16 +249,27 @@ export async function saveBusiness(user_id, updates) {
         throw createError;
       }
 
-      console.log("Successfully created new business:", newBusiness);
+      // Transform snake_case to camelCase for response
+      if (newBusiness) {
+        newBusiness.mainFeature = newBusiness.main_feature;
+      }
+
       return newBusiness;
     }
+
+    if (updateError) {
+      console.error("Failed to update business:", updateError);
+      throw updateError;
+    }
+
+    // Transform snake_case to camelCase for response
+    if (data) {
+      data.mainFeature = data.main_feature;
+    }
+
+    return data;
   } catch (error) {
-    console.error("Unexpected error in saveBusiness:", {
-      error_message: error.message,
-      error_stack: error.stack,
-      user_id,
-      updates,
-    });
+    console.error("Error in saveBusiness:", error);
     throw error;
   }
 }

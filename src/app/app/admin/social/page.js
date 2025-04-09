@@ -905,6 +905,51 @@ export default function SocialMarketingPage() {
   const handlePublishContent = async (contentId) => {
     try {
       setIsGenerating(true);
+
+      // Get the content before updating
+      const { data: content } = await supabase
+        .from("social_content")
+        .select("*")
+        .eq("id", contentId)
+        .single();
+
+      if (!content) throw new Error("Content not found");
+
+      // Delete the video from S3
+      if (content.content?.video?.url) {
+        console.log(
+          "🔄 Attempting to delete video from S3:",
+          content.content.video.url
+        );
+        try {
+          const response = await fetch("/api/social/delete-video", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              videoUrl: content.content.video.url,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            console.error("❌ Failed to delete video from S3:", result.error);
+            throw new Error("Failed to delete video from S3");
+          }
+
+          console.log(
+            "✅ Successfully deleted video from S3:",
+            content.content.video.url
+          );
+        } catch (error) {
+          console.error("❌ Error deleting video:", error);
+          // Continue with publishing even if deletion fails
+        }
+      }
+
+      // Update the content status
       const { error } = await supabase
         .from("social_content")
         .update({
