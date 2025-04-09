@@ -545,7 +545,7 @@ export default function HeroScoringPage() {
               </p>
 
               <Link
-                href="https://copyzen.joinblocks.me/"
+                href="https://www.copyzen.joinblocks.me/"
                 className={`${styles.button.primary} py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg font-medium flex items-center justify-center gap-2 group mx-auto w-fit`}
               >
                 Start Your Website Rewrite
