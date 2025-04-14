@@ -253,6 +253,12 @@ export default function RedditPage() {
   const [postStats, setPostStats] = useState({});
   const [marketingTool, setMarketingTool] = useState("");
   const [savedMarketingTool, setSavedMarketingTool] = useState("");
+  const [filteredSubreddits, setFilteredSubreddits] = useState([]);
+  const [filteringStep, setFilteringStep] = useState(1);
+  const [filteringStatus, setFilteringStatus] = useState("idle");
+  const [subredditCache, setSubredditCache] = useState({});
+  const [karmaTestResults, setKarmaTestResults] = useState({});
+  const [isGenerating, setIsGenerating] = useState(false);
   const redditService = new RedditService();
 
   useEffect(() => {
@@ -311,6 +317,11 @@ export default function RedditPage() {
     setShowSubredditFinder(false);
 
     try {
+      // Clear cache for the previous business
+      if (selectedBusiness) {
+        clearSubredditCache(selectedBusiness);
+      }
+
       // Load saved subreddits data
       await loadSavedSubredditsData(businessId);
 
@@ -334,9 +345,29 @@ export default function RedditPage() {
   const loadSavedSubredditsData = async (businessId) => {
     try {
       setLoadingSaved(true);
+
+      // Check cache first
+      const cacheKey = `saved_subreddits_${businessId}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+
+        // Use cache if it's less than 5 minutes old
+        if (cacheAge < 5 * 60 * 1000) {
+          console.log("📦 Using cached subreddits data");
+          setSavedSubreddits(data.savedSubreddits);
+          setSelectedSubreddits(new Set(data.selectedSubreddits));
+          setSubredditCache(data.subredditCache);
+          setLoadingSaved(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase
         .from("business_subreddits")
-        .select("subreddit_name")
+        .select("subreddit_name, allows_urls, has_good_karma")
         .eq("business_id", businessId)
         .eq("is_selected", true);
 
@@ -353,6 +384,28 @@ export default function RedditPage() {
       // Set the initial state with basic info
       setSavedSubreddits(basicSubreddits);
       setSelectedSubreddits(new Set(data.map((item) => item.subreddit_name)));
+
+      // Initialize the subreddit cache with the loaded states
+      const initialCache = {};
+      data.forEach((item) => {
+        initialCache[item.subreddit_name] = {
+          allowsUrls: item.allows_urls,
+          hasGoodKarma: item.has_good_karma,
+          checked: true,
+        };
+      });
+      setSubredditCache(initialCache);
+
+      // Cache the data
+      const cacheData = {
+        savedSubreddits: basicSubreddits,
+        selectedSubreddits: Array.from(
+          new Set(data.map((item) => item.subreddit_name))
+        ),
+        subredditCache: initialCache,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
 
       // Fetch full details in the background
       const redditService = new RedditService();
@@ -384,13 +437,28 @@ export default function RedditPage() {
       });
 
       const subredditDetails = await Promise.all(detailsPromises);
-      setSavedSubreddits(subredditDetails.filter(Boolean));
+      const updatedSubreddits = subredditDetails.filter(Boolean);
+      setSavedSubreddits(updatedSubreddits);
+
+      // Update cache with full details
+      const updatedCacheData = {
+        ...cacheData,
+        savedSubreddits: updatedSubreddits,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(updatedCacheData));
     } catch (error) {
       console.error("Error loading saved subreddits:", error);
       setError(error.message);
     } finally {
       setLoadingSaved(false);
     }
+  };
+
+  // Add function to clear cache when needed
+  const clearSubredditCache = (businessId) => {
+    const cacheKey = `saved_subreddits_${businessId}`;
+    localStorage.removeItem(cacheKey);
   };
 
   const fetchSubreddits = async (businessId) => {
@@ -870,6 +938,300 @@ export default function RedditPage() {
     }
   }, [savedSubreddits]);
 
+  // Add new function to check subreddit karma requirements
+  const checkSubredditKarma = async (subredditName) => {
+    try {
+      const rules = await redditService.getSubredditRules(subredditName);
+      const minKarma = rules?.requirements?.minKarma || 0;
+      return {
+        minKarma,
+        meetsRequirement: minKarma <= 0, // If no karma requirement, it meets the requirement
+      };
+    } catch (error) {
+      console.error(`Error checking karma for ${subredditName}:`, error);
+      return {
+        minKarma: 0,
+        meetsRequirement: true, // Default to true if we can't check
+      };
+    }
+  };
+
+  // Add new function to check URL promotion rules
+  const checkUrlPromotionRules = async (subredditName) => {
+    try {
+      const rules = await redditService.getSubredditRules(subredditName);
+      const rulesText = rules?.rules?.map((r) => r.description).join(" ") || "";
+      const allowsPromotion =
+        !rulesText.toLowerCase().includes("no self-promotion") &&
+        !rulesText.toLowerCase().includes("no advertising");
+      return {
+        allowsPromotion,
+        rulesText: rulesText.substring(0, 200) + "...", // Truncate for display
+      };
+    } catch (error) {
+      console.error(`Error checking URL rules for ${subredditName}:`, error);
+      return {
+        allowsPromotion: true, // Default to true if we can't check
+        rulesText: "Unable to fetch rules",
+      };
+    }
+  };
+
+  // Cache subreddit data when it's first loaded
+  useEffect(() => {
+    if (savedSubreddits.length > 0) {
+      const newCache = { ...subredditCache };
+      savedSubreddits.forEach((subreddit) => {
+        if (!newCache[subreddit.name]) {
+          newCache[subreddit.name] = {
+            ...subreddit,
+            minKarma: null,
+            allowsUrls: null,
+            checked: false,
+          };
+        }
+      });
+      setSubredditCache(newCache);
+    }
+  }, [savedSubreddits]);
+
+  // Update filtered subreddits when step changes
+  useEffect(() => {
+    if (savedSubreddits.length === 0) return;
+
+    const filterSubreddits = () => {
+      setFilteringStatus("filtering");
+      let filtered = [];
+
+      switch (filteringStep) {
+        case 1: // All subreddits
+          filtered = savedSubreddits;
+          break;
+        case 2: // URL Rules Check
+          filtered = savedSubreddits;
+          break;
+        case 3: // Karma Check - only show subreddits that passed URL check
+          filtered = savedSubreddits.filter((sub) => {
+            const cache = subredditCache[sub.name] || {};
+            return cache.allowsUrls === true;
+          });
+          break;
+        case 4: // Final list - only show subreddits that passed both checks
+          filtered = savedSubreddits.filter((sub) => {
+            const cache = subredditCache[sub.name] || {};
+            return cache.allowsUrls === true && cache.hasGoodKarma === true;
+          });
+          break;
+      }
+
+      setFilteredSubreddits(filtered);
+      setFilteringStatus("idle");
+    };
+
+    filterSubreddits();
+  }, [filteringStep, savedSubreddits, subredditCache]);
+
+  const handleUrlRuleToggle = async (subreddit, allowsUrls) => {
+    try {
+      console.log("🔍 Checking existing record for:", {
+        business_id: selectedBusiness,
+        subreddit_name: subreddit.name,
+      });
+
+      // First check if the record exists
+      const { data: existingRecord, error: checkError } = await supabase
+        .from("business_subreddits")
+        .select("*")
+        .eq("business_id", selectedBusiness)
+        .eq("subreddit_name", subreddit.name)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("❌ Error checking record:", checkError);
+        throw checkError;
+      }
+
+      console.log("📊 Existing record:", existingRecord);
+
+      if (existingRecord) {
+        console.log(
+          "🔄 Updating existing record with allows_urls:",
+          allowsUrls
+        );
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from("business_subreddits")
+          .update({ allows_urls: allowsUrls })
+          .eq("business_id", selectedBusiness)
+          .eq("subreddit_name", subreddit.name);
+
+        if (updateError) {
+          console.error("❌ Error updating record:", updateError);
+          throw updateError;
+        }
+        console.log("✅ Successfully updated record");
+      } else {
+        console.log("➕ Creating new record with allows_urls:", allowsUrls);
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from("business_subreddits")
+          .insert({
+            business_id: selectedBusiness,
+            subreddit_name: subreddit.name,
+            allows_urls: allowsUrls,
+            is_selected: true,
+          });
+
+        if (insertError) {
+          console.error("❌ Error inserting record:", insertError);
+          throw insertError;
+        }
+        console.log("✅ Successfully created new record");
+      }
+
+      // Update local state
+      setSubredditCache((prev) => ({
+        ...prev,
+        [subreddit.name]: {
+          ...(prev[subreddit.name] || {}),
+          allowsUrls,
+        },
+      }));
+    } catch (error) {
+      console.error("❌ Error in handleUrlRuleToggle:", error);
+      alert("Failed to update URL status. Please try again.");
+    }
+  };
+
+  const handleKarmaRuleToggle = async (subreddit, hasGoodKarma) => {
+    try {
+      console.log("🔍 Checking existing record for:", {
+        business_id: selectedBusiness,
+        subreddit_name: subreddit.name,
+      });
+
+      // First check if the record exists
+      const { data: existingRecord, error: checkError } = await supabase
+        .from("business_subreddits")
+        .select("*")
+        .eq("business_id", selectedBusiness)
+        .eq("subreddit_name", subreddit.name)
+        .single();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("❌ Error checking record:", checkError);
+        throw checkError;
+      }
+
+      console.log("📊 Existing record:", existingRecord);
+
+      if (existingRecord) {
+        console.log(
+          "🔄 Updating existing record with has_good_karma:",
+          hasGoodKarma
+        );
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from("business_subreddits")
+          .update({ has_good_karma: hasGoodKarma })
+          .eq("business_id", selectedBusiness)
+          .eq("subreddit_name", subreddit.name);
+
+        if (updateError) {
+          console.error("❌ Error updating record:", updateError);
+          throw updateError;
+        }
+        console.log("✅ Successfully updated record");
+      } else {
+        console.log(
+          "➕ Creating new record with has_good_karma:",
+          hasGoodKarma
+        );
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from("business_subreddits")
+          .insert({
+            business_id: selectedBusiness,
+            subreddit_name: subreddit.name,
+            has_good_karma: hasGoodKarma,
+            is_selected: true,
+          });
+
+        if (insertError) {
+          console.error("❌ Error inserting record:", insertError);
+          throw insertError;
+        }
+        console.log("✅ Successfully created new record");
+      }
+
+      // Update local state
+      setSubredditCache((prev) => ({
+        ...prev,
+        [subreddit.name]: {
+          ...(prev[subreddit.name] || {}),
+          hasGoodKarma,
+        },
+      }));
+    } catch (error) {
+      console.error("❌ Error in handleKarmaRuleToggle:", error);
+      alert("Failed to update karma status. Please try again.");
+    }
+  };
+
+  const handleKarmaTest = async (subreddit) => {
+    try {
+      setIsGenerating(true);
+
+      const testPost = {
+        title: "Test Post - Please Ignore",
+        text: "This is a test post to check karma requirements.",
+        subreddit: subreddit.name,
+      };
+
+      const response = await fetch("/api/reddit/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${redditService.token}`,
+        },
+        body: JSON.stringify(testPost),
+      });
+
+      const result = await response.json();
+
+      // Update local state only
+      setKarmaTestResults((prev) => ({
+        ...prev,
+        [subreddit.name]: {
+          response: result.error || result.message || "Post attempt completed",
+          date: new Date().toISOString(),
+        },
+      }));
+    } catch (error) {
+      console.error("Error testing karma:", error);
+      setKarmaTestResults((prev) => ({
+        ...prev,
+        [subreddit.name]: {
+          response: `Error: ${error.message}`,
+          date: new Date().toISOString(),
+        },
+      }));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleKarmaValidation = async (subreddit, passed) => {
+    // Update local state only
+    setKarmaTestResults((prev) => ({
+      ...prev,
+      [subreddit.name]: {
+        ...prev[subreddit.name],
+        passed,
+      },
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex items-center justify-center">
@@ -1049,116 +1411,197 @@ export default function RedditPage() {
                   </div>
                 </div>
               ) : savedSubreddits.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {savedSubreddits.map((subreddit) => (
-                    <div key={subreddit.name} className="mb-6">
-                      <div className="bg-gradient-to-br from-gray-900/50 via-gray-800/30 to-gray-900/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50 shadow-2xl">
-                        <div className="flex flex-col h-full">
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
-                                <h3 className="text-xl font-semibold text-white">
-                                  r/{subreddit.name}
-                                </h3>
-                                <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                                  {subreddit.description ||
-                                    "No description available"}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() =>
-                                  handleSubredditToggle(subreddit.name)
-                                }
-                                className="px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 rounded-lg hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-300"
-                              >
-                                Remove
-                              </button>
-                            </div>
-
-                            <div className="flex items-center gap-4 text-sm text-gray-400">
-                              <span>
-                                👥{" "}
-                                {(subreddit.subscribers || 0).toLocaleString()}
-                              </span>
-                              <span>
-                                📝{" "}
-                                {(subreddit.recentPosts || 0).toLocaleString()}{" "}
-                                posts/24h
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-4 flex items-center gap-2">
-                            <button
-                              onClick={() => handleOpenFullView(subreddit)}
-                              className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 hover:from-blue-500/30 hover:to-indigo-500/30 text-blue-400 rounded-lg transition-all duration-300 border border-blue-500/20"
-                            >
-                              Open Full View
-                            </button>
-                            <button
-                              onClick={() => handleAnalyzeSubreddit(subreddit)}
-                              disabled={analyzingSubreddit === subreddit.name}
-                              className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 text-purple-400 rounded-lg transition-all duration-300 border border-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {analyzingSubreddit === subreddit.name ? (
-                                <span className="flex items-center gap-2">
-                                  <svg
-                                    className="animate-spin h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <circle
-                                      className="opacity-25"
-                                      cx="12"
-                                      cy="12"
-                                      r="10"
-                                      stroke="currentColor"
-                                      strokeWidth="4"
-                                      fill="none"
-                                    />
-                                    <path
-                                      className="opacity-75"
-                                      fill="currentColor"
-                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                    />
-                                  </svg>
-                                  Analyzing Patterns...
-                                </span>
-                              ) : (
-                                "Analyze Patterns"
-                              )}
-                            </button>
-                          </div>
-
-                          {analysisResults[subreddit.name] && (
-                            <>
-                              <div className="mt-4">
-                                <PatternAnalysis
-                                  analysis={analysisResults[subreddit.name]}
-                                />
-                              </div>
-                              <div className="mt-4 flex justify-end">
-                                <button
-                                  onClick={() =>
-                                    setShowDeconstruction(!showDeconstruction)
-                                  }
-                                  className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 text-purple-400 rounded-lg transition-all duration-300 border border-purple-500/20"
-                                >
-                                  {showDeconstruction
-                                    ? "Hide Pattern Deconstruction"
-                                    : "Show Pattern Deconstruction"}
-                                </button>
-                              </div>
-                              {showDeconstruction && (
-                                <PostDeconstruction
-                                  posts={analyzedPosts[subreddit.name] || []}
-                                  analysis={analysisResults[subreddit.name]}
-                                />
-                              )}
-                            </>
-                          )}
-                        </div>
+                <div className="space-y-4">
+                  {/* Filtering Steps */}
+                  <div className="bg-gradient-to-br from-gray-900/50 via-gray-800/30 to-gray-900/50 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50 shadow-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => setFilteringStep(1)}
+                          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                            filteringStep === 1
+                              ? "bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-400"
+                              : "bg-gradient-to-r from-gray-900/30 to-gray-800/30 text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          Step 1: All Selected
+                        </button>
+                        <button
+                          onClick={() => setFilteringStep(2)}
+                          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                            filteringStep === 2
+                              ? "bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-400"
+                              : "bg-gradient-to-r from-gray-900/30 to-gray-800/30 text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          Step 2: URL Rules Check
+                        </button>
+                        <button
+                          onClick={() => setFilteringStep(3)}
+                          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                            filteringStep === 3
+                              ? "bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-400"
+                              : "bg-gradient-to-r from-gray-900/30 to-gray-800/30 text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          Step 3: Karma Check
+                        </button>
+                        <button
+                          onClick={() => setFilteringStep(4)}
+                          className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                            filteringStep === 4
+                              ? "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400"
+                              : "bg-gradient-to-r from-gray-900/30 to-gray-800/30 text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          ✓ Ready to Post
+                        </button>
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {filteringStep === 4
+                          ? `${filteredSubreddits.length} subreddits approved`
+                          : `${filteredSubreddits.length} subreddits`}
                       </div>
                     </div>
-                  ))}
+
+                    {/* Compact Subreddit List */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {filteredSubreddits.map((subreddit) => {
+                        const cachedData = subredditCache[subreddit.name] || {};
+                        return (
+                          <div
+                            key={subreddit.name}
+                            className={`flex flex-col bg-gradient-to-br p-2 rounded-lg border ${
+                              filteringStep === 4
+                                ? "from-green-500/20 to-green-400/20 border-green-500"
+                                : filteringStep === 2
+                                ? cachedData?.allowsUrls === true
+                                  ? "from-green-500/20 to-green-400/20 border-green-500"
+                                  : cachedData?.allowsUrls === false
+                                  ? "from-red-500/20 to-red-400/20 border-red-500"
+                                  : "from-gray-900/30 to-gray-800/30 border-gray-700/50"
+                                : filteringStep === 3
+                                ? cachedData?.hasGoodKarma === true
+                                  ? "from-green-500/20 to-green-400/20 border-green-500"
+                                  : cachedData?.hasGoodKarma === false
+                                  ? "from-red-500/20 to-red-400/20 border-red-500"
+                                  : "from-gray-900/30 to-gray-800/30 border-gray-700/50"
+                                : "from-gray-900/30 to-gray-800/30 border-gray-700/50"
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-2">
+                                <span className="text-orange-400">r/</span>
+                                <span className="font-medium text-white">
+                                  {subreddit.name}
+                                </span>
+                                <span className="text-sm text-gray-400">
+                                  {subreddit.subscribers?.toLocaleString() ||
+                                    "N/A"}{" "}
+                                  👥
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                                {filteringStep === 2 && (
+                                  <div className="flex items-center gap-2 sm:gap-4">
+                                    <button
+                                      onClick={() =>
+                                        handleUrlRuleToggle(subreddit, true)
+                                      }
+                                      className={`text-2xl ${
+                                        cachedData?.allowsUrls === true
+                                          ? "text-green-400 bg-green-500/20 px-2 sm:px-3 py-1 rounded-full"
+                                          : "text-gray-400 hover:text-green-400"
+                                      }`}
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleUrlRuleToggle(subreddit, false)
+                                      }
+                                      className={`text-2xl ${
+                                        cachedData?.allowsUrls === false
+                                          ? "text-red-400 bg-red-500/20 px-2 sm:px-3 py-1 rounded-full"
+                                          : "text-gray-400 hover:text-red-400"
+                                      }`}
+                                    >
+                                      ✗
+                                    </button>
+                                  </div>
+                                )}
+                                {filteringStep === 3 && (
+                                  <div className="flex items-center gap-2 sm:gap-4">
+                                    <button
+                                      onClick={() =>
+                                        handleKarmaRuleToggle(subreddit, true)
+                                      }
+                                      className={`text-2xl ${
+                                        cachedData?.hasGoodKarma === true
+                                          ? "text-green-400 bg-green-500/20 px-2 sm:px-3 py-1 rounded-full"
+                                          : "text-gray-400 hover:text-green-400"
+                                      }`}
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleKarmaRuleToggle(subreddit, false)
+                                      }
+                                      className={`text-2xl ${
+                                        cachedData?.hasGoodKarma === false
+                                          ? "text-red-400 bg-red-500/20 px-2 sm:px-3 py-1 rounded-full"
+                                          : "text-gray-400 hover:text-red-400"
+                                      }`}
+                                    >
+                                      ✗
+                                    </button>
+                                  </div>
+                                )}
+                                {filteringStep !== 4 ? (
+                                  <button
+                                    onClick={() => {
+                                      if (filteringStep === 2) {
+                                        handleUrlRuleToggle(
+                                          subreddit,
+                                          !cachedData?.allowsUrls
+                                        );
+                                      } else if (filteringStep === 3) {
+                                        handleKarmaRuleToggle(
+                                          subreddit,
+                                          !cachedData?.hasGoodKarma
+                                        );
+                                      }
+                                    }}
+                                    className="px-2 py-1 text-sm sm:text-base bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-400 rounded-lg hover:from-blue-500/30 hover:to-indigo-500/30 transition-all duration-300 whitespace-nowrap"
+                                  >
+                                    {filteringStep === 2
+                                      ? cachedData?.allowsUrls
+                                        ? "Block URLs"
+                                        : "Allow URLs"
+                                      : filteringStep === 3
+                                      ? cachedData?.hasGoodKarma
+                                        ? "Bad Karma"
+                                        : "Good Karma"
+                                      : "View"}
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleOpenFullView(subreddit)
+                                    }
+                                    className="px-2 py-1 text-sm sm:text-base bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 rounded-lg hover:from-green-500/30 hover:to-emerald-500/30 transition-all duration-300 whitespace-nowrap"
+                                  >
+                                    View
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-400">

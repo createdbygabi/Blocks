@@ -26,13 +26,23 @@ const Pattern = ({ pattern, posts, template }) => (
 );
 
 const PatternAnalysis = ({ analysis }) => {
-  if (!analysis) return null;
+  console.log("PatternAnalysis - Received analysis:", analysis);
+
+  if (!analysis) {
+    console.log("PatternAnalysis - No analysis data provided");
+    return null;
+  }
 
   return (
-    <div className="mt-4 bg-gradient-to-br from-gray-900/50 via-gray-800/30 to-gray-900/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50">
-      <pre className="whitespace-pre-wrap text-gray-300 text-sm font-mono">
-        {analysis}
-      </pre>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold text-purple-400">
+          Analysis Results
+        </h3>
+        <div className="prose prose-invert max-w-none whitespace-pre-wrap">
+          {analysis}
+        </div>
+      </div>
     </div>
   );
 };

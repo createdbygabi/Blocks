@@ -3,6 +3,8 @@ import { supabase } from "@/lib/supabase";
 export class RedditService {
   constructor() {
     this.baseUrl = "/api/reddit";
+    this.cache = new Map();
+    this.cacheDuration = 5 * 60 * 1000; // 5 minutes
   }
 
   async searchSubreddits(query, limit = 10) {
@@ -361,6 +363,13 @@ export class RedditService {
 
   async getSubredditInfo(subredditName) {
     try {
+      // Check cache first
+      const cacheKey = `subreddit-${subredditName}`;
+      const cached = this.cache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+        return cached.data;
+      }
+
       const authToken = await this.getAuthToken();
       const response = await fetch(`${this.baseUrl}/subreddit-info`, {
         method: "POST",
@@ -376,7 +385,7 @@ export class RedditService {
       }
 
       const data = await response.json();
-      return {
+      const result = {
         name: subredditName,
         title: data.title || subredditName,
         description: data.description || "No description available",
@@ -387,6 +396,14 @@ export class RedditService {
         icon: data.icon_img || data.community_icon || null,
         url: data.url || `https://reddit.com/r/${subredditName}`,
       };
+
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now(),
+      });
+
+      return result;
     } catch (error) {
       console.error("Error fetching subreddit info:", error);
       return {
@@ -426,5 +443,35 @@ export class RedditService {
     }
 
     return response.json();
+  }
+
+  // Add test post functionality
+  async submitPost(subredditName, postData) {
+    try {
+      const authToken = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/test-post`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          subredditName,
+          title: postData.title,
+          text: postData.text,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit test post");
+      }
+
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error("Error submitting test post:", error);
+      throw error;
+    }
   }
 }

@@ -181,6 +181,25 @@ const CompactPostList = ({ posts, title, analysisResults }) => {
   );
 };
 
+// Helper function to split posts into groups for analysis
+function splitPostsIntoGroups(posts, limit) {
+  if (!posts || posts.length === 0) return [];
+
+  // Sort posts by score in descending order
+  const sortedPosts = [...posts].sort((a, b) => b.score - a.score);
+
+  // Take only the top posts up to the limit
+  const topPosts = sortedPosts.slice(0, limit);
+
+  // Split into groups of 5 for better analysis
+  const groups = [];
+  for (let i = 0; i < topPosts.length; i += 5) {
+    groups.push(topPosts.slice(i, i + 5));
+  }
+
+  return groups;
+}
+
 const SubredditFullView = ({
   subreddit,
   onBack,
@@ -199,7 +218,14 @@ const SubredditFullView = ({
   const [showContentAnalysis, setShowContentAnalysis] = useState(true);
   const [showTitleGenerator, setShowTitleGenerator] = useState(true);
 
-  console.log("current business", business);
+  console.log("SubredditFullView - Props:", {
+    subreddit,
+    analyzingSubreddit,
+    analysisResults: analysisResults[subreddit.name],
+    analyzedPosts: analyzedPosts[subreddit.name],
+    postLimits,
+    postStats: postStats[subreddit.name],
+  });
 
   const splitPosts = (posts = []) => {
     if (!posts || posts.length === 0) {
@@ -257,6 +283,29 @@ const SubredditFullView = ({
 
   const { allTimePosts, lastYearPosts } = splitPosts(
     analyzedPosts[subreddit.name] || []
+  );
+
+  // Sort posts by score in descending order
+  const sortedAllTimePosts = [...allTimePosts].sort(
+    (a, b) => b.score - a.score
+  );
+  const sortedYearlyPosts = [...lastYearPosts].sort(
+    (a, b) => b.score - a.score
+  );
+
+  console.log("Splitting posts:", {
+    totalAllTimePosts: sortedAllTimePosts.length,
+    totalYearlyPosts: sortedYearlyPosts.length,
+  });
+
+  // Split posts into groups for analysis
+  const allTimeGroups = splitPostsIntoGroups(
+    sortedAllTimePosts,
+    postLimits.allTime
+  );
+  const yearlyGroups = splitPostsIntoGroups(
+    sortedYearlyPosts,
+    postLimits.lastYear
   );
 
   return (

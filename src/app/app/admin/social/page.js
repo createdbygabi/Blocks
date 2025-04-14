@@ -55,6 +55,7 @@ function ContentCell({
   onPublish,
   date,
   businessId,
+  onMarkAsNiche,
 }) {
   // Content is approved and ready
   if (content?.status === "pending") {
@@ -125,16 +126,25 @@ function ContentCell({
     );
   }
 
-  // No content, show generate button
+  // No content, show generate and niche buttons
   return (
-    <button
-      onClick={() => onGenerate(businessId, date)}
-      disabled={isLoading}
-      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-400/20 to-pink-400/20 hover:from-rose-400/30 hover:to-pink-400/30 rounded-lg text-rose-300 text-sm transition-all duration-300 border border-rose-400/20 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      <div className="w-2 h-2 rounded-full bg-rose-400" />
-      Generate
-    </button>
+    <div className="flex gap-0.5">
+      <button
+        onClick={() => onGenerate(businessId, date)}
+        disabled={isLoading}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-400/20 to-pink-400/20 hover:from-rose-400/30 hover:to-pink-400/30 rounded-lg text-rose-300 text-sm transition-all duration-300 border border-rose-400/20 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <div className="w-2 h-2 rounded-full bg-rose-400" />
+        Generate
+      </button>
+      <button
+        onClick={() => onMarkAsNiche(businessId, date)}
+        disabled={isLoading}
+        className="px-3 py-2 bg-gradient-to-r from-purple-400/20 to-violet-400/20 hover:from-purple-400/30 hover:to-violet-400/30 rounded-lg text-purple-300 text-sm font-medium transition-all duration-300 border border-purple-400/20 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        N
+      </button>
+    </div>
   );
 }
 
@@ -977,6 +987,41 @@ export default function SocialMarketingPage() {
     });
   };
 
+  const handleMarkAsNiche = async (businessId, date) => {
+    try {
+      setIsGenerating(true);
+
+      const contentData = {
+        business_id: businessId,
+        scheduled_for: new Date(date + "T12:00:00Z").toISOString(),
+        status: "pending",
+        content_type: "reel",
+        content: {
+          video: {
+            url: null,
+            thumbnail: null,
+          },
+        },
+      };
+
+      const { error } = await supabase
+        .from("social_content")
+        .insert([contentData]);
+
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+
+      await fetchData(); // Refresh the data
+    } catch (error) {
+      console.error("Failed to mark as niche:", error);
+      setError(error.message || "Failed to mark as niche");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Generate next 7 days
   const next7Days = useMemo(
     () =>
@@ -1072,6 +1117,7 @@ export default function SocialMarketingPage() {
                   content={content}
                   onGenerate={handleGenerateContent}
                   onPublish={handlePublishContent}
+                  onMarkAsNiche={handleMarkAsNiche}
                   isLoading={isGenerating}
                   onPreview={handlePreviewVideo}
                   date={formatDate(date)}
