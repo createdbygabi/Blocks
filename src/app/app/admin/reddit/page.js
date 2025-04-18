@@ -55,9 +55,16 @@ function SubredditCard({ subreddit, onSelect }) {
         <div className="flex-1">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-xl font-semibold text-white">
-                r/{subreddit.name}
-              </h3>
+              <a
+                href={`https://reddit.com/r/${subreddit.name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
+                <h3 className="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors duration-200">
+                  r/{subreddit.name}
+                </h3>
+              </a>
               <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                 {subreddit.description}
               </p>
@@ -1241,7 +1248,7 @@ export default function RedditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-slate-900 to-black text-white p-8">
+    <div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6 lg:p-8">
       {fullViewSubreddit ? (
         <SubredditFullView
           subreddit={fullViewSubreddit}
@@ -1492,9 +1499,14 @@ export default function RedditPage() {
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
                               <div className="flex flex-col sm:flex-row items-start sm:items-center space-x-2">
                                 <span className="text-orange-400">r/</span>
-                                <span className="font-medium text-white">
+                                <a
+                                  href={`https://reddit.com/r/${subreddit.name}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-white hover:text-blue-400 transition-colors duration-200"
+                                >
                                   {subreddit.name}
-                                </span>
+                                </a>
                                 <span className="text-sm text-gray-400">
                                   {subreddit.subscribers?.toLocaleString() ||
                                     "N/A"}{" "}

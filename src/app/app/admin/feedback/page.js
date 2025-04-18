@@ -18,13 +18,16 @@ function CompactFeedbackItem({ feedback }) {
     }
   );
 
+  // Add fallback for missing email
+  const email = feedback.submitted_by_email || "anonymous";
+  const firstLetter =
+    email !== "anonymous" ? email.charAt(0).toUpperCase() : "A";
+
   return (
     <div className="flex items-center justify-between py-2 px-4 hover:bg-gray-800/50 rounded-lg group">
       <div className="flex items-center gap-3 min-w-0">
         <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex-shrink-0 flex items-center justify-center">
-          <span className="text-blue-400 text-sm">
-            {feedback.submitted_by_email.charAt(0).toUpperCase()}
-          </span>
+          <span className="text-blue-400 text-sm">{firstLetter}</span>
         </div>
         <div className="min-w-0">
           <div className="text-sm text-gray-300 truncate">
@@ -33,7 +36,7 @@ function CompactFeedbackItem({ feedback }) {
           <div className="flex items-center gap-2 text-xs">
             <span className="text-gray-500">{formattedDate}</span>
             <span className="text-gray-600">•</span>
-            <span className="text-blue-400">{feedback.submitted_by_email}</span>
+            <span className="text-blue-400">{email}</span>
           </div>
         </div>
       </div>

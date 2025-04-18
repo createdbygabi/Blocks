@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 const ADMIN_USER_ID = "911d26f9-2fe3-4165-9659-2cd038471795";
 
-export default function RedditCommentsPage() {
+export default function RedditPostsPage() {
   const { user } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -22,6 +22,17 @@ export default function RedditCommentsPage() {
   const [businessKeywords, setBusinessKeywords] = useState({});
   const [redditContent, setRedditContent] = useState({});
   const [expandedBusinesses, setExpandedBusinesses] = useState({});
+  const [activeTab, setActiveTab] = useState("pending");
+  const [generatingResponseFor, setGeneratingResponseFor] = useState(null);
+  const [generatedResponse, setGeneratedResponse] = useState("");
+  const [responseLoading, setResponseLoading] = useState(false);
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [todayRepliedCount, setTodayRepliedCount] = useState(0);
+  const [businessReplies, setBusinessReplies] = useState({});
+  const [evaluationResults, setEvaluationResults] = useState(null);
+  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
+  const [showEvaluationDetails, setShowEvaluationDetails] = useState({});
+  const [savedResponses, setSavedResponses] = useState({});
 
   useEffect(() => {
     if (user && user.id !== ADMIN_USER_ID) {
@@ -32,18 +43,42 @@ export default function RedditCommentsPage() {
     if (user?.id === ADMIN_USER_ID) {
       fetchData();
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   useEffect(() => {
-    // Initialize all businesses as collapsed when data is loaded
-    if (businesses.length > 0) {
-      const initialExpanded = businesses.reduce((acc, business) => {
-        acc[business.id] = false;
-        return acc;
-      }, {});
-      setExpandedBusinesses(initialExpanded);
-    }
-  }, [businesses]);
+    // Get today's date at midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Count replies by business
+    const businessReplies = {};
+    let totalTodayReplies = 0;
+
+    Object.entries(redditContent).forEach(([businessId, items]) => {
+      const todayReplies = items.filter((item) => {
+        if (item.status === "replied") {
+          const itemDate = new Date(item.updated_at || item.created_at);
+          return itemDate >= today;
+        }
+        return false;
+      }).length;
+
+      const totalReplies = items.filter(
+        (item) => item.status === "replied"
+      ).length;
+
+      businessReplies[businessId] = {
+        today: todayReplies,
+        total: totalReplies,
+      };
+
+      totalTodayReplies += todayReplies;
+    });
+
+    setTodayRepliedCount(totalTodayReplies);
+    // Store the business-specific counts
+    setBusinessReplies(businessReplies);
+  }, [redditContent]);
 
   const fetchData = async () => {
     try {
@@ -69,6 +104,17 @@ export default function RedditCommentsPage() {
 
       setBusinesses(businessesResponse.data);
 
+      // Initialize expanded state only for new businesses
+      setExpandedBusinesses((prev) => {
+        const newExpanded = { ...prev };
+        businessesResponse.data.forEach((business) => {
+          if (!(business.id in newExpanded)) {
+            newExpanded[business.id] = false;
+          }
+        });
+        return newExpanded;
+      });
+
       // Create a map of business_id to keywords
       const keywordsMap = {};
       keywordsResponse.data.forEach((item) => {
@@ -92,12 +138,31 @@ export default function RedditCommentsPage() {
 
       // Create a map of business_id to content
       const contentMap = {};
-      contentResponse.data.forEach((item) => {
-        if (!contentMap[item.business_id]) {
-          contentMap[item.business_id] = [];
-        }
-        contentMap[item.business_id].push(item);
-      });
+      contentResponse.data
+        .filter((item) => {
+          if (activeTab === "pending") {
+            return item.status !== "not_relevant" && item.status !== "replied";
+          } else if (activeTab === "evaluated") {
+            // Show posts that have been evaluated (regardless of status)
+            return item.evaluation_date !== null && item.status !== "replied";
+          } else if (activeTab === "ready") {
+            // Show only evaluated posts that are matches and haven't been replied to
+            return (
+              item.is_matching === true &&
+              item.status !== "replied" &&
+              item.status !== "not_relevant"
+            );
+          } else if (activeTab === "replied") {
+            return item.status === "replied";
+          }
+          return false;
+        })
+        .forEach((item) => {
+          if (!contentMap[item.business_id]) {
+            contentMap[item.business_id] = [];
+          }
+          contentMap[item.business_id].push(item);
+        });
 
       // Sort content by email_date for each business
       Object.keys(contentMap).forEach((businessId) => {
@@ -107,6 +172,23 @@ export default function RedditCommentsPage() {
       });
 
       setRedditContent(contentMap);
+
+      // Load saved responses from the database
+      const { data: savedResponsesData, error: savedResponsesError } =
+        await supabase
+          .from("reddit_comments_content")
+          .select("id, generated_response")
+          .filter("generated_response", "not.is", null);
+
+      if (!savedResponsesError && savedResponsesData) {
+        const responseMap = {};
+        savedResponsesData.forEach((item) => {
+          if (item.generated_response) {
+            responseMap[item.id] = item.generated_response;
+          }
+        });
+        setSavedResponses(responseMap);
+      }
 
       if (businessesResponse.data.length > 0 && !selectedBusiness) {
         setSelectedBusiness(businessesResponse.data[0].id);
@@ -130,18 +212,18 @@ export default function RedditCommentsPage() {
 
     try {
       // Extract subreddit and title
-      const subredditMatch = email.body.match(
-        /Reddit (Comments|Posts) \(\/r\/([^)]+)\)/
-      );
+      const subredditMatch = email.body.match(/Reddit Posts \(\/r\/([^)]+)\)/);
       console.log("Subreddit match:", subredditMatch);
 
       if (!subredditMatch) {
-        console.log("No subreddit match found in email body");
+        console.log(
+          "No subreddit match found in email body or not a Reddit Post"
+        );
         return;
       }
 
-      const postType = subredditMatch[1].toLowerCase();
-      const subreddit = subredditMatch[2];
+      const postType = "posts";
+      const subreddit = subredditMatch[1];
       const title = email.body.split("): ")[1].split("\n")[0];
       const permalink =
         email.body.match(/https:\/\/www\.reddit\.com[^\s]+/)?.[0] || "";
@@ -357,6 +439,7 @@ export default function RedditCommentsPage() {
           date: email.date,
           isF5Bot: email.subject?.includes("F5Bot found something"),
           firstLine: email.body?.split("\n")[0],
+          body: email.body,
         }))
       );
 
@@ -396,6 +479,7 @@ export default function RedditCommentsPage() {
       // Process only new emails
       const allContent = [];
       const processedKeywords = new Set();
+      const seenUrls = new Set(); // Track seen URLs to detect duplicates
 
       newEmails.forEach((email) => {
         // Split email body into lines
@@ -414,11 +498,11 @@ export default function RedditCommentsPage() {
               console.log("Extracted keyword:", currentKeyword);
             }
           }
-          // Check if line contains Reddit content
-          else if (line.includes("Reddit") && line.includes("/r/")) {
+          // Check if line contains Reddit content AND specifically "Reddit Posts" (not Comments)
+          else if (line.includes("Reddit Posts") && line.includes("/r/")) {
             // Extract type, subreddit, and title
             const match = line.match(
-              /Reddit (Comments|Posts) \(\/r\/([^)]+)\): ([^\n]+)/
+              /Reddit (Posts) \(\/r\/([^)]+)\): ([^\n]+)/
             );
             if (match) {
               const [_, type, subreddit, title] = match;
@@ -428,12 +512,77 @@ export default function RedditCommentsPage() {
               const urlMatch = nextLine?.match(/(https:\/\/[^\s]+)/);
 
               if (urlMatch) {
+                // Extract the actual Reddit URL if this is an F5Bot URL
+                let redditUrl = urlMatch[1];
+                if (redditUrl.includes("f5bot.com/url")) {
+                  try {
+                    const urlObj = new URL(redditUrl);
+                    const encodedRedditUrl = urlObj.searchParams.get("u");
+                    if (encodedRedditUrl) {
+                      redditUrl = decodeURIComponent(encodedRedditUrl);
+                      console.log(
+                        "Extracted Reddit URL from F5Bot:",
+                        redditUrl
+                      );
+                    }
+                  } catch (err) {
+                    console.error(
+                      "Error extracting Reddit URL from F5Bot:",
+                      err
+                    );
+                    // Continue with the original URL if extraction fails
+                  }
+                }
+
+                const url = redditUrl;
+
+                // Check if this URL has been seen before
+                if (seenUrls.has(url)) {
+                  console.log(
+                    `⚠️ DUPLICATE URL DETECTED in email parse: ${url}`
+                  );
+                  console.log(`  Email ID: ${email.id}`);
+                  console.log(`  Keyword: ${currentKeyword}`);
+                  console.log(`  Title: ${title}`);
+                } else {
+                  seenUrls.add(url);
+                }
+
+                // Extract full content body after URL line until next keyword or end
+                let contentBody = "";
+                let bodyIndex = lines.indexOf(line) + 1; // Start right after URL line
+
+                // Continue reading lines until we hit the next keyword or F5Bot footer
+                while (
+                  bodyIndex < lines.length &&
+                  !lines[bodyIndex].trim().startsWith("Keyword:") &&
+                  !lines[bodyIndex].trim().startsWith("Do you have comments") &&
+                  !lines[bodyIndex]
+                    .trim()
+                    .startsWith("You are receiving this email")
+                ) {
+                  if (lines[bodyIndex].trim()) {
+                    if (contentBody) contentBody += " "; // Add space between paragraphs
+                    contentBody += lines[bodyIndex].trim();
+                  }
+                  bodyIndex++;
+                }
+
+                console.log("📝 Extracted Reddit content body:", {
+                  title,
+                  bodyLength: contentBody.length,
+                  bodyPreview:
+                    contentBody.substring(0, 100) +
+                    (contentBody.length > 100 ? "..." : ""),
+                });
+
                 allContent.push({
                   keyword: currentKeyword,
                   type,
                   subreddit,
                   title,
-                  url: urlMatch[1],
+                  url: redditUrl, // Use the actual Reddit URL, not the F5Bot one
+                  body: contentBody, // Full multi-line content
                   emailId: email.id,
                   emailDate: email.date,
                 });
@@ -442,6 +591,16 @@ export default function RedditCommentsPage() {
           }
         });
       });
+
+      // After pushing to allContent array, add a log to check
+      console.log(
+        "📋 ALL CONTENT ITEMS:",
+        allContent.map((item) => ({
+          title: item.title,
+          hasBody: !!item.body,
+          bodyLength: item.body ? item.body.length : 0,
+        }))
+      );
 
       setNotification(
         `Processing ${
@@ -465,6 +624,21 @@ export default function RedditCommentsPage() {
             )
         );
 
+        // Log all keywords for each business that might match this content
+        if (matchingBusinesses.length > 0) {
+          console.log(
+            `Content with keyword "${content.keyword}" matched with:`,
+            matchingBusinesses.map(([businessId, keywords]) => ({
+              businessId,
+              matchingKeywords: keywords.filter(
+                (k) =>
+                  content.keyword.toLowerCase().includes(k.toLowerCase()) ||
+                  k.toLowerCase().includes(content.keyword.toLowerCase())
+              ),
+            }))
+          );
+        }
+
         // If we found matching businesses, add the first one's ID
         if (matchingBusinesses.length > 0) {
           return {
@@ -480,37 +654,128 @@ export default function RedditCommentsPage() {
       setNotification(
         `Found ${matchedCount} matches with business keywords...`
       );
-      console.log("Matched content with businesses:", matchedContent);
+      console.log(
+        "🔗 MATCHED CONTENT:",
+        matchedContent.map((item) => ({
+          title: item.title,
+          business_id: item.business_id || "NO MATCH",
+          hasBody: !!item.body,
+          bodyLength: item.body ? item.body.length : 0,
+        }))
+      );
 
       // Step 6: Save content to database and mark emails as processed
       console.log("Step 6: Saving to database...");
 
+      // First, log content grouped by URL to see duplicates
+      const contentByUrl = {};
+      matchedContent.forEach((content) => {
+        if (!contentByUrl[content.url]) {
+          contentByUrl[content.url] = [];
+        }
+        contentByUrl[content.url].push({
+          keyword: content.keyword,
+          business_id: content.business_id,
+          title: content.title.substring(0, 30),
+        });
+      });
+
+      // Log URLs that have multiple entries
+      console.log("🔍 CHECKING FOR DUPLICATES:");
+      Object.entries(contentByUrl)
+        .filter(([_, items]) => items.length > 1)
+        .forEach(([url, items]) => {
+          console.log(`⚠️ DUPLICATE URL: ${url}`);
+          console.log(`Found ${items.length} items with same URL:`);
+          console.table(items);
+        });
+
+      // Deduplicate matchedContent by URL before creating contentToSave
+      // This ensures each URL only appears once in our final array
+      const uniqueContent = [];
+      const uniqueUrls = new Set();
+
+      matchedContent.forEach((content) => {
+        if (content.business_id && !uniqueUrls.has(content.url)) {
+          uniqueUrls.add(content.url);
+          uniqueContent.push(content);
+        }
+      });
+
+      console.log(
+        `Reduced from ${matchedContent.length} matched items to ${uniqueContent.length} unique items after URL deduplication.`
+      );
+
       // Save matched content to reddit_comments_content
-      const contentToSave = matchedContent
-        .filter((content) => content.business_id) // Only save content with matched business
-        .map((content) => ({
+      const contentToSave = uniqueContent.map((content) => {
+        // Log the URL being saved to help with debugging
+        console.log(`Saving content with URL: ${content.url}`);
+
+        return {
           business_id: content.business_id,
           keyword: content.keyword,
           type: content.type,
           subreddit: content.subreddit,
           title: content.title,
           url: content.url,
+          content_body: content.body, // Add the content body here!
           email_id: content.emailId,
           email_date: content.emailDate,
           created_at: new Date().toISOString(),
-        }));
+        };
+      });
 
+      console.log(
+        "💾 CONTENT TO SAVE:",
+        contentToSave.map((item) => ({
+          title: item.title,
+          hasContentBody: !!item.content_body,
+          contentBodyLength: item.content_body ? item.content_body.length : 0,
+          contentBodyPreview: item.content_body
+            ? item.content_body.substring(0, 30) + "..."
+            : "N/A",
+        }))
+      );
+
+      // Around line ~500 - Log the database operation attempt
       if (contentToSave.length > 0) {
-        const { error: contentError } = await supabase
+        console.log("🔄 ATTEMPTING DATABASE SAVE with content_body field");
+        const { data, error: contentError } = await supabase
           .from("reddit_comments_content")
           .upsert(contentToSave, {
             onConflict: "url",
-            ignoreDuplicates: true,
+            ignoreDuplicates: false, // Change to false to update existing records
           });
 
         if (contentError) {
-          console.error("Error saving content:", contentError);
+          console.error("❌ DATABASE ERROR:", contentError);
           setNotification(`Error saving content: ${contentError.message}`);
+        } else {
+          console.log("✅ DATABASE SAVE SUCCESSFUL");
+
+          // Add verification query
+          const { data: verifyData, error: verifyError } = await supabase
+            .from("reddit_comments_content")
+            .select("id, url, content_body")
+            .in(
+              "url",
+              contentToSave.map((item) => item.url)
+            );
+
+          if (verifyError) {
+            console.error("❌ VERIFICATION ERROR:", verifyError);
+          } else {
+            console.log(
+              "✅ VERIFIED SAVED DATA:",
+              verifyData.map((item) => ({
+                urlSnippet: item.url.substring(0, 15) + "...",
+                hasContentBody: !!item.content_body,
+                contentBodyLength: item.content_body
+                  ? item.content_body.length
+                  : 0,
+              }))
+            );
+          }
         }
       }
 
@@ -560,6 +825,575 @@ export default function RedditCommentsPage() {
     }));
   };
 
+  const updateContentStatus = async (contentId, newStatus) => {
+    try {
+      // Start loading
+      setLoading(true);
+
+      // Update in database
+      const { data, error } = await supabase
+        .from("reddit_comments_content")
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", contentId)
+        .select(); // Add this to get the updated row
+
+      if (error) {
+        console.error("Error updating status:", error);
+        throw error;
+      }
+
+      // Get the updated content
+      const updatedContent = data[0];
+
+      // Update local state with precise targeting
+      setRedditContent((prev) => {
+        // Create deep copy of previous state
+        const newContent = JSON.parse(JSON.stringify(prev));
+
+        // Find which business contains this content
+        let businessId = null;
+        Object.keys(newContent).forEach((bid) => {
+          const index = newContent[bid].findIndex(
+            (item) => item.id === contentId
+          );
+          if (index !== -1) {
+            businessId = bid;
+            // Update the content with all fields from database response
+            newContent[bid][index] = {
+              ...newContent[bid][index],
+              ...updatedContent,
+            };
+
+            // If status changed to not_relevant or replied and active tab is pending,
+            // or if status changed to pending and active tab is replied,
+            // remove from current view
+            if (
+              (activeTab === "pending" &&
+                (newStatus === "not_relevant" || newStatus === "replied")) ||
+              (activeTab === "replied" && newStatus !== "replied")
+            ) {
+              newContent[bid] = newContent[bid].filter(
+                (item) => item.id !== contentId
+              );
+            }
+          }
+        });
+
+        return newContent;
+      });
+
+      // Show success notification
+      setNotification(`Status updated to ${newStatus}`);
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      setError("Failed to update status: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const generateResponse = async (item, business) => {
+    try {
+      setResponseLoading(true);
+      setGeneratingResponseFor(item.id);
+
+      // First, fetch complete post content from Reddit API
+      console.log(`Fetching complete content for post: ${item.url}`);
+      console.log(
+        `Stored content before fetch: ${
+          item.content_body ? item.content_body.length + " chars" : "empty"
+        }`
+      );
+
+      const redditContentResponse = await fetch("/api/fetch-reddit-content", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: item.url,
+        }),
+      });
+
+      let fullPostContent = item.content_body || "";
+      let postTitle = item.title;
+      let contentSource = "stored"; // Track content source for logging
+
+      if (redditContentResponse.ok) {
+        const postData = await redditContentResponse.json();
+        console.log("Retrieved Reddit post content:", postData);
+
+        // Use the fetched content if available
+        if (postData.selftext) {
+          const oldContentLength = fullPostContent.length;
+          fullPostContent = postData.selftext;
+          contentSource = "fetched";
+
+          console.log(
+            `Content comparison - Old: ${oldContentLength} chars, New: ${fullPostContent.length} chars`
+          );
+          console.log(
+            `Content quality check - Using ${contentSource} content (${fullPostContent.length} chars)`
+          );
+
+          if (
+            fullPostContent.length < 10 &&
+            oldContentLength > fullPostContent.length
+          ) {
+            console.warn(
+              "Fetched content is very short! Reverting to stored content."
+            );
+            fullPostContent = item.content_body || "";
+            contentSource = "stored (reverted)";
+          }
+
+          // Update the content_body in the database while we're at it
+          const { error: updateContentError } = await supabase
+            .from("reddit_comments_content")
+            .update({
+              content_body: fullPostContent,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", item.id);
+
+          if (updateContentError) {
+            console.error("Error updating post content:", updateContentError);
+          } else {
+            console.log(
+              `Updated database with ${fullPostContent.length} chars of content`
+            );
+          }
+        } else {
+          console.warn(
+            "Fetched content has no selftext field. Using stored content instead."
+          );
+        }
+
+        // Use the fetched title if available and different
+        if (postData.title && postData.title !== item.title) {
+          postTitle = postData.title;
+          console.log(`Using fetched post title: ${postTitle}`);
+        }
+      } else {
+        // Log detailed error information
+        try {
+          const errorData = await redditContentResponse.json();
+          console.error("Reddit content fetch failed:", errorData);
+          console.error("Status code:", redditContentResponse.status);
+          console.error("URL that failed:", item.url);
+        } catch (e) {
+          console.error(
+            "Reddit content fetch failed with status:",
+            redditContentResponse.status
+          );
+          console.error("URL that failed:", item.url);
+        }
+        console.warn(
+          `Could not fetch Reddit content, using stored content (${fullPostContent.length} chars) instead`
+        );
+      }
+
+      // Content validation before generating response
+      console.log(`CONTENT VALIDATION CHECK:`);
+      console.log(`- Source: ${contentSource}`);
+      console.log(`- Length: ${fullPostContent.length} characters`);
+      console.log(`- Title length: ${postTitle.length} characters`);
+      console.log(
+        `- Content preview: ${fullPostContent.substring(0, 100)}${
+          fullPostContent.length > 100 ? "..." : ""
+        }`
+      );
+
+      if (fullPostContent.length < 10 && fullPostContent.trim() === "") {
+        console.warn("WARNING: Post content is extremely short or empty!");
+      }
+
+      // Fetch the full business data if we don't have product and subdomain
+      let businessData = business;
+      if (!business.product || !business.subdomain) {
+        const { data, error } = await supabase
+          .from("businesses")
+          .select("name, product, subdomain, main_feature")
+          .eq("id", business.id)
+          .single();
+
+        if (error) throw error;
+        businessData = { ...business, ...data };
+      }
+
+      // Construct the SaaS URL
+      const saasUrl = `${businessData.subdomain}.joinblocks.me`;
+
+      console.log("Generating response with the following data:");
+      console.log(`- Title: ${postTitle}`);
+      console.log(`- Content length: ${fullPostContent.length} chars`);
+      console.log(`- Subreddit: ${item.subreddit}`);
+      console.log(`- Business: ${businessData.name}`);
+      console.log(`- Product: ${businessData.product}`);
+
+      // Make API call to your ChatGPT endpoint
+      const response = await fetch("/api/generate-reddit-response", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: postTitle,
+          content: fullPostContent,
+          subreddit: item.subreddit,
+          businessName: businessData.name,
+          product: businessData.product,
+          mainFeature: businessData.main_feature,
+          saasUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate response");
+      }
+
+      const data = await response.json();
+
+      // Save the generated response
+      const generatedText = data.response;
+      setGeneratedResponse(generatedText);
+
+      // Save to database
+      const { error: updateError } = await supabase
+        .from("reddit_comments_content")
+        .update({
+          generated_response: generatedText,
+          response_generated_at: new Date().toISOString(),
+        })
+        .eq("id", item.id);
+
+      if (updateError) {
+        console.error("Error saving response to database:", updateError);
+      } else {
+        // Update local state
+        setSavedResponses((prev) => ({
+          ...prev,
+          [item.id]: generatedText,
+        }));
+      }
+
+      setShowResponseModal(true);
+    } catch (err) {
+      console.error("Error generating response:", err);
+      setError("Failed to generate response: " + err.message);
+    } finally {
+      setResponseLoading(false);
+      setGeneratingResponseFor(null);
+    }
+  };
+
+  // Function to mark a post as replied to
+  const markAsReplied = async (contentId) => {
+    try {
+      setLoading(true);
+
+      // Update status in database
+      const { error } = await supabase
+        .from("reddit_comments_content")
+        .update({
+          status: "replied",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", contentId);
+
+      if (error) {
+        throw error;
+      }
+
+      setNotification("Marked as replied successfully");
+      fetchData(); // Refresh data
+    } catch (err) {
+      console.error("Error marking as replied:", err);
+      setError("Failed to mark as replied: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyResponseToClipboard = () => {
+    navigator.clipboard.writeText(generatedResponse);
+    setNotification("Response copied to clipboard");
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  // NEW FUNCTION: Batch evaluate Reddit posts with ChatGPT
+  const evaluateRedditPosts = async () => {
+    try {
+      setLoading(true);
+      setNotification("Evaluating Reddit posts with ChatGPT...");
+
+      // Fetch all pending Reddit posts
+      const { data: pendingPosts, error: postsError } = await supabase
+        .from("reddit_comments_content")
+        .select("id, title, content_body, business_id, subreddit")
+        .eq("status", "pending");
+
+      if (postsError) throw postsError;
+
+      if (!pendingPosts || pendingPosts.length === 0) {
+        setNotification("No pending posts to evaluate");
+        return;
+      }
+
+      console.log(`Found ${pendingPosts.length} pending posts to evaluate`);
+
+      // Group posts by business_id for efficiency
+      const postsByBusiness = {};
+      pendingPosts.forEach((post) => {
+        if (!postsByBusiness[post.business_id]) {
+          postsByBusiness[post.business_id] = [];
+        }
+        postsByBusiness[post.business_id].push(post);
+      });
+
+      // Evaluate posts for each business
+      const allResults = [];
+      for (const [businessId, posts] of Object.entries(postsByBusiness)) {
+        // Fetch business data
+        const { data: business, error: businessError } = await supabase
+          .from("businesses")
+          .select("id, name, product, subdomain, main_feature")
+          .eq("id", businessId)
+          .single();
+
+        if (businessError) {
+          console.error(
+            `Error fetching business ${businessId}:`,
+            businessError
+          );
+          continue;
+        }
+
+        // Construct the SaaS URL
+        const saasUrl = `${business.subdomain}.joinblocks.me`;
+
+        // Evaluate all posts for this business
+        const response = await fetch("/api/evaluate-reddit-posts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            posts: posts.map((post) => ({
+              id: post.id,
+              title: post.title,
+              content: post.content_body || "",
+              subreddit: post.subreddit,
+            })),
+            businessName: business.name,
+            product: business.product,
+            mainFeature: business.main_feature,
+            saasUrl,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to evaluate posts for ${business.name}`);
+        }
+
+        const result = await response.json();
+        console.log(`Evaluation results for ${business.name}:`, result);
+
+        // Add to all results
+        allResults.push({
+          business: business.name,
+          businessId: business.id,
+          evaluationResults: result.evaluations,
+          matchingPosts: result.matchingPosts,
+        });
+
+        // Save evaluation results to database for each post
+        const evaluationUpdates = result.evaluations.map((postEval) => {
+          const isMatch = result.matchingPosts.includes(postEval.id);
+          return {
+            id: postEval.id,
+            is_helpful: postEval.canProvideHelpfulResponse,
+            helpful_reason: postEval.helpfulResponseReason,
+            can_plug_product: postEval.canPlugProduct,
+            plug_product_reason: postEval.plugProductReason,
+            is_matching: isMatch,
+            evaluation_date: new Date().toISOString(),
+          };
+        });
+
+        // Batch update posts with evaluation results
+        if (evaluationUpdates.length > 0) {
+          for (const update of evaluationUpdates) {
+            const { error: updateError } = await supabase
+              .from("reddit_comments_content")
+              .update({
+                is_helpful: update.is_helpful,
+                helpful_reason: update.helpful_reason,
+                can_plug_product: update.can_plug_product,
+                plug_product_reason: update.plug_product_reason,
+                is_matching: update.is_matching,
+                evaluation_date: update.evaluation_date,
+              })
+              .eq("id", update.id);
+
+            if (updateError) {
+              console.error(`Error updating post ${update.id}:`, updateError);
+            }
+          }
+        }
+      }
+
+      console.log("All evaluation results:", allResults);
+      setEvaluationResults(allResults);
+      setShowEvaluationModal(true);
+      setNotification(
+        `Evaluated ${pendingPosts.length} posts for relevance and product fit`
+      );
+
+      // Refresh data to show updated evaluation results
+      fetchData();
+
+      // Return results
+      return allResults;
+    } catch (err) {
+      console.error("Error evaluating Reddit posts:", err);
+      setError("Failed to evaluate posts: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to test with a single post
+  const testWithSinglePost = async () => {
+    try {
+      setLoading(true);
+      setNotification("Testing with a sample Reddit post...");
+
+      // Create a test post if none exists
+      const { data: existingPosts, error: existingError } = await supabase
+        .from("reddit_comments_content")
+        .select("id, url, title, subreddit, business_id, content_body")
+        .eq("status", "pending")
+        .limit(1);
+
+      if (existingError) {
+        throw existingError;
+      }
+
+      if (!existingPosts || existingPosts.length === 0) {
+        console.error("No existing posts found to test with");
+        setError("No posts found to test with. Please fetch some posts first.");
+        return;
+      }
+
+      const testPost = existingPosts[0];
+      console.log("Using post for testing:", testPost);
+
+      // Extract the actual Reddit URL if this is an F5Bot URL
+      let redditUrl = testPost.url;
+      if (testPost.url.includes("f5bot.com/url")) {
+        try {
+          const urlObj = new URL(testPost.url);
+          const encodedRedditUrl = urlObj.searchParams.get("u");
+          if (encodedRedditUrl) {
+            redditUrl = decodeURIComponent(encodedRedditUrl);
+            console.log("Extracted Reddit URL:", redditUrl);
+
+            // Update the URL in the database
+            const { error: urlUpdateError } = await supabase
+              .from("reddit_comments_content")
+              .update({
+                url: redditUrl,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", testPost.id);
+
+            if (urlUpdateError) {
+              console.error("Error updating post URL:", urlUpdateError);
+            } else {
+              // Update our test post object with the new URL
+              testPost.url = redditUrl;
+              console.log("Updated test post URL in database");
+            }
+          }
+        } catch (err) {
+          console.error("Error extracting Reddit URL:", err);
+        }
+      }
+
+      // Get the business for this post
+      const { data: business, error: businessError } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("id", testPost.business_id)
+        .single();
+
+      if (businessError) {
+        throw businessError;
+      }
+
+      // Simple API fetch to get the raw Reddit response
+      setNotification("Fetching Reddit content data...");
+      console.log(`Fetching content for: ${redditUrl}`);
+
+      try {
+        const response = await fetch("/api/fetch-reddit-content", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: redditUrl,
+          }),
+        });
+
+        const result = await response.json();
+
+        // Log raw response data
+        console.log("REDDIT API RESPONSE - STATUS:", result.status);
+        console.log("REDDIT API RESPONSE - HEADERS:", result.headers);
+        console.log("REDDIT API RESPONSE - ERROR:", result.error);
+
+        if (result.responseData) {
+          console.log(
+            "REDDIT API RESPONSE - DATA (first 500 chars):",
+            result.responseData.substring(0, 500)
+          );
+          try {
+            // Try to parse the response data as JSON if it is JSON
+            const jsonData = JSON.parse(result.responseData);
+            console.log("REDDIT API RESPONSE - PARSED JSON:", jsonData);
+          } catch (e) {
+            console.log("REDDIT API RESPONSE - RAW DATA (not JSON)");
+          }
+        }
+
+        setNotification(
+          "Test completed. Check console logs for raw Reddit API response."
+        );
+      } catch (err) {
+        console.error("Error fetching Reddit content:", err);
+        setError("Reddit content fetch failed: " + err.message);
+      }
+
+      // Refresh data
+      fetchData();
+    } catch (err) {
+      console.error("Error in test function:", err);
+      setError("Test failed: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!user || user.id !== ADMIN_USER_ID) {
     return null;
   }
@@ -585,7 +1419,7 @@ export default function RedditCommentsPage() {
           <div className="flex items-center gap-3">
             <div className="h-8 w-[3px] bg-blue-500" />
             <h1 className="text-xl sm:text-2xl font-bold">
-              Reddit Comments Manager
+              Reddit Posts Monitor
             </h1>
           </div>
           {gmailConnected && (
@@ -684,9 +1518,136 @@ export default function RedditCommentsPage() {
 
         {/* Reddit Content Section */}
         <div className="mb-6 sm:mb-8 bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-            Reddit Content
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold">Reddit Posts</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={evaluateRedditPosts}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Evaluate Posts with ChatGPT
+              </button>
+              <button
+                onClick={testWithSinglePost}
+                className="px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Test Single Post
+              </button>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  setNotification("Testing with specific post ID: c93rdt...");
+
+                  fetch("/api/fetch-reddit-content", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      url: "t3_c93rdt",
+                    }),
+                  })
+                    .then((response) => response.json())
+                    .then((result) => {
+                      console.log(
+                        "SPECIFIC POST TEST - STATUS:",
+                        result.status
+                      );
+                      console.log(
+                        "SPECIFIC POST TEST - HEADERS:",
+                        result.headers
+                      );
+                      console.log("SPECIFIC POST TEST - ERROR:", result.error);
+
+                      if (result.responseData) {
+                        console.log(
+                          "SPECIFIC POST TEST - DATA (first 500 chars):",
+                          result.responseData.substring(0, 500)
+                        );
+                        try {
+                          // Try to parse the response data as JSON if it is JSON
+                          const jsonData = JSON.parse(result.responseData);
+                          console.log(
+                            "SPECIFIC POST TEST - PARSED JSON:",
+                            jsonData
+                          );
+                        } catch (e) {
+                          console.log(
+                            "SPECIFIC POST TEST - RAW DATA (not JSON)"
+                          );
+                        }
+                      }
+
+                      setNotification(
+                        "Test with specific post ID completed. Check console logs."
+                      );
+                    })
+                    .catch((err) => {
+                      console.error("Error testing specific post:", err);
+                      setError(
+                        "Test with specific post ID failed: " + err.message
+                      );
+                    })
+                    .finally(() => {
+                      setLoading(false);
+                    });
+                }}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                Test ID: c93rdt
+              </button>
+              <button
+                onClick={() => setShowEvaluationModal(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                View Evaluation Report
+              </button>
+              <div className="flex rounded-lg border border-gray-700 p-1">
+                <button
+                  onClick={() => handleTabChange("pending")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "pending"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  To Process
+                </button>
+                <button
+                  onClick={() => handleTabChange("evaluated")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "evaluated"
+                      ? "bg-purple-500 text-white"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Evaluated
+                </button>
+                <button
+                  onClick={() => handleTabChange("ready")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "ready"
+                      ? "bg-amber-500 text-white"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Ready to Respond
+                </button>
+                <button
+                  onClick={() => handleTabChange("replied")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "replied"
+                      ? "bg-green-500 text-white"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  Replied{" "}
+                  {todayRepliedCount > 0 && `(${todayRepliedCount} today)`}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-4 sm:space-y-6">
             {businesses.map((business) => {
               const content = redditContent[business.id] || [];
@@ -719,9 +1680,31 @@ export default function RedditCommentsPage() {
                       <h3 className="text-base sm:text-lg font-medium text-blue-400">
                         {business.name}
                       </h3>
-                      <span className="text-xs sm:text-sm text-gray-400">
-                        ({content.length} items)
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm text-gray-400">
+                          {activeTab === "pending" ? (
+                            `(${content.length} to process)`
+                          ) : activeTab === "evaluated" ? (
+                            `(${content.length} evaluated)`
+                          ) : activeTab === "ready" ? (
+                            `(${content.length} ready to respond)`
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <span className="text-green-400">
+                                {businessReplies[business.id]?.today > 0 && (
+                                  <span className="bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded text-xs">
+                                    {businessReplies[business.id]?.today} today
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-gray-400 ml-1">
+                                ({businessReplies[business.id]?.total || 0}{" "}
+                                total)
+                              </span>
+                            </span>
+                          )}
+                        </span>
+                      </div>
                     </div>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -743,7 +1726,12 @@ export default function RedditCommentsPage() {
                       {content.map((item) => (
                         <div
                           key={item.id}
-                          className="bg-gray-800 p-3 rounded-lg flex flex-col gap-3"
+                          className={`bg-gray-800 p-3 rounded-lg flex flex-col gap-3 ${
+                            (activeTab === "evaluated" && item.is_matching) ||
+                            activeTab === "ready"
+                              ? "border-2 border-green-500/50"
+                              : ""
+                          }`}
                         >
                           <div className="space-y-2">
                             <div className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm">
@@ -758,11 +1746,123 @@ export default function RedditCommentsPage() {
                               <span className="text-gray-400 whitespace-nowrap">
                                 {item.type}
                               </span>
+                              {(activeTab === "evaluated" ||
+                                activeTab === "ready") && (
+                                <>
+                                  <span className="text-gray-400">•</span>
+                                  <span
+                                    className={`whitespace-nowrap px-2 py-0.5 rounded ${
+                                      item.is_matching
+                                        ? "bg-green-500/20 text-green-300"
+                                        : "bg-yellow-500/20 text-yellow-300"
+                                    }`}
+                                  >
+                                    {item.is_matching ? "Match" : "No Match"}
+                                  </span>
+                                </>
+                              )}
+                              {savedResponses[item.id] && (
+                                <>
+                                  <span className="text-gray-400">•</span>
+                                  <span className="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded whitespace-nowrap">
+                                    Response Ready
+                                  </span>
+                                </>
+                              )}
                             </div>
                             <h4 className="text-sm font-medium line-clamp-2">
                               {item.title}
                             </h4>
                           </div>
+
+                          {activeTab === "evaluated" && (
+                            <div className="border-t border-gray-700/50 pt-2">
+                              <div className="flex justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      item.is_helpful
+                                        ? "bg-green-500/20 text-green-300"
+                                        : "bg-red-500/20 text-red-300"
+                                    }`}
+                                  >
+                                    {item.is_helpful
+                                      ? "Helpful"
+                                      : "Not Helpful"}
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      item.can_plug_product
+                                        ? "bg-blue-500/20 text-blue-300"
+                                        : "bg-red-500/20 text-red-300"
+                                    }`}
+                                  >
+                                    {item.can_plug_product
+                                      ? "Can Plug Product"
+                                      : "Cannot Plug"}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    setShowEvaluationDetails((prev) => ({
+                                      ...prev,
+                                      [item.id]: !prev[item.id],
+                                    }))
+                                  }
+                                  className="text-xs text-gray-400 hover:text-white"
+                                >
+                                  {showEvaluationDetails[item.id]
+                                    ? "Hide Details"
+                                    : "Show Details"}
+                                </button>
+                              </div>
+
+                              {showEvaluationDetails[item.id] && (
+                                <div className="text-xs space-y-2 mt-2 bg-gray-900 p-2 rounded">
+                                  <div>
+                                    <p className="text-green-400 font-medium mb-1">
+                                      Can provide helpful response:
+                                    </p>
+                                    <p className="text-gray-300">
+                                      {item.helpful_reason}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-blue-400 font-medium mb-1">
+                                      Can plug product:
+                                    </p>
+                                    <p className="text-gray-300">
+                                      {item.plug_product_reason}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {activeTab === "ready" && savedResponses[item.id] && (
+                            <div className="border-t border-gray-700/50 pt-2">
+                              <div className="flex justify-between mb-2">
+                                <div className="text-xs font-medium text-purple-300">
+                                  Generated Response:
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setGeneratedResponse(
+                                      savedResponses[item.id]
+                                    );
+                                    setShowResponseModal(true);
+                                  }}
+                                  className="text-xs text-gray-400 hover:text-white"
+                                >
+                                  View Response
+                                </button>
+                              </div>
+                              <div className="text-xs bg-gray-900 p-2 rounded line-clamp-3 text-gray-300">
+                                {savedResponses[item.id]}
+                              </div>
+                            </div>
+                          )}
 
                           <div className="flex flex-wrap gap-2">
                             <div className="bg-indigo-500/20 px-2 sm:px-3 py-1.5 rounded-lg border border-indigo-500/30 flex items-center gap-1.5">
@@ -809,50 +1909,75 @@ export default function RedditCommentsPage() {
                                 )}
                               </span>
                             </div>
+                            {item.evaluation_date &&
+                              activeTab !== "evaluated" &&
+                              activeTab !== "ready" && (
+                                <div
+                                  className={`px-2 sm:px-3 py-1.5 rounded-lg border flex items-center gap-1.5 ${
+                                    item.is_matching
+                                      ? "bg-green-500/20 border-green-500/30 text-green-300"
+                                      : "bg-yellow-500/20 border-yellow-500/30 text-yellow-300"
+                                  }`}
+                                >
+                                  <span className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                                    {item.is_matching
+                                      ? "Good Match"
+                                      : "Poor Match"}
+                                  </span>
+                                </div>
+                              )}
                           </div>
 
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-gray-700/50">
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300 text-sm whitespace-nowrap"
-                            >
-                              View on Reddit →
-                            </a>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 text-sm whitespace-nowrap"
+                              >
+                                View on Reddit →
+                              </a>
+                              <button
+                                onClick={() => generateResponse(item, business)}
+                                disabled={
+                                  responseLoading &&
+                                  generatingResponseFor === item.id
+                                }
+                                className={`text-sm px-3 py-1 rounded-md ${
+                                  responseLoading &&
+                                  generatingResponseFor === item.id
+                                    ? "bg-purple-500/30 text-purple-300"
+                                    : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
+                                }`}
+                              >
+                                {responseLoading &&
+                                generatingResponseFor === item.id ? (
+                                  <>
+                                    <span className="inline-block mr-2 h-3 w-3 rounded-full border-2 border-purple-300 border-t-transparent animate-spin"></span>
+                                    Generating...
+                                  </>
+                                ) : savedResponses[item.id] ? (
+                                  "Regenerate Response"
+                                ) : (
+                                  "Generate Response"
+                                )}
+                              </button>
+
+                              {activeTab === "ready" &&
+                                savedResponses[item.id] && (
+                                  <button
+                                    onClick={() => markAsReplied(item.id)}
+                                    className="text-sm px-3 py-1 rounded-md bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                                  >
+                                    Mark as Replied
+                                  </button>
+                                )}
+                            </div>
                             <select
                               value={item.status || "pending"}
-                              onChange={async (e) => {
-                                const newStatus = e.target.value;
-                                try {
-                                  const { error } = await supabase
-                                    .from("reddit_comments_content")
-                                    .update({
-                                      status: newStatus,
-                                      updated_at: new Date().toISOString(),
-                                    })
-                                    .eq("id", item.id);
-
-                                  if (error) throw error;
-
-                                  setRedditContent((prev) => ({
-                                    ...prev,
-                                    [business.id]: prev[business.id].map(
-                                      (content) =>
-                                        content.id === item.id
-                                          ? {
-                                              ...content,
-                                              status: newStatus,
-                                            }
-                                          : content
-                                    ),
-                                  }));
-                                } catch (error) {
-                                  console.error(
-                                    "Error updating status:",
-                                    error
-                                  );
-                                }
+                              onChange={(e) => {
+                                updateContentStatus(item.id, e.target.value);
                               }}
                               className={`w-full sm:w-auto text-xs sm:text-sm px-2 py-1 rounded border ${
                                 item.status === "replied"
@@ -894,7 +2019,7 @@ export default function RedditCommentsPage() {
             </h2>
             <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
               Connect your Gmail account to automatically fetch and parse Reddit
-              comment notifications.
+              post notifications.
             </p>
             <button
               onClick={connectGmail}
@@ -949,6 +2074,181 @@ export default function RedditCommentsPage() {
               ))}
             </div>
           </motion.div>
+        )}
+
+        {/* Add Evaluation Results Modal */}
+        {showEvaluationModal && evaluationResults && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 max-w-5xl w-full max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  Post Evaluation Results
+                </h3>
+                <button
+                  onClick={() => setShowEvaluationModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {evaluationResults.map((result, index) => (
+                  <div
+                    key={index}
+                    className="mb-6 border-b border-gray-800 pb-6"
+                  >
+                    <h4 className="text-lg font-semibold mb-2">
+                      {result.business}
+                    </h4>
+
+                    {result.matchingPosts?.length > 0 ? (
+                      <div className="mb-4">
+                        <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-lg mb-3">
+                          <h5 className="font-medium text-green-400 mb-2">
+                            ✅ {result.matchingPosts.length} Matching Posts
+                          </h5>
+                          <div className="space-y-2">
+                            {result.evaluationResults
+                              .filter((postEval) =>
+                                result.matchingPosts.includes(postEval.id)
+                              )
+                              .map((postEval, i) => (
+                                <div
+                                  key={i}
+                                  className="bg-gray-800 p-3 rounded border border-gray-700"
+                                >
+                                  <p className="text-sm mb-2 line-clamp-2">
+                                    <span className="text-blue-400 mr-1">
+                                      [{postEval.id}]
+                                    </span>
+                                    {postEval.title}
+                                  </p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                    <div className="bg-green-500/10 p-2 rounded">
+                                      <p className="text-green-400 font-medium mb-1">
+                                        Can provide helpful response:
+                                      </p>
+                                      <p>{postEval.helpfulResponseReason}</p>
+                                    </div>
+                                    <div className="bg-blue-500/10 p-2 rounded">
+                                      <p className="text-blue-400 font-medium mb-1">
+                                        Can plug product:
+                                      </p>
+                                      <p>{postEval.plugProductReason}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-yellow-400 mb-4">
+                        No matching posts found
+                      </div>
+                    )}
+
+                    <div>
+                      <h5 className="font-medium text-gray-400 mb-2">
+                        All Evaluated Posts ({result.evaluationResults.length})
+                      </h5>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {result.evaluationResults.map((postEval, i) => (
+                          <div
+                            key={i}
+                            className={`p-2 rounded text-xs ${
+                              result.matchingPosts.includes(postEval.id)
+                                ? "bg-green-900/20 border border-green-800"
+                                : "bg-gray-800 border border-gray-700"
+                            }`}
+                          >
+                            <p className="line-clamp-1">
+                              <span
+                                className={
+                                  result.matchingPosts.includes(postEval.id)
+                                    ? "text-green-400"
+                                    : "text-gray-400"
+                                }
+                              >
+                                [{postEval.id}]
+                              </span>{" "}
+                              {postEval.title}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  onClick={() => setShowEvaluationModal(false)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Response Modal */}
+        {showResponseModal && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 max-w-2xl w-full max-h-[80vh] flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Generated Response</h3>
+                <button
+                  onClick={() => setShowResponseModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto bg-gray-800 rounded-lg p-4 mb-4">
+                <p className="text-white whitespace-pre-wrap">
+                  {generatedResponse}
+                </p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={copyResponseToClipboard}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Copy to Clipboard
+                </button>
+                <button
+                  onClick={() => setShowResponseModal(false)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
