@@ -904,188 +904,278 @@ export default function RedditPostsPage() {
     try {
       setResponseLoading(true);
       setGeneratingResponseFor(item.id);
+      setNotification("Generating response for post...");
 
-      // First, fetch complete post content from Reddit API
-      console.log(`Fetching complete content for post: ${item.url}`);
-      console.log(
-        `Stored content before fetch: ${
-          item.content_body ? item.content_body.length + " chars" : "empty"
-        }`
-      );
-
-      const redditContentResponse = await fetch("/api/fetch-reddit-content", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: item.url,
-        }),
+      console.log("GENERATING RESPONSE FOR CONTENT:", {
+        id: item.id,
+        business_id: item.business_id,
+        title: item.title,
+        url: item.url,
+        subreddit: item.subreddit,
+        status: item.status,
+        is_matching: item.is_matching,
+        created_at: item.created_at,
       });
 
-      let fullPostContent = item.content_body || "";
-      let postTitle = item.title;
-      let contentSource = "stored"; // Track content source for logging
-
-      if (redditContentResponse.ok) {
-        const postData = await redditContentResponse.json();
-        console.log("Retrieved Reddit post content:", postData);
-
-        // Use the fetched content if available
-        if (postData.selftext) {
-          const oldContentLength = fullPostContent.length;
-          fullPostContent = postData.selftext;
-          contentSource = "fetched";
-
-          console.log(
-            `Content comparison - Old: ${oldContentLength} chars, New: ${fullPostContent.length} chars`
-          );
-          console.log(
-            `Content quality check - Using ${contentSource} content (${fullPostContent.length} chars)`
-          );
-
-          if (
-            fullPostContent.length < 10 &&
-            oldContentLength > fullPostContent.length
-          ) {
-            console.warn(
-              "Fetched content is very short! Reverting to stored content."
-            );
-            fullPostContent = item.content_body || "";
-            contentSource = "stored (reverted)";
-          }
-
-          // Update the content_body in the database while we're at it
-          const { error: updateContentError } = await supabase
-            .from("reddit_comments_content")
-            .update({
-              content_body: fullPostContent,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", item.id);
-
-          if (updateContentError) {
-            console.error("Error updating post content:", updateContentError);
-          } else {
-            console.log(
-              `Updated database with ${fullPostContent.length} chars of content`
-            );
-          }
-        } else {
-          console.warn(
-            "Fetched content has no selftext field. Using stored content instead."
-          );
-        }
-
-        // Use the fetched title if available and different
-        if (postData.title && postData.title !== item.title) {
-          postTitle = postData.title;
-          console.log(`Using fetched post title: ${postTitle}`);
-        }
-      } else {
-        // Log detailed error information
+      // Extract the actual Reddit URL if this is an F5Bot URL
+      let redditUrl = item.url;
+      if (item.url.includes("f5bot.com/url")) {
         try {
-          const errorData = await redditContentResponse.json();
-          console.error("Reddit content fetch failed:", errorData);
-          console.error("Status code:", redditContentResponse.status);
-          console.error("URL that failed:", item.url);
-        } catch (e) {
-          console.error(
-            "Reddit content fetch failed with status:",
-            redditContentResponse.status
-          );
-          console.error("URL that failed:", item.url);
+          const urlObj = new URL(item.url);
+          const encodedRedditUrl = urlObj.searchParams.get("u");
+          if (encodedRedditUrl) {
+            redditUrl = decodeURIComponent(encodedRedditUrl);
+            console.log("Extracted Reddit URL:", redditUrl);
+
+            // Update the URL in the database
+            const { error: urlUpdateError } = await supabase
+              .from("reddit_comments_content")
+              .update({
+                url: redditUrl,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", item.id);
+
+            if (urlUpdateError) {
+              console.error("Error updating post URL:", urlUpdateError);
+            } else {
+              console.log("Updated post URL in database");
+            }
+          }
+        } catch (err) {
+          console.error("Error extracting Reddit URL:", err);
         }
-        console.warn(
-          `Could not fetch Reddit content, using stored content (${fullPostContent.length} chars) instead`
+      }
+
+      // Construct the Reddit JSON URL directly for testing
+      const jsonUrl = redditUrl.endsWith(".json")
+        ? redditUrl
+        : `${redditUrl}.json`;
+      console.log("Reddit JSON URL:", jsonUrl);
+
+      // Simple API fetch to get the raw Reddit response
+      setNotification("Fetching Reddit content data...");
+      console.log(`Fetching content for: ${jsonUrl}`);
+
+      try {
+        const response = await fetch("/api/fetch-reddit-content", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: redditUrl, // The API will handle appending .json
+          }),
+        });
+
+        const result = await response.json();
+
+        // Log raw response data
+        console.log("REDDIT API RESPONSE - STATUS:", result.status);
+        console.log("REDDIT API RESPONSE - HEADERS:", result.headers);
+        console.log("REDDIT API RESPONSE - ERROR:", result.error);
+
+        if (!result.responseData) {
+          console.error("No response data from Reddit API");
+          throw new Error("Failed to fetch Reddit content");
+        }
+
+        // Extract post content and data from the response
+        let postTitle = item.title;
+        let postContent = item.content_body || "";
+        let postSubreddit = item.subreddit;
+
+        try {
+          // Try to parse the response data as JSON if it is JSON
+          const jsonData = JSON.parse(result.responseData);
+          console.log("REDDIT API RESPONSE - PARSED JSON:", jsonData);
+
+          // Check for the direct Listing format
+          if (
+            jsonData?.kind === "Listing" &&
+            jsonData?.data?.children?.length > 0
+          ) {
+            console.log("=== DIRECT LISTING FORMAT DETECTED ===");
+            const post = jsonData.data.children[0].data;
+
+            postTitle = post.title || postTitle;
+            postSubreddit = post.subreddit || postSubreddit;
+
+            console.log("DIRECT POST DETAILS:", {
+              title: post.title,
+              author: post.author,
+              selftext: post.selftext,
+              subreddit: post.subreddit,
+            });
+
+            // Check if this is a crosspost with removed content
+            if (
+              post.selftext === "[removed]" &&
+              post.crosspost_parent_list &&
+              post.crosspost_parent_list.length > 0
+            ) {
+              // Use content from the original post in the crosspost
+              const originalPost = post.crosspost_parent_list[0];
+              postContent = originalPost.selftext || "";
+              console.log(
+                "Using content from crossposted original:",
+                postContent.substring(0, 100) + "..."
+              );
+            } else {
+              postContent = post.selftext || "";
+            }
+
+            console.log("DIRECT SELFTEXT CONTENT:", postContent);
+          }
+          // Log important parts of the parsed JSON if it exists (standard post+comments format)
+          else if (
+            jsonData[0] &&
+            jsonData[0].data &&
+            jsonData[0].data.children
+          ) {
+            const post = jsonData[0].data.children[0]?.data;
+
+            postTitle = post.title || postTitle;
+            postSubreddit = post.subreddit || postSubreddit;
+
+            console.log("POST DETAILS:", {
+              title: post.title,
+              author: post.author,
+              selftext: post.selftext,
+              subreddit: post.subreddit,
+              num_comments: post.num_comments,
+            });
+
+            // Check if this is a crosspost with removed content
+            if (
+              post.selftext === "[removed]" &&
+              post.crosspost_parent_list &&
+              post.crosspost_parent_list.length > 0
+            ) {
+              // Use content from the original post in the crosspost
+              const originalPost = post.crosspost_parent_list[0];
+              postContent = originalPost.selftext || "";
+              console.log(
+                "Using content from crossposted original:",
+                postContent.substring(0, 100) + "..."
+              );
+            } else {
+              postContent = post.selftext || "";
+            }
+
+            console.log("SELFTEXT CONTENT:", postContent);
+
+            // Log all comments if they exist
+            if (jsonData[1] && jsonData[1].data && jsonData[1].data.children) {
+              console.log("COMMENT COUNT:", jsonData[1].data.children.length);
+              console.log(
+                "FIRST 3 COMMENTS:",
+                jsonData[1].data.children.slice(0, 3).map((c) => ({
+                  author: c.data?.author,
+                  body: c.data?.body,
+                  score: c.data?.score,
+                }))
+              );
+            }
+          }
+
+          // Update the database with the fetched content
+          if (postContent && postContent !== "[deleted]") {
+            const { error: updateContentError } = await supabase
+              .from("reddit_comments_content")
+              .update({
+                title: postTitle,
+                content_body: postContent,
+                subreddit: postSubreddit,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", item.id);
+
+            if (updateContentError) {
+              console.error("Error updating post content:", updateContentError);
+            } else {
+              console.log(
+                `Updated database with ${postContent.length} chars of content`
+              );
+            }
+          }
+        } catch (e) {
+          console.log(
+            "REDDIT API RESPONSE - RAW DATA (not JSON):",
+            result.responseData
+          );
+          console.error("Error parsing Reddit response:", e);
+        }
+
+        // Now generate a response using ChatGPT
+        setNotification("Generating response with ChatGPT...");
+
+        // Use business data for response generation
+        const saasUrl = business?.subdomain
+          ? `${business.subdomain}.joinblocks.me`
+          : "";
+
+        const generateResponse = await fetch("/api/generate-reddit-response", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            postId: item.id,
+            title: postTitle,
+            content: postContent,
+            subreddit: postSubreddit,
+            businessName: business?.name || "",
+            product: business?.product || "",
+            mainFeature: business?.main_feature || "",
+            saasUrl: saasUrl,
+          }),
+        });
+
+        if (!generateResponse.ok) {
+          console.error(
+            "Failed to generate response:",
+            await generateResponse.text()
+          );
+          throw new Error("Failed to generate response with ChatGPT");
+        }
+
+        const responseData = await generateResponse.json();
+
+        // Log the generated response
+        console.log("CHATGPT GENERATED RESPONSE:", responseData.response);
+
+        // Save the generated response
+        const generatedText = responseData.response;
+        setGeneratedResponse(generatedText);
+
+        // Save to database
+        const { error: updateError } = await supabase
+          .from("reddit_comments_content")
+          .update({
+            generated_response: generatedText,
+            response_generated_at: new Date().toISOString(),
+          })
+          .eq("id", item.id);
+
+        if (updateError) {
+          console.error("Error saving response to database:", updateError);
+        } else {
+          // Update local state
+          setSavedResponses((prev) => ({
+            ...prev,
+            [item.id]: generatedText,
+          }));
+          console.log("Saved response to database for post ID:", item.id);
+          setNotification("Generated and saved response with ChatGPT");
+        }
+      } catch (err) {
+        console.error(
+          "Error fetching Reddit content or generating response:",
+          err
         );
+        setError("Failed to generate response: " + err.message);
       }
-
-      // Content validation before generating response
-      console.log(`CONTENT VALIDATION CHECK:`);
-      console.log(`- Source: ${contentSource}`);
-      console.log(`- Length: ${fullPostContent.length} characters`);
-      console.log(`- Title length: ${postTitle.length} characters`);
-      console.log(
-        `- Content preview: ${fullPostContent.substring(0, 100)}${
-          fullPostContent.length > 100 ? "..." : ""
-        }`
-      );
-
-      if (fullPostContent.length < 10 && fullPostContent.trim() === "") {
-        console.warn("WARNING: Post content is extremely short or empty!");
-      }
-
-      // Fetch the full business data if we don't have product and subdomain
-      let businessData = business;
-      if (!business.product || !business.subdomain) {
-        const { data, error } = await supabase
-          .from("businesses")
-          .select("name, product, subdomain, main_feature")
-          .eq("id", business.id)
-          .single();
-
-        if (error) throw error;
-        businessData = { ...business, ...data };
-      }
-
-      // Construct the SaaS URL
-      const saasUrl = `${businessData.subdomain}.joinblocks.me`;
-
-      console.log("Generating response with the following data:");
-      console.log(`- Title: ${postTitle}`);
-      console.log(`- Content length: ${fullPostContent.length} chars`);
-      console.log(`- Subreddit: ${item.subreddit}`);
-      console.log(`- Business: ${businessData.name}`);
-      console.log(`- Product: ${businessData.product}`);
-
-      // Make API call to your ChatGPT endpoint
-      const response = await fetch("/api/generate-reddit-response", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: postTitle,
-          content: fullPostContent,
-          subreddit: item.subreddit,
-          businessName: businessData.name,
-          product: businessData.product,
-          mainFeature: businessData.main_feature,
-          saasUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate response");
-      }
-
-      const data = await response.json();
-
-      // Save the generated response
-      const generatedText = data.response;
-      setGeneratedResponse(generatedText);
-
-      // Save to database
-      const { error: updateError } = await supabase
-        .from("reddit_comments_content")
-        .update({
-          generated_response: generatedText,
-          response_generated_at: new Date().toISOString(),
-        })
-        .eq("id", item.id);
-
-      if (updateError) {
-        console.error("Error saving response to database:", updateError);
-      } else {
-        // Update local state
-        setSavedResponses((prev) => ({
-          ...prev,
-          [item.id]: generatedText,
-        }));
-      }
-
-      setShowResponseModal(true);
     } catch (err) {
       console.error("Error generating response:", err);
       setError("Failed to generate response: " + err.message);
@@ -1275,27 +1365,65 @@ export default function RedditPostsPage() {
   const testWithSinglePost = async () => {
     try {
       setLoading(true);
-      setNotification("Testing with a sample Reddit post...");
+      setNotification("Testing with a ready Reddit post...");
 
-      // Create a test post if none exists
-      const { data: existingPosts, error: existingError } = await supabase
+      // Get all ready posts first to see what's available
+      const { data: allReadyPosts, error: readyError } = await supabase
         .from("reddit_comments_content")
-        .select("id, url, title, subreddit, business_id, content_body")
-        .eq("status", "pending")
-        .limit(1);
+        .select(
+          "id, url, title, subreddit, business_id, content_body, status, is_matching"
+        )
+        .eq("is_matching", true)
+        .not("status", "eq", "replied")
+        .not("status", "eq", "not_relevant")
+        .order("created_at", { ascending: false });
 
-      if (existingError) {
-        throw existingError;
+      if (readyError) {
+        console.error("Error fetching all ready posts:", readyError);
+        throw readyError;
       }
 
-      if (!existingPosts || existingPosts.length === 0) {
-        console.error("No existing posts found to test with");
-        setError("No posts found to test with. Please fetch some posts first.");
+      console.log(
+        `Found ${allReadyPosts?.length || 0} total ready posts:`,
+        allReadyPosts
+      );
+
+      // Get the first "ready" post (matching posts that aren't replied to or not relevant)
+      const { data: readyPosts, error: postsError } = await supabase
+        .from("reddit_comments_content")
+        .select(
+          "id, url, title, subreddit, business_id, content_body, status, is_matching, created_at"
+        )
+        .eq("is_matching", true)
+        .not("status", "eq", "replied")
+        .not("status", "eq", "not_relevant")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (postsError) {
+        console.error("Error fetching first ready post:", postsError);
+        throw postsError;
+      }
+
+      if (!readyPosts || readyPosts.length === 0) {
+        console.error("No ready posts found to test with");
+        setError(
+          "No ready posts found to test with. Please evaluate some posts first."
+        );
         return;
       }
 
-      const testPost = existingPosts[0];
-      console.log("Using post for testing:", testPost);
+      const testPost = readyPosts[0];
+      console.log("SELECTED POST FOR TESTING:", {
+        id: testPost.id,
+        business_id: testPost.business_id,
+        title: testPost.title,
+        url: testPost.url,
+        subreddit: testPost.subreddit,
+        status: testPost.status,
+        is_matching: testPost.is_matching,
+        created_at: testPost.created_at,
+      });
 
       // Extract the actual Reddit URL if this is an F5Bot URL
       let redditUrl = testPost.url;
@@ -1329,6 +1457,12 @@ export default function RedditPostsPage() {
         }
       }
 
+      // Construct the Reddit JSON URL directly for testing
+      const jsonUrl = redditUrl.endsWith(".json")
+        ? redditUrl
+        : `${redditUrl}.json`;
+      console.log("Reddit JSON URL:", jsonUrl);
+
       // Get the business for this post
       const { data: business, error: businessError } = await supabase
         .from("businesses")
@@ -1342,7 +1476,7 @@ export default function RedditPostsPage() {
 
       // Simple API fetch to get the raw Reddit response
       setNotification("Fetching Reddit content data...");
-      console.log(`Fetching content for: ${redditUrl}`);
+      console.log(`Fetching content for: ${jsonUrl}`);
 
       try {
         const response = await fetch("/api/fetch-reddit-content", {
@@ -1351,7 +1485,7 @@ export default function RedditPostsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            url: redditUrl,
+            url: redditUrl, // The API will handle appending .json
           }),
         });
 
@@ -1363,6 +1497,9 @@ export default function RedditPostsPage() {
         console.log("REDDIT API RESPONSE - ERROR:", result.error);
 
         if (result.responseData) {
+          // Log the full response data
+          console.log("REDDIT API RESPONSE - FULL DATA:", result.responseData);
+
           console.log(
             "REDDIT API RESPONSE - DATA (first 500 chars):",
             result.responseData.substring(0, 500)
@@ -1371,8 +1508,149 @@ export default function RedditPostsPage() {
             // Try to parse the response data as JSON if it is JSON
             const jsonData = JSON.parse(result.responseData);
             console.log("REDDIT API RESPONSE - PARSED JSON:", jsonData);
+
+            // Check for the direct Listing format
+            if (
+              jsonData?.kind === "Listing" &&
+              jsonData?.data?.children?.length > 0
+            ) {
+              console.log("=== DIRECT LISTING FORMAT DETECTED ===");
+              const post = jsonData.data.children[0].data;
+
+              console.log("DIRECT POST DETAILS:", {
+                title: post.title,
+                author: post.author,
+                selftext: post.selftext,
+                subreddit: post.subreddit,
+              });
+
+              // Log the selftext specifically as requested
+              console.log("DIRECT SELFTEXT CONTENT:", post.selftext);
+            }
+
+            // Log important parts of the parsed JSON if it exists
+            if (jsonData[0] && jsonData[0].data && jsonData[0].data.children) {
+              console.log("POST DETAILS:", {
+                title: jsonData[0].data.children[0]?.data?.title,
+                author: jsonData[0].data.children[0]?.data?.author,
+                selftext: jsonData[0].data.children[0]?.data?.selftext,
+                subreddit: jsonData[0].data.children[0]?.data?.subreddit,
+                num_comments: jsonData[0].data.children[0]?.data?.num_comments,
+              });
+
+              // Log the selftext specifically as requested
+              console.log(
+                "SELFTEXT CONTENT:",
+                jsonData[0].data.children[0]?.data?.selftext
+              );
+
+              // Extract post content for ChatGPT
+              let postContent = "";
+              const postData = jsonData[0].data.children[0]?.data;
+
+              // Check if this is a crosspost and the original has content
+              if (
+                postData.selftext === "[removed]" &&
+                postData.crosspost_parent_list &&
+                postData.crosspost_parent_list.length > 0
+              ) {
+                // Use the content from the original post
+                const originalPost = postData.crosspost_parent_list[0];
+                postContent = originalPost.selftext || "";
+                console.log(
+                  "Using content from crossposted original:",
+                  postContent
+                );
+              } else {
+                // Use the content from this post
+                postContent = postData.selftext || "";
+              }
+
+              // Now generate a response using ChatGPT
+              setNotification("Generating response with ChatGPT...");
+
+              const generateResponse = await fetch(
+                "/api/generate-reddit-response",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    postId: testPost.id,
+                    title: postData.title,
+                    content: postContent,
+                    subreddit: postData.subreddit,
+                    businessName: business?.name || "",
+                    product: business?.product || "",
+                    mainFeature: business?.main_feature || "",
+                    saasUrl: business?.subdomain
+                      ? `${business.subdomain}.joinblocks.me`
+                      : "",
+                  }),
+                }
+              );
+
+              if (generateResponse.ok) {
+                const responseData = await generateResponse.json();
+
+                // Log the generated response
+                console.log(
+                  "CHATGPT GENERATED RESPONSE:",
+                  responseData.response
+                );
+
+                // Save the generated response to the database
+                if (testPost.id) {
+                  const { error: updateError } = await supabase
+                    .from("reddit_comments_content")
+                    .update({
+                      generated_response: responseData.response,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", testPost.id);
+
+                  if (updateError) {
+                    console.error(
+                      "Error saving generated response:",
+                      updateError
+                    );
+                  } else {
+                    console.log(
+                      "Saved response to database for post ID:",
+                      testPost.id
+                    );
+                    setNotification(
+                      "Generated and saved response with ChatGPT"
+                    );
+                  }
+                }
+              } else {
+                console.error(
+                  "Failed to generate response:",
+                  await generateResponse.text()
+                );
+                setError("Failed to generate response with ChatGPT");
+              }
+            }
+
+            // Log all comments if they exist
+            if (jsonData[1] && jsonData[1].data && jsonData[1].data.children) {
+              console.log("COMMENT COUNT:", jsonData[1].data.children.length);
+              console.log(
+                "FIRST 3 COMMENTS:",
+                jsonData[1].data.children.slice(0, 3).map((c) => ({
+                  author: c.data?.author,
+                  body: c.data?.body,
+                  score: c.data?.score,
+                }))
+              );
+            }
           } catch (e) {
-            console.log("REDDIT API RESPONSE - RAW DATA (not JSON)");
+            console.log(
+              "REDDIT API RESPONSE - RAW DATA (not JSON):",
+              result.responseData
+            );
           }
         }
 
@@ -1848,17 +2126,16 @@ export default function RedditPostsPage() {
                                 </div>
                                 <button
                                   onClick={() => {
-                                    setGeneratedResponse(
-                                      savedResponses[item.id]
-                                    );
-                                    setShowResponseModal(true);
+                                    // Removed modal opening - we're now showing the full response directly
+                                    // setGeneratedResponse(savedResponses[item.id]);
+                                    // setShowResponseModal(true);
                                   }}
-                                  className="text-xs text-gray-400 hover:text-white"
+                                  className="text-xs text-gray-400 hover:text-white cursor-default"
                                 >
-                                  View Response
+                                  Full Response
                                 </button>
                               </div>
-                              <div className="text-xs bg-gray-900 p-2 rounded line-clamp-3 text-gray-300">
+                              <div className="text-xs bg-gray-900 p-2 rounded text-gray-300 whitespace-pre-wrap">
                                 {savedResponses[item.id]}
                               </div>
                             </div>

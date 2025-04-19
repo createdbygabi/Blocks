@@ -35,6 +35,8 @@ import { PricingSection } from "./PricingSection";
 import { Testimonials } from "./Testimonials";
 import { useState, useRef, useEffect } from "react";
 import { initAnalytics } from "@/lib/analytics";
+import dynamic from "next/dynamic";
+import React from "react";
 
 // Fade up animation variant
 const fadeUp = {
@@ -53,10 +55,36 @@ export function LandingPage({ data }) {
   // Add a flag to track if component is mounted
   const [isMounted, setIsMounted] = useState(false);
 
+  // State to hold the custom hero component (if it exists)
+  const [customHeroComponent, setCustomHeroComponent] = useState(null);
+
   useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
+
+  useEffect(() => {
+    // Try to load a custom hero component based on business name
+    const businessName = business.name?.toLowerCase().replace(/\s+/g, "");
+    if (!businessName) return;
+
+    // Check if component exists and dynamically import it
+    const loadCustomHero = async () => {
+      try {
+        // Dynamic import for client-side only
+        const CustomHeroComponent = await import(
+          `./hero-value-component/${businessName}.js`
+        ).catch(() => null);
+        if (CustomHeroComponent?.default) {
+          setCustomHeroComponent(() => CustomHeroComponent.default);
+        }
+      } catch (error) {
+        console.log(`No custom hero component found for ${businessName}`);
+      }
+    };
+
+    loadCustomHero();
+  }, [business.name]);
 
   // Track session start time and setup tracking
   useEffect(() => {
@@ -317,8 +345,8 @@ export function LandingPage({ data }) {
           />
 
           <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-0">
-            {landingPage?.hero_image ? (
-              // Two-column layout with image
+            {landingPage?.hero_image || customHeroComponent ? (
+              // Two-column layout with image or custom component
               <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-6 md:gap-8 items-center pt-165 md:pt-32 mx-2">
                 {/* Left column - Content */}
                 <div className="max-w-2xl text-center md:text-left">
@@ -354,36 +382,6 @@ export function LandingPage({ data }) {
                         "The easiest way to plan meals, generate shopping lists, and cook delicious food. Perfect for busy families."}
                     </p>
                   </motion.div>
-
-                  {/* Feature list */}
-                  {/* <motion.ul
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="space-y-2 md:space-y-3 mb-6 md:mb-8 max-w-lg mx-auto md:mx-0"
-                  >
-                    {[
-                      "Post to all major platforms in one click",
-                      "Schedule content for the perfect posting time",
-                      "Customize content for each platform",
-                      "Generate viral videos using our studio templates",
-                    ].map((feature, index) => (
-                      <li key={index} className="flex items-center gap-3">
-                        <div
-                          className={`w-5 h-5 rounded-full ${styles.utils.highlight} flex items-center justify-center`}
-                        >
-                          <FiCheck
-                            className={`w-3 h-3 ${styles.text.accent}`}
-                          />
-                        </div>
-                        <span
-                          className={`text-sm md:text-base ${styles.text.secondary}`}
-                        >
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </motion.ul> */}
 
                   {/* Updated CTA Form */}
                   <motion.form
@@ -426,9 +424,9 @@ export function LandingPage({ data }) {
                       {landingPage?.hero_icons?.map((imgNumber) => (
                         <img
                           key={imgNumber}
-                          src={`/images/hero/face_${imgNumber}.jpg`}
+                          src={`${process.env.NEXT_PUBLIC_APP_URL}/images/hero/face_${imgNumber}.jpg`}
                           alt=""
-                          className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-900"
+                          className="w-11 h-11 rounded-full border-4 border-white dark:border-white"
                         />
                       ))}
                     </div>
@@ -446,27 +444,35 @@ export function LandingPage({ data }) {
                         ))}
                       </div>
                       <p className={`text-sm ${styles.text.secondary}`}>
-                        Loved by <span className="font-bold">248+ </span>
+                        Loved by <span className="font-bold">152+ </span>
                         {hero?.userType || "small businesses"}
                       </p>
                     </div>
                   </motion.div>
                 </div>
 
-                {/* Right column - Platform Icons */}
+                {/* Right column - Platform Icons or Custom Hero Component */}
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
                   className="w-full max-w-lg md:max-w-none mx-auto mb-8 md:mb-0"
                 >
-                  <div className="relative aspect-square">
-                    <img
-                      src={landingPage.hero_image}
-                      alt="Platform preview"
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                  </div>
+                  {customHeroComponent ? (
+                    // Render custom hero component if available
+                    <div className="relative">
+                      {React.createElement(customHeroComponent, { styles })}
+                    </div>
+                  ) : (
+                    // Otherwise render the image
+                    <div className="relative aspect-square">
+                      <img
+                        src={landingPage.hero_image}
+                        alt="Platform preview"
+                        className="w-full h-full object-cover rounded-2xl"
+                      />
+                    </div>
+                  )}
                 </motion.div>
               </div>
             ) : (
@@ -575,7 +581,7 @@ export function LandingPage({ data }) {
                       ))}
                     </div>
                     <p className={`text-sm ${styles.text.secondary}`}>
-                      Loved by <span className="font-bold">150+ </span>
+                      Loved by <span className="font-bold">152+ </span>
                       {hero?.userType || "small businesses"}
                     </p>
                   </div>
